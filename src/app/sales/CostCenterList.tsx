@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { createCostCenter, updateCostCenter, deleteCostCenter } from './actions';
+import { createCostCenter, updateCostCenter, deleteCostCenter, bulkCreateCostCenters } from './actions';
+import * as XLSX from 'xlsx';
 import { useRouter } from 'next/navigation';
 
 function SearchableProductSelect({ products, value, onChange, lang }: { products: any[], value: string, onChange: (val: string) => void, lang: string }) {
@@ -61,6 +62,9 @@ export default function CostCenterList({ costCenters, products, units, lang }: {
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<any | null>(null);
   
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
+
   const [formData, setFormData] = useState({ 
     code: '', 
     name: '', 
@@ -297,6 +301,21 @@ export default function CostCenterList({ costCenters, products, units, lang }: {
                     {lang === 'ar' ? 'تحديد مكونات المنتج وحساب تكلفة الإنتاج الكلية' : 'Define product ingredients and calculate total production costs'}
                 </p>
             </div>
+            <button className="btn-secondary no-print" onClick={() => {
+                const data = costCenters.map(cc => ({
+                    'Code': cc.code,
+                    'Recipe Name': cc.name,
+                    'Target Product': cc.product?.name,
+                    'Ingredients Count': cc.items.length,
+                    'Yield Weight': cc.yieldWeight
+                }));
+                const ws = XLSX.utils.json_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Recipes");
+                XLSX.writeFile(wb, "Recipes_Backup.xlsx");
+            }}>
+                {lang === 'ar' ? '📤 تصدير إكسيل' : 'Export Excel'}
+            </button>
             <button className="btn-primary" onClick={openAdd}>
                 {lang === 'ar' ? '+ إضافة وصفة إنتاج' : '+ Create New Recipe'}
             </button>

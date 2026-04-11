@@ -129,14 +129,86 @@ export default function ProductList({ products, units, lang, dict }: { products:
     return val || 'N/A';
   };
 
+  const handleExport = () => {
+    const dataToExport = products.map(p => ({
+       'SKU': p.sku,
+       'Name (AR)': p.nameAr || '',
+       'Name (EN)': p.name || '',
+       'Classification': p.classification,
+       'Category': p.category || '',
+       'Cost': p.costPrice,
+       'Price': p.salePrice,
+       'Stock': p.stockQuantity,
+       'Unit': lang === 'ar' ? (p.unitRef?.nameAr || p.unit) : (p.unitRef?.name || p.unit)
+    }));
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Products");
+    XLSX.writeFile(wb, "Accounting_Products.xlsx");
+  };
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+     if (!e.target.files?.[0]) return;
+     const file = e.target.files[0];
+     setImportLoading(true);
+     try {
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data);
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+        
+        const mappedData = jsonData.map((item: any) => ({
+           sku: item.SKU || item['رقم الصنف'],
+           name: item['Name (EN)'] || item['الاسم بالإنجليزية'] || item.Name,
+           nameAr: item['Name (AR)'] || item['الاسم بالعربية'] || item.NameAr,
+           category: item.Category || item['القسم'],
+           classification: item.Classification || item['التصنيف'],
+           unit: item.Unit || item['الوحدة'],
+           costPrice: parseFloat(item.Cost || item['التكلفة']) || 0,
+           salePrice: parseFloat(item.Price || item['السعر']) || 0,
+           stockQuantity: parseFloat(item.Stock || item['الكمية']) || 0,
+           unitQuantity: parseFloat(item['Sub-Units in Main'] || item['الكمية في الوحدة']) || 1,
+        }));
+
+        const res = await bulkCreateProducts(mappedData);
+        if (res.success) {
+           alert(res.message);
+           setShowImportModal(false);
+        } else {
+           alert(res.error);
+        }
+     } catch (err: any) {
+        alert("خطأ في قراءة الملف: " + err.message);
+     } finally {
+        setImportLoading(false);
+     }
+  };
+
+  const handleDeleteAll = async () => {
+     if (confirm(lang === 'ar' ? 'تحذير: هذا سيحذف كافة المنتجات، حركات المخزن، وفواتير المبيعات المرتبطة. هل أنت متأكد؟' : 'Warning: This will delete ALL products and related data. Proceed?')) {
+        const res = await deleteAllProducts();
+        if (res.success) alert(lang === 'ar' ? 'تم حذف كافة البيانات بنجاح' : 'Success');
+        else alert(res.error);
+     }
+  };
+
   return (
     <div className="products-module" suppressHydrationWarning={true}>
       <div className="card">
         <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 className="card-title">{lang === 'ar' ? 'مركز تكلفة الأصناف والمنتجات' : 'Products Cost Center'}</h2>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button className="btn-secondary no-print" onClick={handleExport}>
+                {lang === 'ar' ? '📤 تصدير إكسيل' : 'Export Excel'}
+              </button>
+              <button className="btn-secondary no-print" onClick={() => setShowImportModal(true)}>
+                {lang === 'ar' ? '📥 استيراد' : 'Import'}
+              </button>
               <button className="btn-primary no-print" onClick={openAdd}>
                 {lang === 'ar' ? '+ صنف جديد' : '+ New Item'}
+              </button>
+              <button className="btn-secondary no-print" style={{ color: '#ef4444' }} onClick={handleDeleteAll}>
+                {lang === 'ar' ? '🗑️ حذف الكل' : 'Delete All'}
               </button>
           </div>
         </div>
@@ -321,6 +393,23 @@ export default function ProductList({ products, units, lang, dict }: { products:
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {showImportModal && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '450px' }}>
+            <div className="modal-header">
+              <h3>{lang === 'ar' ? 'استيراد صنف من إكسل' : 'Import from Excel'}</h3>
+              <button className="close-btn" onClick={() => setShowImportModal(false)}>&times;</button>
+            </div>
+            <div style={{ padding: '2rem', textAlign: 'center' }}>
+               <p style={{ marginBottom: '1rem', color: '#64748b' }}>
+                 {lang === 'ar' ? 'اختر ملف إكسل يحتوي على أعمدة: SKU, Name, Cost, Price...' : 'Upload Excel file with columns: SKU, Name, Cost, Price...'}
+               </p>
+               <input type="file" accept=".xlsx, .xls" onChange={handleImportFile} disabled={importLoading} />
+               {importLoading && <div style={{ marginTop: '1rem' }}>{lang === 'ar' ? 'جاري المعالجة...' : 'Processing...'}</div>}
+            </div>
           </div>
         </div>
       )}
