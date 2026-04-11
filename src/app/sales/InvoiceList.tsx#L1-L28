@@ -1,0 +1,30 @@
+'use client';
+
+import React, { useState, useTransition } from 'react';
+import { deleteSalesInvoice, updateSalesInvoiceStatus } from './actions';
+
+const STATUS_OPTIONS = ['Draft', 'Paid', 'Partially Paid', 'Overdue'];
+
+const STATUS_STYLES: Record<string, { bg: string; color: string }> = {
+  Paid: { bg: '#dcfce7', color: '#166534' },
+  Draft: { bg: '#f3f4f6', color: '#4b5563' },
+  'Partially Paid': { bg: '#fef9c3', color: '#854d0e' },
+  Overdue: { bg: '#fee2e2', color: '#991b1b' },
+};
+
+export default function InvoiceList({ 
+  invoices, 
+  lang, 
+  dict,
+  onNewInvoice,
+  onEditInvoice,
+  companyProfile
+}: { 
+  invoices: any[], 
+  lang: string, 
+  dict: any, 
+  onNewInvoice?: () => void,
+  onEditInvoice?: (invoice: any) => void,
+  companyProfile: any
+}) {
+  const [searchTerm, setSearchTerm] = useState('');

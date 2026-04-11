@@ -1,0 +1,582 @@
+[
+  {
+    "id": "cmndtnydt0006vrdc4wj35xdy",
+    "code": "1",
+    "name": "Assets",
+    "nameAr": "الأصول",
+    "type": "Asset",
+    "parentId": null,
+    "createdAt": "2026-03-30T23:31:30.641Z",
+    "updatedAt": "2026-03-30T23:31:30.641Z"
+  },
+  {
+    "id": "cmndtnyfe000bvrdc3f46dhzl",
+    "code": "1000",
+    "name": "Cash on Hand",
+    "nameAr": "النقدية بالصندوق",
+    "type": "Asset",
+    "parentId": "cmndtnydt0006vrdc4wj35xdy",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmndtnyff000cvrdc052x08sn",
+    "code": "1010",
+    "name": "Petty Cash",
+    "nameAr": "العهد النقدية",
+    "type": "Asset",
+    "parentId": "cmndtnydt0006vrdc4wj35xdy",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmndtnyff000dvrdcfvazy7tg",
+    "code": "1020",
+    "name": "Main Bank Account",
+    "nameAr": "حساب البنك الرئيسي",
+    "type": "Asset",
+    "parentId": "cmndtnydt0006vrdc4wj35xdy",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmndu3nja0000vrec2xts1l71",
+    "code": "1101",
+    "name": "Sales Revenue",
+    "nameAr": "إيرادات المبيعات",
+    "type": "Revenue",
+    "parentId": null,
+    "createdAt": "2026-03-30T23:43:43.075Z",
+    "updatedAt": "2026-03-30T23:43:43.075Z"
+  },
+  {
+    "id": "cmndu3nmx0004vrechlzh8icc",
+    "code": "1102",
+    "name": "Cash",
+    "nameAr": "الصندوق",
+    "type": "Asset",
+    "parentId": null,
+    "createdAt": "2026-03-30T23:43:43.209Z",
+    "updatedAt": "2026-03-30T23:43:43.209Z"
+  },
+  {
+    "id": "cmndtnyff000evrdcvya4byhg",
+    "code": "1200",
+    "name": "Accounts Receivable",
+    "nameAr": "حسابات العملاء (ذمم)",
+    "type": "Asset",
+    "parentId": "cmndtnydt0006vrdc4wj35xdy",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmndu3nkr0001vrec94clw5ka",
+    "code": "1201",
+    "name": "Accounts Receivable",
+    "nameAr": "ذمم مدينة - عملاء",
+    "type": "Asset",
+    "parentId": null,
+    "createdAt": "2026-03-30T23:43:43.131Z",
+    "updatedAt": "2026-03-30T23:43:43.131Z"
+  },
+  {
+    "id": "cmnfnygde0003vr14ema7a75v",
+    "code": "1201-CUST-1775024827664",
+    "name": "ركن العمارية",
+    "nameAr": "ركن العمارية",
+    "type": "Asset",
+    "parentId": "cmndu3nkr0001vrec94clw5ka",
+    "createdAt": "2026-04-01T06:27:15.168Z",
+    "updatedAt": "2026-04-01T15:17:27.524Z"
+  },
+  {
+    "id": "cmndua8ki0009vrdcq0eq74av",
+    "code": "1202",
+    "name": "Accounts Payable",
+    "nameAr": "ذمم دائنة - موردين",
+    "type": "Liability",
+    "parentId": null,
+    "createdAt": "2026-03-30T23:48:50.274Z",
+    "updatedAt": "2026-03-30T23:48:50.274Z"
+  },
+  {
+    "id": "cmndtnyff000fvrdc9x0n3r51",
+    "code": "1300",
+    "name": "Inventory Asset",
+    "nameAr": "المخزون",
+    "type": "Asset",
+    "parentId": "cmndtnydt0006vrdc4wj35xdy",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmndu3nlf0002vrecfe6njgbf",
+    "code": "1301",
+    "name": "Inventory",
+    "nameAr": "المخزون",
+    "type": "Asset",
+    "parentId": null,
+    "createdAt": "2026-03-30T23:43:43.155Z",
+    "updatedAt": "2026-03-30T23:43:43.155Z"
+  },
+  {
+    "id": "cmndtnyff000gvrdccndjolnf",
+    "code": "1400",
+    "name": "Prepaid Expenses",
+    "nameAr": "مصروفات مدفوعة مقدماً",
+    "type": "Asset",
+    "parentId": "cmndtnydt0006vrdc4wj35xdy",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmndvaw2q000kvrdcy0howdty",
+    "code": "1401",
+    "name": "VAT Receivable (Input Tax)",
+    "nameAr": "ضريبة القيمة المضافة المدفوعة",
+    "type": "Asset",
+    "parentId": null,
+    "createdAt": "2026-03-31T00:17:20.355Z",
+    "updatedAt": "2026-03-31T00:17:20.355Z"
+  },
+  {
+    "id": "cmndtnyff000hvrdc8emur2p0",
+    "code": "1500",
+    "name": "Machinery & Equipment",
+    "nameAr": "آلات ومعدات",
+    "type": "Asset",
+    "parentId": "cmndtnydt0006vrdc4wj35xdy",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmndtnyff000ivrdcyo3pue23",
+    "code": "1510",
+    "name": "Accumulated Depreciation",
+    "nameAr": "مجمع الإهلاك",
+    "type": "Asset",
+    "parentId": "cmndtnydt0006vrdc4wj35xdy",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmndtnyec0007vrdcuogh50nr",
+    "code": "2",
+    "name": "Liabilities",
+    "nameAr": "الخصوم",
+    "type": "Liability",
+    "parentId": null,
+    "createdAt": "2026-03-30T23:31:30.661Z",
+    "updatedAt": "2026-03-30T23:31:30.661Z"
+  },
+  {
+    "id": "cmndtnyff000jvrdcq0bo743l",
+    "code": "2000",
+    "name": "Accounts Payable",
+    "nameAr": "حسابات الموردين (ذمم)",
+    "type": "Liability",
+    "parentId": "cmndtnyec0007vrdcuogh50nr",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmndvaw2n000jvrdcudsqjyl7",
+    "code": "2001",
+    "name": "Accounts Payable",
+    "nameAr": "ذمم دائنة - موردين",
+    "type": "Liability",
+    "parentId": null,
+    "createdAt": "2026-03-31T00:17:20.352Z",
+    "updatedAt": "2026-03-31T00:17:20.352Z"
+  },
+  {
+    "id": "cmnfo3ot00006vr14f225kwpg",
+    "code": "2001-SUPP-1775025068278",
+    "name": "ااااا",
+    "nameAr": "اااااا",
+    "type": "Liability",
+    "parentId": "cmndvaw2n000jvrdcudsqjyl7",
+    "createdAt": "2026-04-01T06:31:19.380Z",
+    "updatedAt": "2026-04-01T06:31:19.380Z"
+  },
+  {
+    "id": "cmndtnyff000kvrdch6hf2974",
+    "code": "2100",
+    "name": "Accrued Salaries",
+    "nameAr": "رواتب مستحقة",
+    "type": "Liability",
+    "parentId": "cmndtnyec0007vrdcuogh50nr",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmnfg3n690019vrdcvchrger3",
+    "code": "2101",
+    "name": "VAT Payable (Output Tax)",
+    "nameAr": "ضريبة القيمة المضافة المحصلة",
+    "type": "Liability",
+    "parentId": null,
+    "createdAt": "2026-04-01T02:47:20.338Z",
+    "updatedAt": "2026-04-01T02:47:20.338Z"
+  },
+  {
+    "id": "cmndtnyff000lvrdcdzfmpeud",
+    "code": "2200",
+    "name": "Sales Tax Payable",
+    "nameAr": "ضريبة المبيعات المستحقة",
+    "type": "Liability",
+    "parentId": "cmndtnyec0007vrdcuogh50nr",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmndtnyff000mvrdcnnvzguc4",
+    "code": "2300",
+    "name": "Income Tax Payable",
+    "nameAr": "ضريبة الدخل المستحقة",
+    "type": "Liability",
+    "parentId": "cmndtnyec0007vrdcuogh50nr",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmndtnyff000nvrdcmht33dea",
+    "code": "2500",
+    "name": "Long-Term Bank Loan",
+    "nameAr": "قرض بنكي طويل الأجل",
+    "type": "Liability",
+    "parentId": "cmndtnyec0007vrdcuogh50nr",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmndtnyem0008vrdcryb1dpe2",
+    "code": "3",
+    "name": "Equity",
+    "nameAr": "حقوق الملكية",
+    "type": "Equity",
+    "parentId": null,
+    "createdAt": "2026-03-30T23:31:30.670Z",
+    "updatedAt": "2026-03-30T23:31:30.670Z"
+  },
+  {
+    "id": "cmnkhctr50001vryssqabodui",
+    "code": "31",
+    "name": "Capital",
+    "nameAr": "رأس المال",
+    "type": "Equity",
+    "parentId": "cmndtnyem0008vrdcryb1dpe2",
+    "createdAt": "2026-04-04T15:21:19.264Z",
+    "updatedAt": "2026-04-04T15:21:19.264Z"
+  },
+  {
+    "id": "cmndtnyff000pvrdcvzf02zxb",
+    "code": "3100",
+    "name": "Owner Drawings",
+    "nameAr": "مسحوبات المالك",
+    "type": "Equity",
+    "parentId": "cmndtnyem0008vrdcryb1dpe2",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmnkh0xhr0001vr90bfutsin2",
+    "code": "3101",
+    "name": "Registered Capital",
+    "nameAr": "رأس المال المسجل",
+    "type": "Equity",
+    "parentId": "cmnkhctr50001vryssqabodui",
+    "createdAt": "2026-04-04T15:12:04.232Z",
+    "updatedAt": "2026-04-04T15:21:19.345Z"
+  },
+  {
+    "id": "cmnkh0xil0003vr902pgux63l",
+    "code": "3102",
+    "name": "Additional Paid-in Capital",
+    "nameAr": "رأس المال الإضافي المدفوع",
+    "type": "Equity",
+    "parentId": "cmnkhctr50001vryssqabodui",
+    "createdAt": "2026-04-04T15:12:04.269Z",
+    "updatedAt": "2026-04-04T15:21:19.368Z"
+  },
+  {
+    "id": "cmnkhctru0003vrysrcsgdcx4",
+    "code": "32",
+    "name": "Other Equity",
+    "nameAr": "حقوق ملكية أخرى",
+    "type": "Equity",
+    "parentId": "cmndtnyem0008vrdcryb1dpe2",
+    "createdAt": "2026-04-04T15:21:19.290Z",
+    "updatedAt": "2026-04-04T15:21:19.290Z"
+  },
+  {
+    "id": "cmndtnyff000qvrdcytx1mre9",
+    "code": "3200",
+    "name": "Retained Earnings",
+    "nameAr": "أرباح محتجزة",
+    "type": "Equity",
+    "parentId": "cmnkhctsq0007vrysvusu02g9",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-04-04T15:21:19.462Z"
+  },
+  {
+    "id": "cmnkh0xjg0005vr906rkzoj3d",
+    "code": "3201",
+    "name": "Opening Balances",
+    "nameAr": "أرصدة افتتاحية",
+    "type": "Equity",
+    "parentId": "cmnkhctru0003vrysrcsgdcx4",
+    "createdAt": "2026-04-04T15:12:04.300Z",
+    "updatedAt": "2026-04-04T15:21:19.381Z"
+  },
+  {
+    "id": "cmnkhcts70005vrys9d7l66iw",
+    "code": "33",
+    "name": "Reserves",
+    "nameAr": "احتياطيات",
+    "type": "Equity",
+    "parentId": "cmndtnyem0008vrdcryb1dpe2",
+    "createdAt": "2026-04-04T15:21:19.303Z",
+    "updatedAt": "2026-04-04T15:21:19.303Z"
+  },
+  {
+    "id": "cmnkh0xlu0007vr90vnem58fc",
+    "code": "3301",
+    "name": "Statutory Reserve",
+    "nameAr": "احتياطي نظامي",
+    "type": "Equity",
+    "parentId": "cmnkhcts70005vrys9d7l66iw",
+    "createdAt": "2026-04-04T15:12:04.386Z",
+    "updatedAt": "2026-04-04T15:21:19.394Z"
+  },
+  {
+    "id": "cmnkh0xn80009vr9047gf87my",
+    "code": "3302",
+    "name": "Foreign Currency Translation Reserve",
+    "nameAr": "احتياطي ترجمة عملات أجنبية",
+    "type": "Equity",
+    "parentId": "cmnkhcts70005vrys9d7l66iw",
+    "createdAt": "2026-04-04T15:12:04.437Z",
+    "updatedAt": "2026-04-04T15:21:19.411Z"
+  },
+  {
+    "id": "cmnkhctsq0007vrysvusu02g9",
+    "code": "34",
+    "name": "Retained Earnings (or Losses)",
+    "nameAr": "الأرباح المبقاة (أو الخسائر)",
+    "type": "Equity",
+    "parentId": "cmndtnyem0008vrdcryb1dpe2",
+    "createdAt": "2026-04-04T15:21:19.322Z",
+    "updatedAt": "2026-04-04T15:21:19.322Z"
+  },
+  {
+    "id": "cmnkh0xox000bvr908m1mdsjv",
+    "code": "3401",
+    "name": "Operating Profit and Loss",
+    "nameAr": "الأرباح والخسائر العاملة",
+    "type": "Equity",
+    "parentId": "cmnkhctsq0007vrysvusu02g9",
+    "createdAt": "2026-04-04T15:12:04.497Z",
+    "updatedAt": "2026-04-04T15:21:19.423Z"
+  },
+  {
+    "id": "cmnkhctvx0009vrys6d0o6957",
+    "code": "3402",
+    "name": "Retained Earnings (or Losses)",
+    "nameAr": "الأرباح المبقاة (أو الخسائر)",
+    "type": "Equity",
+    "parentId": "cmnkhctsq0007vrysvusu02g9",
+    "createdAt": "2026-04-04T15:21:19.437Z",
+    "updatedAt": "2026-04-04T15:21:19.437Z"
+  },
+  {
+    "id": "cmndtnyew0009vrdcsw8f3c4b",
+    "code": "4",
+    "name": "Revenue",
+    "nameAr": "الإيرادات",
+    "type": "Revenue",
+    "parentId": null,
+    "createdAt": "2026-03-30T23:31:30.680Z",
+    "updatedAt": "2026-03-30T23:31:30.680Z"
+  },
+  {
+    "id": "cmndtnyff000rvrdc91chjdbz",
+    "code": "4000",
+    "name": "Sales Revenue",
+    "nameAr": "إيرادات المبيعات",
+    "type": "Revenue",
+    "parentId": "cmndtnyew0009vrdcsw8f3c4b",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmndtnyff000svrdcoun43l71",
+    "code": "4100",
+    "name": "Service Revenue",
+    "nameAr": "إيرادات الخدمات",
+    "type": "Revenue",
+    "parentId": "cmndtnyew0009vrdcsw8f3c4b",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmndtnyff000tvrdc24u17omv",
+    "code": "4200",
+    "name": "Sales Returns and Allowances",
+    "nameAr": "مردودات ومسموحات المبيعات",
+    "type": "Revenue",
+    "parentId": "cmndtnyew0009vrdcsw8f3c4b",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmndtnyff000uvrdcq9nznjsp",
+    "code": "4300",
+    "name": "Interest Income",
+    "nameAr": "إيرادات فوائد",
+    "type": "Revenue",
+    "parentId": "cmndtnyew0009vrdcsw8f3c4b",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmndtnyf5000avrdcg1ajqjml",
+    "code": "5",
+    "name": "Expenses",
+    "nameAr": "المصروفات",
+    "type": "Expense",
+    "parentId": null,
+    "createdAt": "2026-03-30T23:31:30.689Z",
+    "updatedAt": "2026-03-30T23:31:30.689Z"
+  },
+  {
+    "id": "cmndtnyff000vvrdcns6kg3ek",
+    "code": "5000",
+    "name": "Cost of Goods Sold (COGS)",
+    "nameAr": "تكلفة البضاعة المباعة",
+    "type": "Expense",
+    "parentId": "cmndtnyf5000avrdcg1ajqjml",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmndtnyff000wvrdchxnqoslk",
+    "code": "5100",
+    "name": "Direct Labor",
+    "nameAr": "أجور عمالة مباشرة",
+    "type": "Expense",
+    "parentId": "cmndtnyf5000avrdcg1ajqjml",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmndu3nm40003vrecs4gy8dvc",
+    "code": "5101",
+    "name": "Cost of Goods Sold",
+    "nameAr": "تكلفة البضاعة المباعة",
+    "type": "Expense",
+    "parentId": null,
+    "createdAt": "2026-03-30T23:43:43.180Z",
+    "updatedAt": "2026-03-30T23:43:43.180Z"
+  },
+  {
+    "id": "cmndtnyff000xvrdczkg5qgge",
+    "code": "5200",
+    "name": "Shipping and Delivery",
+    "nameAr": "مصروفات شحن وتوصيل",
+    "type": "Expense",
+    "parentId": "cmndtnyf5000avrdcg1ajqjml",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmndtnyff000yvrdcj6jnwmvv",
+    "code": "6000",
+    "name": "Salaries and Wages",
+    "nameAr": "رواتب وأجور",
+    "type": "Expense",
+    "parentId": "cmndtnyf5000avrdcg1ajqjml",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmndtnyff000zvrdcbmqdaqqk",
+    "code": "6100",
+    "name": "Rent Expense",
+    "nameAr": "مصروف إيجار",
+    "type": "Expense",
+    "parentId": "cmndtnyf5000avrdcg1ajqjml",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmndtnyff0010vrdc9wyyv73e",
+    "code": "6200",
+    "name": "Utilities Expense",
+    "nameAr": "مصروف منافع (ماء وكهرباء)",
+    "type": "Expense",
+    "parentId": "cmndtnyf5000avrdcg1ajqjml",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmndtnyff0011vrdcszghuh4x",
+    "code": "6300",
+    "name": "Office Supplies",
+    "nameAr": "قرطاسية وأدوات مكتبية",
+    "type": "Expense",
+    "parentId": "cmndtnyf5000avrdcg1ajqjml",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmndtnyff0012vrdc5e8gjytc",
+    "code": "6400",
+    "name": "Marketing and Advertising",
+    "nameAr": "دعاية وإعلان",
+    "type": "Expense",
+    "parentId": "cmndtnyf5000avrdcg1ajqjml",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmndtnyff0013vrdc5tik07tm",
+    "code": "6500",
+    "name": "Insurance Expense",
+    "nameAr": "مصروف تأمين",
+    "type": "Expense",
+    "parentId": "cmndtnyf5000avrdcg1ajqjml",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmndtnyff0014vrdcmbnaifzi",
+    "code": "6600",
+    "name": "Depreciation Expense",
+    "nameAr": "مصروف الإهلاك",
+    "type": "Expense",
+    "parentId": "cmndtnyf5000avrdcg1ajqjml",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmndtnyff0015vrdcn7zz7rmr",
+    "code": "6700",
+    "name": "Bank Fees",
+    "nameAr": "عمولات بنكية",
+    "type": "Expense",
+    "parentId": "cmndtnyf5000avrdcg1ajqjml",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  },
+  {
+    "id": "cmndtnyff0016vrdc9kz0u2kh",
+    "code": "6800",
+    "name": "Legal and Professional Fees",
+    "nameAr": "أتعاب مهنية وقانونية",
+    "type": "Expense",
+    "parentId": "cmndtnyf5000avrdcg1ajqjml",
+    "createdAt": "2026-03-30T23:31:30.698Z",
+    "updatedAt": "2026-03-30T23:31:30.698Z"
+  }
+]

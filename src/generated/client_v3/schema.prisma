@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client_v3"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Customer {
+  id        String         @id @default(cuid())
+  code      String         @unique
+  name      String
+  nameAr    String?
+  email     String?
+  phone     String?
+  address   String?
+  balance   Float          @default(0)
+  invoices  SalesInvoice[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+model Supplier {
+  id        String            @id @default(cuid())
+  code      String            @unique
+  name      String
+  nameAr    String?
+  email     String?
+  phone     String?
+  address   String?
+  balance   Float             @default(0)
+  invoices  PurchaseInvoice[]
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}
+
+model Product {
+  id            String         @id @default(cuid())
+  sku           String         @unique
+  name          String
+  nameAr        String?
+  description   String?
+  category      String?
+  unit          String         @default("pc") // pc, kg, m, etc.
+  costPrice     Float          @default(0)
+  salePrice     Float          @default(0)
+  stockQuantity Float          @default(0)
+  reorderPoint  Float          @default(0)
+  items         InvoiceItem[]
+  purchaseItems PurchaseItem[]
+  inventoryLogs InventoryLog[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model SalesInvoice {
+  id               String          @id @default(cuid())
+  invoiceNumber    String          @unique
+  date             DateTime
+  customerId       String
+  customer         Customer        @relation(fields: [customerId], references: [id])
+  items            InvoiceItem[]
+  totalAmount      Float
+  taxAmount        Float           @default(0)
+  discount         Float           @default(0)
+  netAmount        Float
+  status           String // "Draft", "Paid", "Partially Paid", "Overdue"
+  journalVoucherId String?
+  journalVoucher   JournalVoucher? @relation(fields: [journalVoucherId], references: [id])
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+model PurchaseInvoice {
+  id               String          @id @default(cuid())
+  invoiceNumber    String          @unique
+  date             DateTime
+  supplierId       String
+  supplier         Supplier        @relation(fields: [supplierId], references: [id])
+  items            PurchaseItem[]
+  totalAmount      Float
+  taxAmount        Float           @default(0)
+  discount         Float           @default(0)
+  netAmount        Float
+  status           String // "Draft", "Paid", "Partially Paid", "Overdue"
+  journalVoucherId String?
+  journalVoucher   JournalVoucher? @relation(fields: [journalVoucherId], references: [id])
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+model InvoiceItem {
+  id        String       @id @default(cuid())
+  invoiceId String
+  invoice   SalesInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product      @relation(fields: [productId], references: [id])
+  quantity  Float
+  unitPrice Float
+  total     Float
+}
+
+model PurchaseItem {
+  id        String          @id @default(cuid())
+  invoiceId String
+  invoice   PurchaseInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product         @relation(fields: [productId], references: [id])
+  quantity  Float
+  unitPrice Float
+  total     Float
+}
+
+model InventoryLog {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  date        DateTime @default(now())
+  type        String // "Purchase", "Sale", "Adjustment", "Return"
+  quantity    Float // Positive for In, Negative for Out
+  referenceId String? // ID of SalesInvoice or PurchaseInvoice
+  description String?
+}
+
+model Account {
+  id        String         @id @default(cuid())
+  code      String         @unique // e.g., "1000" for Cash
+  name      String // e.g., "Cash", "Accounts Receivable"
+  nameAr    String? // Arabic name
+  type      String // "Asset", "Liability", "Equity", "Revenue", "Expense"
+  parentId  String?
+  parent    Account?       @relation("AccountHierarchy", fields: [parentId], references: [id])
+  children  Account[]      @relation("AccountHierarchy")
+  entries   JournalEntry[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+model JournalVoucher {
+  id               String            @id @default(cuid())
+  reference        String            @unique
+  date             DateTime
+  description      String
+  status           String            @default("Draft") // "Draft", "Posted"
+  entries          JournalEntry[]
+  invoices         SalesInvoice[]
+  purchaseInvoices PurchaseInvoice[]
+  createdAt        DateTime          @default(now())
+}
+
+model JournalEntry {
+  id               String          @id @default(cuid())
+  date             DateTime
+  description      String
+  accountId        String
+  account          Account         @relation(fields: [accountId], references: [id])
+  debit            Float           @default(0)
+  credit           Float           @default(0)
+  reference        String? // Could be Invoice ID
+  journalVoucherId String?
+  journalVoucher   JournalVoucher? @relation(fields: [journalVoucherId], references: [id], onDelete: Cascade)
+  createdAt        DateTime        @default(now())
+}
