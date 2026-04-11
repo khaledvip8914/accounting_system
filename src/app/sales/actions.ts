@@ -1750,26 +1750,3 @@ export async function bulkCreateCostCenters(data: any[]) {
     // Placeholder for bulk recipe creation
     return { success: true, message: 'Feature coming soon or handled manually' };
 }
-
-export async function deleteAllProducts() {
-  try {
-     const session = await getSession();
-     if (!hasPermission(session?.user, 'MANAGE_INVENTORY')) {
-       throw new Error('غير مصرح لك بإدارة المخزون');
-     }
-     
-     // Delete in order to satisfy relations
-     await prisma.warehouseStock.deleteMany({});
-     await prisma.inventoryLog.deleteMany({});
-     await prisma.costCenterItem.deleteMany({});
-     await prisma.costCenter.deleteMany({});
-     await prisma.invoiceItem.deleteMany({});
-     await prisma.product.deleteMany({});
-     
-     revalidatePath('/sales');
-     revalidatePath('/inventory');
-     return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message };
-  }
-}
