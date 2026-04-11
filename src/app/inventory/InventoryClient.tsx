@@ -5,6 +5,7 @@ import ProductList from '../sales/ProductList';
 import CostCenterList from '../sales/CostCenterList';
 import ProductionOrderList from '../sales/ProductionOrderList';
 import UnitList from '../sales/UnitList';
+import ItemCardList from './ItemCardList';
 import { getDictionary } from '@/lib/i18n';
 
 export default function InventoryClient({
@@ -29,6 +30,7 @@ export default function InventoryClient({
     { id: 'products', label: lang === 'ar' ? 'المخزن والمنتجات' : 'Inventory', icon: '📦' },
     { id: 'cost-centers', label: lang === 'ar' ? 'وصفات الإنتاج (Recipe)' : 'Recipes/BOM', icon: '📝' },
     { id: 'production', label: lang === 'ar' ? 'أوامر الإنتاج' : 'Prod. Orders', icon: '🏭' },
+    { id: 'item-card', label: lang === 'ar' ? 'بطاقة الصنف' : 'Item Card', icon: '📇' },
     { id: 'units', label: lang === 'ar' ? 'وحدات القياس' : 'Units/Scale', icon: '⚖️' },
   ];
 
@@ -55,6 +57,7 @@ export default function InventoryClient({
         {activeTab === 'products' && <ProductList products={initialProducts} units={initialUnits} lang={lang} dict={dict} />}
         {activeTab === 'cost-centers' && <CostCenterList costCenters={initialCostCenters} products={initialProducts} units={initialUnits} lang={lang} />}
         {activeTab === 'production' && <ProductionOrderList orders={initialProductionOrders} products={initialProducts} warehouses={initialWarehouses} costCenters={initialCostCenters} units={initialUnits} lang={lang} />}
+        {activeTab === 'item-card' && <ItemCardList products={initialProducts} lang={lang} />}
         {activeTab === 'units' && <UnitList units={initialUnits} lang={lang} />}
       </div>
 
