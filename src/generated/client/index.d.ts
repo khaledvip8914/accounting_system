@@ -138,6 +138,16 @@ export type ProductionOrderItem = $Result.DefaultSelection<Prisma.$ProductionOrd
  * 
  */
 export type User = $Result.DefaultSelection<Prisma.$UserPayload>
+/**
+ * Model Employee
+ * 
+ */
+export type Employee = $Result.DefaultSelection<Prisma.$EmployeePayload>
+/**
+ * Model DisposalVoucher
+ * 
+ */
+export type DisposalVoucher = $Result.DefaultSelection<Prisma.$DisposalVoucherPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -506,6 +516,26 @@ export class PrismaClient<
     * ```
     */
   get user(): Prisma.UserDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.employee`: Exposes CRUD operations for the **Employee** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Employees
+    * const employees = await prisma.employee.findMany()
+    * ```
+    */
+  get employee(): Prisma.EmployeeDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.disposalVoucher`: Exposes CRUD operations for the **DisposalVoucher** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more DisposalVouchers
+    * const disposalVouchers = await prisma.disposalVoucher.findMany()
+    * ```
+    */
+  get disposalVoucher(): Prisma.DisposalVoucherDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -971,7 +1001,9 @@ export namespace Prisma {
     CostCenterItem: 'CostCenterItem',
     ProductionOrder: 'ProductionOrder',
     ProductionOrderItem: 'ProductionOrderItem',
-    User: 'User'
+    User: 'User',
+    Employee: 'Employee',
+    DisposalVoucher: 'DisposalVoucher'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -990,7 +1022,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "customer" | "supplier" | "warehouse" | "warehouseStock" | "product" | "salesInvoice" | "purchaseInvoice" | "invoiceItem" | "purchaseItem" | "stockTransfer" | "stockTransferItem" | "inventoryLog" | "account" | "journalVoucher" | "journalEntry" | "transactionVoucher" | "companyProfile" | "salesQuotation" | "quotationItem" | "unitOfMeasure" | "costCenter" | "costCenterItem" | "productionOrder" | "productionOrderItem" | "user"
+      modelProps: "customer" | "supplier" | "warehouse" | "warehouseStock" | "product" | "salesInvoice" | "purchaseInvoice" | "invoiceItem" | "purchaseItem" | "stockTransfer" | "stockTransferItem" | "inventoryLog" | "account" | "journalVoucher" | "journalEntry" | "transactionVoucher" | "companyProfile" | "salesQuotation" | "quotationItem" | "unitOfMeasure" | "costCenter" | "costCenterItem" | "productionOrder" | "productionOrderItem" | "user" | "employee" | "disposalVoucher"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2844,6 +2876,154 @@ export namespace Prisma {
           }
         }
       }
+      Employee: {
+        payload: Prisma.$EmployeePayload<ExtArgs>
+        fields: Prisma.EmployeeFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.EmployeeFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EmployeePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.EmployeeFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EmployeePayload>
+          }
+          findFirst: {
+            args: Prisma.EmployeeFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EmployeePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.EmployeeFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EmployeePayload>
+          }
+          findMany: {
+            args: Prisma.EmployeeFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EmployeePayload>[]
+          }
+          create: {
+            args: Prisma.EmployeeCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EmployeePayload>
+          }
+          createMany: {
+            args: Prisma.EmployeeCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.EmployeeCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EmployeePayload>[]
+          }
+          delete: {
+            args: Prisma.EmployeeDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EmployeePayload>
+          }
+          update: {
+            args: Prisma.EmployeeUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EmployeePayload>
+          }
+          deleteMany: {
+            args: Prisma.EmployeeDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.EmployeeUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.EmployeeUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EmployeePayload>[]
+          }
+          upsert: {
+            args: Prisma.EmployeeUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EmployeePayload>
+          }
+          aggregate: {
+            args: Prisma.EmployeeAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateEmployee>
+          }
+          groupBy: {
+            args: Prisma.EmployeeGroupByArgs<ExtArgs>
+            result: $Utils.Optional<EmployeeGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.EmployeeCountArgs<ExtArgs>
+            result: $Utils.Optional<EmployeeCountAggregateOutputType> | number
+          }
+        }
+      }
+      DisposalVoucher: {
+        payload: Prisma.$DisposalVoucherPayload<ExtArgs>
+        fields: Prisma.DisposalVoucherFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.DisposalVoucherFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DisposalVoucherPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.DisposalVoucherFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DisposalVoucherPayload>
+          }
+          findFirst: {
+            args: Prisma.DisposalVoucherFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DisposalVoucherPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.DisposalVoucherFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DisposalVoucherPayload>
+          }
+          findMany: {
+            args: Prisma.DisposalVoucherFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DisposalVoucherPayload>[]
+          }
+          create: {
+            args: Prisma.DisposalVoucherCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DisposalVoucherPayload>
+          }
+          createMany: {
+            args: Prisma.DisposalVoucherCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.DisposalVoucherCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DisposalVoucherPayload>[]
+          }
+          delete: {
+            args: Prisma.DisposalVoucherDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DisposalVoucherPayload>
+          }
+          update: {
+            args: Prisma.DisposalVoucherUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DisposalVoucherPayload>
+          }
+          deleteMany: {
+            args: Prisma.DisposalVoucherDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.DisposalVoucherUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.DisposalVoucherUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DisposalVoucherPayload>[]
+          }
+          upsert: {
+            args: Prisma.DisposalVoucherUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DisposalVoucherPayload>
+          }
+          aggregate: {
+            args: Prisma.DisposalVoucherAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateDisposalVoucher>
+          }
+          groupBy: {
+            args: Prisma.DisposalVoucherGroupByArgs<ExtArgs>
+            result: $Utils.Optional<DisposalVoucherGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.DisposalVoucherCountArgs<ExtArgs>
+            result: $Utils.Optional<DisposalVoucherCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2965,6 +3145,8 @@ export namespace Prisma {
     productionOrder?: ProductionOrderOmit
     productionOrderItem?: ProductionOrderItemOmit
     user?: UserOmit
+    employee?: EmployeeOmit
+    disposalVoucher?: DisposalVoucherOmit
   }
 
   /* Types for Logging */
@@ -3124,6 +3306,7 @@ export namespace Prisma {
     transfersTo: number
     transfersFrom: number
     stockItems: number
+    disposalVouchers: number
   }
 
   export type WarehouseCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -3135,6 +3318,7 @@ export namespace Prisma {
     transfersTo?: boolean | WarehouseCountOutputTypeCountTransfersToArgs
     transfersFrom?: boolean | WarehouseCountOutputTypeCountTransfersFromArgs
     stockItems?: boolean | WarehouseCountOutputTypeCountStockItemsArgs
+    disposalVouchers?: boolean | WarehouseCountOutputTypeCountDisposalVouchersArgs
   }
 
   // Custom InputTypes
@@ -3204,6 +3388,13 @@ export namespace Prisma {
     where?: WarehouseStockWhereInput
   }
 
+  /**
+   * WarehouseCountOutputType without action
+   */
+  export type WarehouseCountOutputTypeCountDisposalVouchersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: DisposalVoucherWhereInput
+  }
+
 
   /**
    * Count Type ProductCountOutputType
@@ -3220,6 +3411,7 @@ export namespace Prisma {
     quotationItems: number
     transfers: number
     warehouseStocks: number
+    disposalVouchers: number
   }
 
   export type ProductCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -3233,6 +3425,7 @@ export namespace Prisma {
     quotationItems?: boolean | ProductCountOutputTypeCountQuotationItemsArgs
     transfers?: boolean | ProductCountOutputTypeCountTransfersArgs
     warehouseStocks?: boolean | ProductCountOutputTypeCountWarehouseStocksArgs
+    disposalVouchers?: boolean | ProductCountOutputTypeCountDisposalVouchersArgs
   }
 
   // Custom InputTypes
@@ -3314,6 +3507,13 @@ export namespace Prisma {
    */
   export type ProductCountOutputTypeCountWarehouseStocksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: WarehouseStockWhereInput
+  }
+
+  /**
+   * ProductCountOutputType without action
+   */
+  export type ProductCountOutputTypeCountDisposalVouchersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: DisposalVoucherWhereInput
   }
 
 
@@ -6231,6 +6431,7 @@ export namespace Prisma {
     transfersTo?: boolean | Warehouse$transfersToArgs<ExtArgs>
     transfersFrom?: boolean | Warehouse$transfersFromArgs<ExtArgs>
     stockItems?: boolean | Warehouse$stockItemsArgs<ExtArgs>
+    disposalVouchers?: boolean | Warehouse$disposalVouchersArgs<ExtArgs>
     _count?: boolean | WarehouseCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["warehouse"]>
 
@@ -6274,6 +6475,7 @@ export namespace Prisma {
     transfersTo?: boolean | Warehouse$transfersToArgs<ExtArgs>
     transfersFrom?: boolean | Warehouse$transfersFromArgs<ExtArgs>
     stockItems?: boolean | Warehouse$stockItemsArgs<ExtArgs>
+    disposalVouchers?: boolean | Warehouse$disposalVouchersArgs<ExtArgs>
     _count?: boolean | WarehouseCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type WarehouseIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -6290,6 +6492,7 @@ export namespace Prisma {
       transfersTo: Prisma.$StockTransferPayload<ExtArgs>[]
       transfersFrom: Prisma.$StockTransferPayload<ExtArgs>[]
       stockItems: Prisma.$WarehouseStockPayload<ExtArgs>[]
+      disposalVouchers: Prisma.$DisposalVoucherPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -6701,6 +6904,7 @@ export namespace Prisma {
     transfersTo<T extends Warehouse$transfersToArgs<ExtArgs> = {}>(args?: Subset<T, Warehouse$transfersToArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StockTransferPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     transfersFrom<T extends Warehouse$transfersFromArgs<ExtArgs> = {}>(args?: Subset<T, Warehouse$transfersFromArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StockTransferPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     stockItems<T extends Warehouse$stockItemsArgs<ExtArgs> = {}>(args?: Subset<T, Warehouse$stockItemsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WarehouseStockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    disposalVouchers<T extends Warehouse$disposalVouchersArgs<ExtArgs> = {}>(args?: Subset<T, Warehouse$disposalVouchersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DisposalVoucherPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -7312,6 +7516,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: WarehouseStockScalarFieldEnum | WarehouseStockScalarFieldEnum[]
+  }
+
+  /**
+   * Warehouse.disposalVouchers
+   */
+  export type Warehouse$disposalVouchersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DisposalVoucher
+     */
+    select?: DisposalVoucherSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DisposalVoucher
+     */
+    omit?: DisposalVoucherOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DisposalVoucherInclude<ExtArgs> | null
+    where?: DisposalVoucherWhereInput
+    orderBy?: DisposalVoucherOrderByWithRelationInput | DisposalVoucherOrderByWithRelationInput[]
+    cursor?: DisposalVoucherWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: DisposalVoucherScalarFieldEnum | DisposalVoucherScalarFieldEnum[]
   }
 
   /**
@@ -8760,6 +8988,7 @@ export namespace Prisma {
     quotationItems?: boolean | Product$quotationItemsArgs<ExtArgs>
     transfers?: boolean | Product$transfersArgs<ExtArgs>
     warehouseStocks?: boolean | Product$warehouseStocksArgs<ExtArgs>
+    disposalVouchers?: boolean | Product$disposalVouchersArgs<ExtArgs>
     _count?: boolean | ProductCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["product"]>
 
@@ -8847,6 +9076,7 @@ export namespace Prisma {
     quotationItems?: boolean | Product$quotationItemsArgs<ExtArgs>
     transfers?: boolean | Product$transfersArgs<ExtArgs>
     warehouseStocks?: boolean | Product$warehouseStocksArgs<ExtArgs>
+    disposalVouchers?: boolean | Product$disposalVouchersArgs<ExtArgs>
     _count?: boolean | ProductCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ProductIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -8873,6 +9103,7 @@ export namespace Prisma {
       quotationItems: Prisma.$QuotationItemPayload<ExtArgs>[]
       transfers: Prisma.$StockTransferItemPayload<ExtArgs>[]
       warehouseStocks: Prisma.$WarehouseStockPayload<ExtArgs>[]
+      disposalVouchers: Prisma.$DisposalVoucherPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -9300,6 +9531,7 @@ export namespace Prisma {
     quotationItems<T extends Product$quotationItemsArgs<ExtArgs> = {}>(args?: Subset<T, Product$quotationItemsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$QuotationItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     transfers<T extends Product$transfersArgs<ExtArgs> = {}>(args?: Subset<T, Product$transfersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StockTransferItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     warehouseStocks<T extends Product$warehouseStocksArgs<ExtArgs> = {}>(args?: Subset<T, Product$warehouseStocksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WarehouseStockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    disposalVouchers<T extends Product$disposalVouchersArgs<ExtArgs> = {}>(args?: Subset<T, Product$disposalVouchersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DisposalVoucherPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -10017,6 +10249,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: WarehouseStockScalarFieldEnum | WarehouseStockScalarFieldEnum[]
+  }
+
+  /**
+   * Product.disposalVouchers
+   */
+  export type Product$disposalVouchersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DisposalVoucher
+     */
+    select?: DisposalVoucherSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DisposalVoucher
+     */
+    omit?: DisposalVoucherOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DisposalVoucherInclude<ExtArgs> | null
+    where?: DisposalVoucherWhereInput
+    orderBy?: DisposalVoucherOrderByWithRelationInput | DisposalVoucherOrderByWithRelationInput[]
+    cursor?: DisposalVoucherWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: DisposalVoucherScalarFieldEnum | DisposalVoucherScalarFieldEnum[]
   }
 
   /**
@@ -12669,6 +12925,7 @@ export namespace Prisma {
     id: string | null
     invoiceId: string | null
     productId: string | null
+    unitId: string | null
     quantity: number | null
     unitPrice: number | null
     total: number | null
@@ -12678,6 +12935,7 @@ export namespace Prisma {
     id: string | null
     invoiceId: string | null
     productId: string | null
+    unitId: string | null
     quantity: number | null
     unitPrice: number | null
     total: number | null
@@ -12687,6 +12945,7 @@ export namespace Prisma {
     id: number
     invoiceId: number
     productId: number
+    unitId: number
     quantity: number
     unitPrice: number
     total: number
@@ -12710,6 +12969,7 @@ export namespace Prisma {
     id?: true
     invoiceId?: true
     productId?: true
+    unitId?: true
     quantity?: true
     unitPrice?: true
     total?: true
@@ -12719,6 +12979,7 @@ export namespace Prisma {
     id?: true
     invoiceId?: true
     productId?: true
+    unitId?: true
     quantity?: true
     unitPrice?: true
     total?: true
@@ -12728,6 +12989,7 @@ export namespace Prisma {
     id?: true
     invoiceId?: true
     productId?: true
+    unitId?: true
     quantity?: true
     unitPrice?: true
     total?: true
@@ -12824,6 +13086,7 @@ export namespace Prisma {
     id: string
     invoiceId: string
     productId: string
+    unitId: string | null
     quantity: number
     unitPrice: number
     total: number
@@ -12852,6 +13115,7 @@ export namespace Prisma {
     id?: boolean
     invoiceId?: boolean
     productId?: boolean
+    unitId?: boolean
     quantity?: boolean
     unitPrice?: boolean
     total?: boolean
@@ -12863,6 +13127,7 @@ export namespace Prisma {
     id?: boolean
     invoiceId?: boolean
     productId?: boolean
+    unitId?: boolean
     quantity?: boolean
     unitPrice?: boolean
     total?: boolean
@@ -12874,6 +13139,7 @@ export namespace Prisma {
     id?: boolean
     invoiceId?: boolean
     productId?: boolean
+    unitId?: boolean
     quantity?: boolean
     unitPrice?: boolean
     total?: boolean
@@ -12885,12 +13151,13 @@ export namespace Prisma {
     id?: boolean
     invoiceId?: boolean
     productId?: boolean
+    unitId?: boolean
     quantity?: boolean
     unitPrice?: boolean
     total?: boolean
   }
 
-  export type InvoiceItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "invoiceId" | "productId" | "quantity" | "unitPrice" | "total", ExtArgs["result"]["invoiceItem"]>
+  export type InvoiceItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "invoiceId" | "productId" | "unitId" | "quantity" | "unitPrice" | "total", ExtArgs["result"]["invoiceItem"]>
   export type InvoiceItemInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     product?: boolean | ProductDefaultArgs<ExtArgs>
     invoice?: boolean | SalesInvoiceDefaultArgs<ExtArgs>
@@ -12914,6 +13181,7 @@ export namespace Prisma {
       id: string
       invoiceId: string
       productId: string
+      unitId: string | null
       quantity: number
       unitPrice: number
       total: number
@@ -13345,6 +13613,7 @@ export namespace Prisma {
     readonly id: FieldRef<"InvoiceItem", 'String'>
     readonly invoiceId: FieldRef<"InvoiceItem", 'String'>
     readonly productId: FieldRef<"InvoiceItem", 'String'>
+    readonly unitId: FieldRef<"InvoiceItem", 'String'>
     readonly quantity: FieldRef<"InvoiceItem", 'Float'>
     readonly unitPrice: FieldRef<"InvoiceItem", 'Float'>
     readonly total: FieldRef<"InvoiceItem", 'Float'>
@@ -13788,6 +14057,7 @@ export namespace Prisma {
     id: string | null
     invoiceId: string | null
     productId: string | null
+    unitId: string | null
     quantity: number | null
     unitPrice: number | null
     total: number | null
@@ -13797,6 +14067,7 @@ export namespace Prisma {
     id: string | null
     invoiceId: string | null
     productId: string | null
+    unitId: string | null
     quantity: number | null
     unitPrice: number | null
     total: number | null
@@ -13806,6 +14077,7 @@ export namespace Prisma {
     id: number
     invoiceId: number
     productId: number
+    unitId: number
     quantity: number
     unitPrice: number
     total: number
@@ -13829,6 +14101,7 @@ export namespace Prisma {
     id?: true
     invoiceId?: true
     productId?: true
+    unitId?: true
     quantity?: true
     unitPrice?: true
     total?: true
@@ -13838,6 +14111,7 @@ export namespace Prisma {
     id?: true
     invoiceId?: true
     productId?: true
+    unitId?: true
     quantity?: true
     unitPrice?: true
     total?: true
@@ -13847,6 +14121,7 @@ export namespace Prisma {
     id?: true
     invoiceId?: true
     productId?: true
+    unitId?: true
     quantity?: true
     unitPrice?: true
     total?: true
@@ -13943,6 +14218,7 @@ export namespace Prisma {
     id: string
     invoiceId: string
     productId: string
+    unitId: string | null
     quantity: number
     unitPrice: number
     total: number
@@ -13971,6 +14247,7 @@ export namespace Prisma {
     id?: boolean
     invoiceId?: boolean
     productId?: boolean
+    unitId?: boolean
     quantity?: boolean
     unitPrice?: boolean
     total?: boolean
@@ -13982,6 +14259,7 @@ export namespace Prisma {
     id?: boolean
     invoiceId?: boolean
     productId?: boolean
+    unitId?: boolean
     quantity?: boolean
     unitPrice?: boolean
     total?: boolean
@@ -13993,6 +14271,7 @@ export namespace Prisma {
     id?: boolean
     invoiceId?: boolean
     productId?: boolean
+    unitId?: boolean
     quantity?: boolean
     unitPrice?: boolean
     total?: boolean
@@ -14004,12 +14283,13 @@ export namespace Prisma {
     id?: boolean
     invoiceId?: boolean
     productId?: boolean
+    unitId?: boolean
     quantity?: boolean
     unitPrice?: boolean
     total?: boolean
   }
 
-  export type PurchaseItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "invoiceId" | "productId" | "quantity" | "unitPrice" | "total", ExtArgs["result"]["purchaseItem"]>
+  export type PurchaseItemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "invoiceId" | "productId" | "unitId" | "quantity" | "unitPrice" | "total", ExtArgs["result"]["purchaseItem"]>
   export type PurchaseItemInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     product?: boolean | ProductDefaultArgs<ExtArgs>
     invoice?: boolean | PurchaseInvoiceDefaultArgs<ExtArgs>
@@ -14033,6 +14313,7 @@ export namespace Prisma {
       id: string
       invoiceId: string
       productId: string
+      unitId: string | null
       quantity: number
       unitPrice: number
       total: number
@@ -14464,6 +14745,7 @@ export namespace Prisma {
     readonly id: FieldRef<"PurchaseItem", 'String'>
     readonly invoiceId: FieldRef<"PurchaseItem", 'String'>
     readonly productId: FieldRef<"PurchaseItem", 'String'>
+    readonly unitId: FieldRef<"PurchaseItem", 'String'>
     readonly quantity: FieldRef<"PurchaseItem", 'Float'>
     readonly unitPrice: FieldRef<"PurchaseItem", 'Float'>
     readonly total: FieldRef<"PurchaseItem", 'Float'>
@@ -17121,6 +17403,8 @@ export namespace Prisma {
     id: string | null
     productId: string | null
     warehouseId: string | null
+    unitId: string | null
+    unitName: string | null
     date: Date | null
     type: string | null
     quantity: number | null
@@ -17132,6 +17416,8 @@ export namespace Prisma {
     id: string | null
     productId: string | null
     warehouseId: string | null
+    unitId: string | null
+    unitName: string | null
     date: Date | null
     type: string | null
     quantity: number | null
@@ -17143,6 +17429,8 @@ export namespace Prisma {
     id: number
     productId: number
     warehouseId: number
+    unitId: number
+    unitName: number
     date: number
     type: number
     quantity: number
@@ -17164,6 +17452,8 @@ export namespace Prisma {
     id?: true
     productId?: true
     warehouseId?: true
+    unitId?: true
+    unitName?: true
     date?: true
     type?: true
     quantity?: true
@@ -17175,6 +17465,8 @@ export namespace Prisma {
     id?: true
     productId?: true
     warehouseId?: true
+    unitId?: true
+    unitName?: true
     date?: true
     type?: true
     quantity?: true
@@ -17186,6 +17478,8 @@ export namespace Prisma {
     id?: true
     productId?: true
     warehouseId?: true
+    unitId?: true
+    unitName?: true
     date?: true
     type?: true
     quantity?: true
@@ -17284,6 +17578,8 @@ export namespace Prisma {
     id: string
     productId: string
     warehouseId: string | null
+    unitId: string | null
+    unitName: string | null
     date: Date
     type: string
     quantity: number
@@ -17314,6 +17610,8 @@ export namespace Prisma {
     id?: boolean
     productId?: boolean
     warehouseId?: boolean
+    unitId?: boolean
+    unitName?: boolean
     date?: boolean
     type?: boolean
     quantity?: boolean
@@ -17327,6 +17625,8 @@ export namespace Prisma {
     id?: boolean
     productId?: boolean
     warehouseId?: boolean
+    unitId?: boolean
+    unitName?: boolean
     date?: boolean
     type?: boolean
     quantity?: boolean
@@ -17340,6 +17640,8 @@ export namespace Prisma {
     id?: boolean
     productId?: boolean
     warehouseId?: boolean
+    unitId?: boolean
+    unitName?: boolean
     date?: boolean
     type?: boolean
     quantity?: boolean
@@ -17353,6 +17655,8 @@ export namespace Prisma {
     id?: boolean
     productId?: boolean
     warehouseId?: boolean
+    unitId?: boolean
+    unitName?: boolean
     date?: boolean
     type?: boolean
     quantity?: boolean
@@ -17360,7 +17664,7 @@ export namespace Prisma {
     description?: boolean
   }
 
-  export type InventoryLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "productId" | "warehouseId" | "date" | "type" | "quantity" | "referenceId" | "description", ExtArgs["result"]["inventoryLog"]>
+  export type InventoryLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "productId" | "warehouseId" | "unitId" | "unitName" | "date" | "type" | "quantity" | "referenceId" | "description", ExtArgs["result"]["inventoryLog"]>
   export type InventoryLogInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     warehouse?: boolean | InventoryLog$warehouseArgs<ExtArgs>
     product?: boolean | ProductDefaultArgs<ExtArgs>
@@ -17384,6 +17688,8 @@ export namespace Prisma {
       id: string
       productId: string
       warehouseId: string | null
+      unitId: string | null
+      unitName: string | null
       date: Date
       type: string
       quantity: number
@@ -17817,6 +18123,8 @@ export namespace Prisma {
     readonly id: FieldRef<"InventoryLog", 'String'>
     readonly productId: FieldRef<"InventoryLog", 'String'>
     readonly warehouseId: FieldRef<"InventoryLog", 'String'>
+    readonly unitId: FieldRef<"InventoryLog", 'String'>
+    readonly unitName: FieldRef<"InventoryLog", 'String'>
     readonly date: FieldRef<"InventoryLog", 'DateTime'>
     readonly type: FieldRef<"InventoryLog", 'String'>
     readonly quantity: FieldRef<"InventoryLog", 'Float'>
@@ -33630,6 +33938,2352 @@ export namespace Prisma {
 
 
   /**
+   * Model Employee
+   */
+
+  export type AggregateEmployee = {
+    _count: EmployeeCountAggregateOutputType | null
+    _avg: EmployeeAvgAggregateOutputType | null
+    _sum: EmployeeSumAggregateOutputType | null
+    _min: EmployeeMinAggregateOutputType | null
+    _max: EmployeeMaxAggregateOutputType | null
+  }
+
+  export type EmployeeAvgAggregateOutputType = {
+    basicSalary: number | null
+  }
+
+  export type EmployeeSumAggregateOutputType = {
+    basicSalary: number | null
+  }
+
+  export type EmployeeMinAggregateOutputType = {
+    id: string | null
+    code: string | null
+    name: string | null
+    nameAr: string | null
+    jobTitle: string | null
+    jobTitleAr: string | null
+    department: string | null
+    basicSalary: number | null
+    joinDate: Date | null
+    status: string | null
+    phone: string | null
+    email: string | null
+    address: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type EmployeeMaxAggregateOutputType = {
+    id: string | null
+    code: string | null
+    name: string | null
+    nameAr: string | null
+    jobTitle: string | null
+    jobTitleAr: string | null
+    department: string | null
+    basicSalary: number | null
+    joinDate: Date | null
+    status: string | null
+    phone: string | null
+    email: string | null
+    address: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type EmployeeCountAggregateOutputType = {
+    id: number
+    code: number
+    name: number
+    nameAr: number
+    jobTitle: number
+    jobTitleAr: number
+    department: number
+    basicSalary: number
+    joinDate: number
+    status: number
+    phone: number
+    email: number
+    address: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type EmployeeAvgAggregateInputType = {
+    basicSalary?: true
+  }
+
+  export type EmployeeSumAggregateInputType = {
+    basicSalary?: true
+  }
+
+  export type EmployeeMinAggregateInputType = {
+    id?: true
+    code?: true
+    name?: true
+    nameAr?: true
+    jobTitle?: true
+    jobTitleAr?: true
+    department?: true
+    basicSalary?: true
+    joinDate?: true
+    status?: true
+    phone?: true
+    email?: true
+    address?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type EmployeeMaxAggregateInputType = {
+    id?: true
+    code?: true
+    name?: true
+    nameAr?: true
+    jobTitle?: true
+    jobTitleAr?: true
+    department?: true
+    basicSalary?: true
+    joinDate?: true
+    status?: true
+    phone?: true
+    email?: true
+    address?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type EmployeeCountAggregateInputType = {
+    id?: true
+    code?: true
+    name?: true
+    nameAr?: true
+    jobTitle?: true
+    jobTitleAr?: true
+    department?: true
+    basicSalary?: true
+    joinDate?: true
+    status?: true
+    phone?: true
+    email?: true
+    address?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type EmployeeAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Employee to aggregate.
+     */
+    where?: EmployeeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Employees to fetch.
+     */
+    orderBy?: EmployeeOrderByWithRelationInput | EmployeeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: EmployeeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Employees from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Employees.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Employees
+    **/
+    _count?: true | EmployeeCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: EmployeeAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: EmployeeSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: EmployeeMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: EmployeeMaxAggregateInputType
+  }
+
+  export type GetEmployeeAggregateType<T extends EmployeeAggregateArgs> = {
+        [P in keyof T & keyof AggregateEmployee]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateEmployee[P]>
+      : GetScalarType<T[P], AggregateEmployee[P]>
+  }
+
+
+
+
+  export type EmployeeGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: EmployeeWhereInput
+    orderBy?: EmployeeOrderByWithAggregationInput | EmployeeOrderByWithAggregationInput[]
+    by: EmployeeScalarFieldEnum[] | EmployeeScalarFieldEnum
+    having?: EmployeeScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: EmployeeCountAggregateInputType | true
+    _avg?: EmployeeAvgAggregateInputType
+    _sum?: EmployeeSumAggregateInputType
+    _min?: EmployeeMinAggregateInputType
+    _max?: EmployeeMaxAggregateInputType
+  }
+
+  export type EmployeeGroupByOutputType = {
+    id: string
+    code: string
+    name: string
+    nameAr: string | null
+    jobTitle: string | null
+    jobTitleAr: string | null
+    department: string | null
+    basicSalary: number
+    joinDate: Date
+    status: string
+    phone: string | null
+    email: string | null
+    address: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: EmployeeCountAggregateOutputType | null
+    _avg: EmployeeAvgAggregateOutputType | null
+    _sum: EmployeeSumAggregateOutputType | null
+    _min: EmployeeMinAggregateOutputType | null
+    _max: EmployeeMaxAggregateOutputType | null
+  }
+
+  type GetEmployeeGroupByPayload<T extends EmployeeGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<EmployeeGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof EmployeeGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], EmployeeGroupByOutputType[P]>
+            : GetScalarType<T[P], EmployeeGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type EmployeeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    code?: boolean
+    name?: boolean
+    nameAr?: boolean
+    jobTitle?: boolean
+    jobTitleAr?: boolean
+    department?: boolean
+    basicSalary?: boolean
+    joinDate?: boolean
+    status?: boolean
+    phone?: boolean
+    email?: boolean
+    address?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["employee"]>
+
+  export type EmployeeSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    code?: boolean
+    name?: boolean
+    nameAr?: boolean
+    jobTitle?: boolean
+    jobTitleAr?: boolean
+    department?: boolean
+    basicSalary?: boolean
+    joinDate?: boolean
+    status?: boolean
+    phone?: boolean
+    email?: boolean
+    address?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["employee"]>
+
+  export type EmployeeSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    code?: boolean
+    name?: boolean
+    nameAr?: boolean
+    jobTitle?: boolean
+    jobTitleAr?: boolean
+    department?: boolean
+    basicSalary?: boolean
+    joinDate?: boolean
+    status?: boolean
+    phone?: boolean
+    email?: boolean
+    address?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["employee"]>
+
+  export type EmployeeSelectScalar = {
+    id?: boolean
+    code?: boolean
+    name?: boolean
+    nameAr?: boolean
+    jobTitle?: boolean
+    jobTitleAr?: boolean
+    department?: boolean
+    basicSalary?: boolean
+    joinDate?: boolean
+    status?: boolean
+    phone?: boolean
+    email?: boolean
+    address?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type EmployeeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "code" | "name" | "nameAr" | "jobTitle" | "jobTitleAr" | "department" | "basicSalary" | "joinDate" | "status" | "phone" | "email" | "address" | "createdAt" | "updatedAt", ExtArgs["result"]["employee"]>
+
+  export type $EmployeePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Employee"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      code: string
+      name: string
+      nameAr: string | null
+      jobTitle: string | null
+      jobTitleAr: string | null
+      department: string | null
+      basicSalary: number
+      joinDate: Date
+      status: string
+      phone: string | null
+      email: string | null
+      address: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["employee"]>
+    composites: {}
+  }
+
+  type EmployeeGetPayload<S extends boolean | null | undefined | EmployeeDefaultArgs> = $Result.GetResult<Prisma.$EmployeePayload, S>
+
+  type EmployeeCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<EmployeeFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: EmployeeCountAggregateInputType | true
+    }
+
+  export interface EmployeeDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Employee'], meta: { name: 'Employee' } }
+    /**
+     * Find zero or one Employee that matches the filter.
+     * @param {EmployeeFindUniqueArgs} args - Arguments to find a Employee
+     * @example
+     * // Get one Employee
+     * const employee = await prisma.employee.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends EmployeeFindUniqueArgs>(args: SelectSubset<T, EmployeeFindUniqueArgs<ExtArgs>>): Prisma__EmployeeClient<$Result.GetResult<Prisma.$EmployeePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Employee that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {EmployeeFindUniqueOrThrowArgs} args - Arguments to find a Employee
+     * @example
+     * // Get one Employee
+     * const employee = await prisma.employee.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends EmployeeFindUniqueOrThrowArgs>(args: SelectSubset<T, EmployeeFindUniqueOrThrowArgs<ExtArgs>>): Prisma__EmployeeClient<$Result.GetResult<Prisma.$EmployeePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Employee that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EmployeeFindFirstArgs} args - Arguments to find a Employee
+     * @example
+     * // Get one Employee
+     * const employee = await prisma.employee.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends EmployeeFindFirstArgs>(args?: SelectSubset<T, EmployeeFindFirstArgs<ExtArgs>>): Prisma__EmployeeClient<$Result.GetResult<Prisma.$EmployeePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Employee that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EmployeeFindFirstOrThrowArgs} args - Arguments to find a Employee
+     * @example
+     * // Get one Employee
+     * const employee = await prisma.employee.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends EmployeeFindFirstOrThrowArgs>(args?: SelectSubset<T, EmployeeFindFirstOrThrowArgs<ExtArgs>>): Prisma__EmployeeClient<$Result.GetResult<Prisma.$EmployeePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Employees that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EmployeeFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Employees
+     * const employees = await prisma.employee.findMany()
+     * 
+     * // Get first 10 Employees
+     * const employees = await prisma.employee.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const employeeWithIdOnly = await prisma.employee.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends EmployeeFindManyArgs>(args?: SelectSubset<T, EmployeeFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EmployeePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Employee.
+     * @param {EmployeeCreateArgs} args - Arguments to create a Employee.
+     * @example
+     * // Create one Employee
+     * const Employee = await prisma.employee.create({
+     *   data: {
+     *     // ... data to create a Employee
+     *   }
+     * })
+     * 
+     */
+    create<T extends EmployeeCreateArgs>(args: SelectSubset<T, EmployeeCreateArgs<ExtArgs>>): Prisma__EmployeeClient<$Result.GetResult<Prisma.$EmployeePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Employees.
+     * @param {EmployeeCreateManyArgs} args - Arguments to create many Employees.
+     * @example
+     * // Create many Employees
+     * const employee = await prisma.employee.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends EmployeeCreateManyArgs>(args?: SelectSubset<T, EmployeeCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Employees and returns the data saved in the database.
+     * @param {EmployeeCreateManyAndReturnArgs} args - Arguments to create many Employees.
+     * @example
+     * // Create many Employees
+     * const employee = await prisma.employee.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Employees and only return the `id`
+     * const employeeWithIdOnly = await prisma.employee.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends EmployeeCreateManyAndReturnArgs>(args?: SelectSubset<T, EmployeeCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EmployeePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Employee.
+     * @param {EmployeeDeleteArgs} args - Arguments to delete one Employee.
+     * @example
+     * // Delete one Employee
+     * const Employee = await prisma.employee.delete({
+     *   where: {
+     *     // ... filter to delete one Employee
+     *   }
+     * })
+     * 
+     */
+    delete<T extends EmployeeDeleteArgs>(args: SelectSubset<T, EmployeeDeleteArgs<ExtArgs>>): Prisma__EmployeeClient<$Result.GetResult<Prisma.$EmployeePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Employee.
+     * @param {EmployeeUpdateArgs} args - Arguments to update one Employee.
+     * @example
+     * // Update one Employee
+     * const employee = await prisma.employee.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends EmployeeUpdateArgs>(args: SelectSubset<T, EmployeeUpdateArgs<ExtArgs>>): Prisma__EmployeeClient<$Result.GetResult<Prisma.$EmployeePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Employees.
+     * @param {EmployeeDeleteManyArgs} args - Arguments to filter Employees to delete.
+     * @example
+     * // Delete a few Employees
+     * const { count } = await prisma.employee.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends EmployeeDeleteManyArgs>(args?: SelectSubset<T, EmployeeDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Employees.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EmployeeUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Employees
+     * const employee = await prisma.employee.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends EmployeeUpdateManyArgs>(args: SelectSubset<T, EmployeeUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Employees and returns the data updated in the database.
+     * @param {EmployeeUpdateManyAndReturnArgs} args - Arguments to update many Employees.
+     * @example
+     * // Update many Employees
+     * const employee = await prisma.employee.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Employees and only return the `id`
+     * const employeeWithIdOnly = await prisma.employee.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends EmployeeUpdateManyAndReturnArgs>(args: SelectSubset<T, EmployeeUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EmployeePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Employee.
+     * @param {EmployeeUpsertArgs} args - Arguments to update or create a Employee.
+     * @example
+     * // Update or create a Employee
+     * const employee = await prisma.employee.upsert({
+     *   create: {
+     *     // ... data to create a Employee
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Employee we want to update
+     *   }
+     * })
+     */
+    upsert<T extends EmployeeUpsertArgs>(args: SelectSubset<T, EmployeeUpsertArgs<ExtArgs>>): Prisma__EmployeeClient<$Result.GetResult<Prisma.$EmployeePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Employees.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EmployeeCountArgs} args - Arguments to filter Employees to count.
+     * @example
+     * // Count the number of Employees
+     * const count = await prisma.employee.count({
+     *   where: {
+     *     // ... the filter for the Employees we want to count
+     *   }
+     * })
+    **/
+    count<T extends EmployeeCountArgs>(
+      args?: Subset<T, EmployeeCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], EmployeeCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Employee.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EmployeeAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends EmployeeAggregateArgs>(args: Subset<T, EmployeeAggregateArgs>): Prisma.PrismaPromise<GetEmployeeAggregateType<T>>
+
+    /**
+     * Group by Employee.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EmployeeGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends EmployeeGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: EmployeeGroupByArgs['orderBy'] }
+        : { orderBy?: EmployeeGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, EmployeeGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetEmployeeGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Employee model
+   */
+  readonly fields: EmployeeFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Employee.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__EmployeeClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Employee model
+   */
+  interface EmployeeFieldRefs {
+    readonly id: FieldRef<"Employee", 'String'>
+    readonly code: FieldRef<"Employee", 'String'>
+    readonly name: FieldRef<"Employee", 'String'>
+    readonly nameAr: FieldRef<"Employee", 'String'>
+    readonly jobTitle: FieldRef<"Employee", 'String'>
+    readonly jobTitleAr: FieldRef<"Employee", 'String'>
+    readonly department: FieldRef<"Employee", 'String'>
+    readonly basicSalary: FieldRef<"Employee", 'Float'>
+    readonly joinDate: FieldRef<"Employee", 'DateTime'>
+    readonly status: FieldRef<"Employee", 'String'>
+    readonly phone: FieldRef<"Employee", 'String'>
+    readonly email: FieldRef<"Employee", 'String'>
+    readonly address: FieldRef<"Employee", 'String'>
+    readonly createdAt: FieldRef<"Employee", 'DateTime'>
+    readonly updatedAt: FieldRef<"Employee", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Employee findUnique
+   */
+  export type EmployeeFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Employee
+     */
+    select?: EmployeeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Employee
+     */
+    omit?: EmployeeOmit<ExtArgs> | null
+    /**
+     * Filter, which Employee to fetch.
+     */
+    where: EmployeeWhereUniqueInput
+  }
+
+  /**
+   * Employee findUniqueOrThrow
+   */
+  export type EmployeeFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Employee
+     */
+    select?: EmployeeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Employee
+     */
+    omit?: EmployeeOmit<ExtArgs> | null
+    /**
+     * Filter, which Employee to fetch.
+     */
+    where: EmployeeWhereUniqueInput
+  }
+
+  /**
+   * Employee findFirst
+   */
+  export type EmployeeFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Employee
+     */
+    select?: EmployeeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Employee
+     */
+    omit?: EmployeeOmit<ExtArgs> | null
+    /**
+     * Filter, which Employee to fetch.
+     */
+    where?: EmployeeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Employees to fetch.
+     */
+    orderBy?: EmployeeOrderByWithRelationInput | EmployeeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Employees.
+     */
+    cursor?: EmployeeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Employees from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Employees.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Employees.
+     */
+    distinct?: EmployeeScalarFieldEnum | EmployeeScalarFieldEnum[]
+  }
+
+  /**
+   * Employee findFirstOrThrow
+   */
+  export type EmployeeFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Employee
+     */
+    select?: EmployeeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Employee
+     */
+    omit?: EmployeeOmit<ExtArgs> | null
+    /**
+     * Filter, which Employee to fetch.
+     */
+    where?: EmployeeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Employees to fetch.
+     */
+    orderBy?: EmployeeOrderByWithRelationInput | EmployeeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Employees.
+     */
+    cursor?: EmployeeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Employees from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Employees.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Employees.
+     */
+    distinct?: EmployeeScalarFieldEnum | EmployeeScalarFieldEnum[]
+  }
+
+  /**
+   * Employee findMany
+   */
+  export type EmployeeFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Employee
+     */
+    select?: EmployeeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Employee
+     */
+    omit?: EmployeeOmit<ExtArgs> | null
+    /**
+     * Filter, which Employees to fetch.
+     */
+    where?: EmployeeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Employees to fetch.
+     */
+    orderBy?: EmployeeOrderByWithRelationInput | EmployeeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Employees.
+     */
+    cursor?: EmployeeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Employees from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Employees.
+     */
+    skip?: number
+    distinct?: EmployeeScalarFieldEnum | EmployeeScalarFieldEnum[]
+  }
+
+  /**
+   * Employee create
+   */
+  export type EmployeeCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Employee
+     */
+    select?: EmployeeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Employee
+     */
+    omit?: EmployeeOmit<ExtArgs> | null
+    /**
+     * The data needed to create a Employee.
+     */
+    data: XOR<EmployeeCreateInput, EmployeeUncheckedCreateInput>
+  }
+
+  /**
+   * Employee createMany
+   */
+  export type EmployeeCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Employees.
+     */
+    data: EmployeeCreateManyInput | EmployeeCreateManyInput[]
+  }
+
+  /**
+   * Employee createManyAndReturn
+   */
+  export type EmployeeCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Employee
+     */
+    select?: EmployeeSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Employee
+     */
+    omit?: EmployeeOmit<ExtArgs> | null
+    /**
+     * The data used to create many Employees.
+     */
+    data: EmployeeCreateManyInput | EmployeeCreateManyInput[]
+  }
+
+  /**
+   * Employee update
+   */
+  export type EmployeeUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Employee
+     */
+    select?: EmployeeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Employee
+     */
+    omit?: EmployeeOmit<ExtArgs> | null
+    /**
+     * The data needed to update a Employee.
+     */
+    data: XOR<EmployeeUpdateInput, EmployeeUncheckedUpdateInput>
+    /**
+     * Choose, which Employee to update.
+     */
+    where: EmployeeWhereUniqueInput
+  }
+
+  /**
+   * Employee updateMany
+   */
+  export type EmployeeUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Employees.
+     */
+    data: XOR<EmployeeUpdateManyMutationInput, EmployeeUncheckedUpdateManyInput>
+    /**
+     * Filter which Employees to update
+     */
+    where?: EmployeeWhereInput
+    /**
+     * Limit how many Employees to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Employee updateManyAndReturn
+   */
+  export type EmployeeUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Employee
+     */
+    select?: EmployeeSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Employee
+     */
+    omit?: EmployeeOmit<ExtArgs> | null
+    /**
+     * The data used to update Employees.
+     */
+    data: XOR<EmployeeUpdateManyMutationInput, EmployeeUncheckedUpdateManyInput>
+    /**
+     * Filter which Employees to update
+     */
+    where?: EmployeeWhereInput
+    /**
+     * Limit how many Employees to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Employee upsert
+   */
+  export type EmployeeUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Employee
+     */
+    select?: EmployeeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Employee
+     */
+    omit?: EmployeeOmit<ExtArgs> | null
+    /**
+     * The filter to search for the Employee to update in case it exists.
+     */
+    where: EmployeeWhereUniqueInput
+    /**
+     * In case the Employee found by the `where` argument doesn't exist, create a new Employee with this data.
+     */
+    create: XOR<EmployeeCreateInput, EmployeeUncheckedCreateInput>
+    /**
+     * In case the Employee was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<EmployeeUpdateInput, EmployeeUncheckedUpdateInput>
+  }
+
+  /**
+   * Employee delete
+   */
+  export type EmployeeDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Employee
+     */
+    select?: EmployeeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Employee
+     */
+    omit?: EmployeeOmit<ExtArgs> | null
+    /**
+     * Filter which Employee to delete.
+     */
+    where: EmployeeWhereUniqueInput
+  }
+
+  /**
+   * Employee deleteMany
+   */
+  export type EmployeeDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Employees to delete
+     */
+    where?: EmployeeWhereInput
+    /**
+     * Limit how many Employees to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Employee without action
+   */
+  export type EmployeeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Employee
+     */
+    select?: EmployeeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Employee
+     */
+    omit?: EmployeeOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model DisposalVoucher
+   */
+
+  export type AggregateDisposalVoucher = {
+    _count: DisposalVoucherCountAggregateOutputType | null
+    _avg: DisposalVoucherAvgAggregateOutputType | null
+    _sum: DisposalVoucherSumAggregateOutputType | null
+    _min: DisposalVoucherMinAggregateOutputType | null
+    _max: DisposalVoucherMaxAggregateOutputType | null
+  }
+
+  export type DisposalVoucherAvgAggregateOutputType = {
+    quantity: number | null
+  }
+
+  export type DisposalVoucherSumAggregateOutputType = {
+    quantity: number | null
+  }
+
+  export type DisposalVoucherMinAggregateOutputType = {
+    id: string | null
+    voucherNumber: string | null
+    date: Date | null
+    productId: string | null
+    warehouseId: string | null
+    unitId: string | null
+    quantity: number | null
+    reason: string | null
+    notes: string | null
+    status: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type DisposalVoucherMaxAggregateOutputType = {
+    id: string | null
+    voucherNumber: string | null
+    date: Date | null
+    productId: string | null
+    warehouseId: string | null
+    unitId: string | null
+    quantity: number | null
+    reason: string | null
+    notes: string | null
+    status: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type DisposalVoucherCountAggregateOutputType = {
+    id: number
+    voucherNumber: number
+    date: number
+    productId: number
+    warehouseId: number
+    unitId: number
+    quantity: number
+    reason: number
+    notes: number
+    status: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type DisposalVoucherAvgAggregateInputType = {
+    quantity?: true
+  }
+
+  export type DisposalVoucherSumAggregateInputType = {
+    quantity?: true
+  }
+
+  export type DisposalVoucherMinAggregateInputType = {
+    id?: true
+    voucherNumber?: true
+    date?: true
+    productId?: true
+    warehouseId?: true
+    unitId?: true
+    quantity?: true
+    reason?: true
+    notes?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type DisposalVoucherMaxAggregateInputType = {
+    id?: true
+    voucherNumber?: true
+    date?: true
+    productId?: true
+    warehouseId?: true
+    unitId?: true
+    quantity?: true
+    reason?: true
+    notes?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type DisposalVoucherCountAggregateInputType = {
+    id?: true
+    voucherNumber?: true
+    date?: true
+    productId?: true
+    warehouseId?: true
+    unitId?: true
+    quantity?: true
+    reason?: true
+    notes?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type DisposalVoucherAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DisposalVoucher to aggregate.
+     */
+    where?: DisposalVoucherWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DisposalVouchers to fetch.
+     */
+    orderBy?: DisposalVoucherOrderByWithRelationInput | DisposalVoucherOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: DisposalVoucherWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DisposalVouchers from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DisposalVouchers.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned DisposalVouchers
+    **/
+    _count?: true | DisposalVoucherCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: DisposalVoucherAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: DisposalVoucherSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: DisposalVoucherMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: DisposalVoucherMaxAggregateInputType
+  }
+
+  export type GetDisposalVoucherAggregateType<T extends DisposalVoucherAggregateArgs> = {
+        [P in keyof T & keyof AggregateDisposalVoucher]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateDisposalVoucher[P]>
+      : GetScalarType<T[P], AggregateDisposalVoucher[P]>
+  }
+
+
+
+
+  export type DisposalVoucherGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: DisposalVoucherWhereInput
+    orderBy?: DisposalVoucherOrderByWithAggregationInput | DisposalVoucherOrderByWithAggregationInput[]
+    by: DisposalVoucherScalarFieldEnum[] | DisposalVoucherScalarFieldEnum
+    having?: DisposalVoucherScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: DisposalVoucherCountAggregateInputType | true
+    _avg?: DisposalVoucherAvgAggregateInputType
+    _sum?: DisposalVoucherSumAggregateInputType
+    _min?: DisposalVoucherMinAggregateInputType
+    _max?: DisposalVoucherMaxAggregateInputType
+  }
+
+  export type DisposalVoucherGroupByOutputType = {
+    id: string
+    voucherNumber: string
+    date: Date
+    productId: string
+    warehouseId: string
+    unitId: string | null
+    quantity: number
+    reason: string
+    notes: string | null
+    status: string
+    createdAt: Date
+    updatedAt: Date
+    _count: DisposalVoucherCountAggregateOutputType | null
+    _avg: DisposalVoucherAvgAggregateOutputType | null
+    _sum: DisposalVoucherSumAggregateOutputType | null
+    _min: DisposalVoucherMinAggregateOutputType | null
+    _max: DisposalVoucherMaxAggregateOutputType | null
+  }
+
+  type GetDisposalVoucherGroupByPayload<T extends DisposalVoucherGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<DisposalVoucherGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof DisposalVoucherGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], DisposalVoucherGroupByOutputType[P]>
+            : GetScalarType<T[P], DisposalVoucherGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type DisposalVoucherSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    voucherNumber?: boolean
+    date?: boolean
+    productId?: boolean
+    warehouseId?: boolean
+    unitId?: boolean
+    quantity?: boolean
+    reason?: boolean
+    notes?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    product?: boolean | ProductDefaultArgs<ExtArgs>
+    warehouse?: boolean | WarehouseDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["disposalVoucher"]>
+
+  export type DisposalVoucherSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    voucherNumber?: boolean
+    date?: boolean
+    productId?: boolean
+    warehouseId?: boolean
+    unitId?: boolean
+    quantity?: boolean
+    reason?: boolean
+    notes?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    product?: boolean | ProductDefaultArgs<ExtArgs>
+    warehouse?: boolean | WarehouseDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["disposalVoucher"]>
+
+  export type DisposalVoucherSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    voucherNumber?: boolean
+    date?: boolean
+    productId?: boolean
+    warehouseId?: boolean
+    unitId?: boolean
+    quantity?: boolean
+    reason?: boolean
+    notes?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    product?: boolean | ProductDefaultArgs<ExtArgs>
+    warehouse?: boolean | WarehouseDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["disposalVoucher"]>
+
+  export type DisposalVoucherSelectScalar = {
+    id?: boolean
+    voucherNumber?: boolean
+    date?: boolean
+    productId?: boolean
+    warehouseId?: boolean
+    unitId?: boolean
+    quantity?: boolean
+    reason?: boolean
+    notes?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type DisposalVoucherOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "voucherNumber" | "date" | "productId" | "warehouseId" | "unitId" | "quantity" | "reason" | "notes" | "status" | "createdAt" | "updatedAt", ExtArgs["result"]["disposalVoucher"]>
+  export type DisposalVoucherInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    product?: boolean | ProductDefaultArgs<ExtArgs>
+    warehouse?: boolean | WarehouseDefaultArgs<ExtArgs>
+  }
+  export type DisposalVoucherIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    product?: boolean | ProductDefaultArgs<ExtArgs>
+    warehouse?: boolean | WarehouseDefaultArgs<ExtArgs>
+  }
+  export type DisposalVoucherIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    product?: boolean | ProductDefaultArgs<ExtArgs>
+    warehouse?: boolean | WarehouseDefaultArgs<ExtArgs>
+  }
+
+  export type $DisposalVoucherPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "DisposalVoucher"
+    objects: {
+      product: Prisma.$ProductPayload<ExtArgs>
+      warehouse: Prisma.$WarehousePayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      voucherNumber: string
+      date: Date
+      productId: string
+      warehouseId: string
+      unitId: string | null
+      quantity: number
+      reason: string
+      notes: string | null
+      status: string
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["disposalVoucher"]>
+    composites: {}
+  }
+
+  type DisposalVoucherGetPayload<S extends boolean | null | undefined | DisposalVoucherDefaultArgs> = $Result.GetResult<Prisma.$DisposalVoucherPayload, S>
+
+  type DisposalVoucherCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<DisposalVoucherFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: DisposalVoucherCountAggregateInputType | true
+    }
+
+  export interface DisposalVoucherDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['DisposalVoucher'], meta: { name: 'DisposalVoucher' } }
+    /**
+     * Find zero or one DisposalVoucher that matches the filter.
+     * @param {DisposalVoucherFindUniqueArgs} args - Arguments to find a DisposalVoucher
+     * @example
+     * // Get one DisposalVoucher
+     * const disposalVoucher = await prisma.disposalVoucher.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends DisposalVoucherFindUniqueArgs>(args: SelectSubset<T, DisposalVoucherFindUniqueArgs<ExtArgs>>): Prisma__DisposalVoucherClient<$Result.GetResult<Prisma.$DisposalVoucherPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one DisposalVoucher that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {DisposalVoucherFindUniqueOrThrowArgs} args - Arguments to find a DisposalVoucher
+     * @example
+     * // Get one DisposalVoucher
+     * const disposalVoucher = await prisma.disposalVoucher.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends DisposalVoucherFindUniqueOrThrowArgs>(args: SelectSubset<T, DisposalVoucherFindUniqueOrThrowArgs<ExtArgs>>): Prisma__DisposalVoucherClient<$Result.GetResult<Prisma.$DisposalVoucherPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first DisposalVoucher that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DisposalVoucherFindFirstArgs} args - Arguments to find a DisposalVoucher
+     * @example
+     * // Get one DisposalVoucher
+     * const disposalVoucher = await prisma.disposalVoucher.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends DisposalVoucherFindFirstArgs>(args?: SelectSubset<T, DisposalVoucherFindFirstArgs<ExtArgs>>): Prisma__DisposalVoucherClient<$Result.GetResult<Prisma.$DisposalVoucherPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first DisposalVoucher that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DisposalVoucherFindFirstOrThrowArgs} args - Arguments to find a DisposalVoucher
+     * @example
+     * // Get one DisposalVoucher
+     * const disposalVoucher = await prisma.disposalVoucher.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends DisposalVoucherFindFirstOrThrowArgs>(args?: SelectSubset<T, DisposalVoucherFindFirstOrThrowArgs<ExtArgs>>): Prisma__DisposalVoucherClient<$Result.GetResult<Prisma.$DisposalVoucherPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more DisposalVouchers that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DisposalVoucherFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all DisposalVouchers
+     * const disposalVouchers = await prisma.disposalVoucher.findMany()
+     * 
+     * // Get first 10 DisposalVouchers
+     * const disposalVouchers = await prisma.disposalVoucher.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const disposalVoucherWithIdOnly = await prisma.disposalVoucher.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends DisposalVoucherFindManyArgs>(args?: SelectSubset<T, DisposalVoucherFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DisposalVoucherPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a DisposalVoucher.
+     * @param {DisposalVoucherCreateArgs} args - Arguments to create a DisposalVoucher.
+     * @example
+     * // Create one DisposalVoucher
+     * const DisposalVoucher = await prisma.disposalVoucher.create({
+     *   data: {
+     *     // ... data to create a DisposalVoucher
+     *   }
+     * })
+     * 
+     */
+    create<T extends DisposalVoucherCreateArgs>(args: SelectSubset<T, DisposalVoucherCreateArgs<ExtArgs>>): Prisma__DisposalVoucherClient<$Result.GetResult<Prisma.$DisposalVoucherPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many DisposalVouchers.
+     * @param {DisposalVoucherCreateManyArgs} args - Arguments to create many DisposalVouchers.
+     * @example
+     * // Create many DisposalVouchers
+     * const disposalVoucher = await prisma.disposalVoucher.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends DisposalVoucherCreateManyArgs>(args?: SelectSubset<T, DisposalVoucherCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many DisposalVouchers and returns the data saved in the database.
+     * @param {DisposalVoucherCreateManyAndReturnArgs} args - Arguments to create many DisposalVouchers.
+     * @example
+     * // Create many DisposalVouchers
+     * const disposalVoucher = await prisma.disposalVoucher.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many DisposalVouchers and only return the `id`
+     * const disposalVoucherWithIdOnly = await prisma.disposalVoucher.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends DisposalVoucherCreateManyAndReturnArgs>(args?: SelectSubset<T, DisposalVoucherCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DisposalVoucherPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a DisposalVoucher.
+     * @param {DisposalVoucherDeleteArgs} args - Arguments to delete one DisposalVoucher.
+     * @example
+     * // Delete one DisposalVoucher
+     * const DisposalVoucher = await prisma.disposalVoucher.delete({
+     *   where: {
+     *     // ... filter to delete one DisposalVoucher
+     *   }
+     * })
+     * 
+     */
+    delete<T extends DisposalVoucherDeleteArgs>(args: SelectSubset<T, DisposalVoucherDeleteArgs<ExtArgs>>): Prisma__DisposalVoucherClient<$Result.GetResult<Prisma.$DisposalVoucherPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one DisposalVoucher.
+     * @param {DisposalVoucherUpdateArgs} args - Arguments to update one DisposalVoucher.
+     * @example
+     * // Update one DisposalVoucher
+     * const disposalVoucher = await prisma.disposalVoucher.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends DisposalVoucherUpdateArgs>(args: SelectSubset<T, DisposalVoucherUpdateArgs<ExtArgs>>): Prisma__DisposalVoucherClient<$Result.GetResult<Prisma.$DisposalVoucherPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more DisposalVouchers.
+     * @param {DisposalVoucherDeleteManyArgs} args - Arguments to filter DisposalVouchers to delete.
+     * @example
+     * // Delete a few DisposalVouchers
+     * const { count } = await prisma.disposalVoucher.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends DisposalVoucherDeleteManyArgs>(args?: SelectSubset<T, DisposalVoucherDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more DisposalVouchers.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DisposalVoucherUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many DisposalVouchers
+     * const disposalVoucher = await prisma.disposalVoucher.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends DisposalVoucherUpdateManyArgs>(args: SelectSubset<T, DisposalVoucherUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more DisposalVouchers and returns the data updated in the database.
+     * @param {DisposalVoucherUpdateManyAndReturnArgs} args - Arguments to update many DisposalVouchers.
+     * @example
+     * // Update many DisposalVouchers
+     * const disposalVoucher = await prisma.disposalVoucher.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more DisposalVouchers and only return the `id`
+     * const disposalVoucherWithIdOnly = await prisma.disposalVoucher.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends DisposalVoucherUpdateManyAndReturnArgs>(args: SelectSubset<T, DisposalVoucherUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DisposalVoucherPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one DisposalVoucher.
+     * @param {DisposalVoucherUpsertArgs} args - Arguments to update or create a DisposalVoucher.
+     * @example
+     * // Update or create a DisposalVoucher
+     * const disposalVoucher = await prisma.disposalVoucher.upsert({
+     *   create: {
+     *     // ... data to create a DisposalVoucher
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the DisposalVoucher we want to update
+     *   }
+     * })
+     */
+    upsert<T extends DisposalVoucherUpsertArgs>(args: SelectSubset<T, DisposalVoucherUpsertArgs<ExtArgs>>): Prisma__DisposalVoucherClient<$Result.GetResult<Prisma.$DisposalVoucherPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of DisposalVouchers.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DisposalVoucherCountArgs} args - Arguments to filter DisposalVouchers to count.
+     * @example
+     * // Count the number of DisposalVouchers
+     * const count = await prisma.disposalVoucher.count({
+     *   where: {
+     *     // ... the filter for the DisposalVouchers we want to count
+     *   }
+     * })
+    **/
+    count<T extends DisposalVoucherCountArgs>(
+      args?: Subset<T, DisposalVoucherCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], DisposalVoucherCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a DisposalVoucher.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DisposalVoucherAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends DisposalVoucherAggregateArgs>(args: Subset<T, DisposalVoucherAggregateArgs>): Prisma.PrismaPromise<GetDisposalVoucherAggregateType<T>>
+
+    /**
+     * Group by DisposalVoucher.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DisposalVoucherGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends DisposalVoucherGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: DisposalVoucherGroupByArgs['orderBy'] }
+        : { orderBy?: DisposalVoucherGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, DisposalVoucherGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetDisposalVoucherGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the DisposalVoucher model
+   */
+  readonly fields: DisposalVoucherFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for DisposalVoucher.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__DisposalVoucherClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    product<T extends ProductDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ProductDefaultArgs<ExtArgs>>): Prisma__ProductClient<$Result.GetResult<Prisma.$ProductPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    warehouse<T extends WarehouseDefaultArgs<ExtArgs> = {}>(args?: Subset<T, WarehouseDefaultArgs<ExtArgs>>): Prisma__WarehouseClient<$Result.GetResult<Prisma.$WarehousePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the DisposalVoucher model
+   */
+  interface DisposalVoucherFieldRefs {
+    readonly id: FieldRef<"DisposalVoucher", 'String'>
+    readonly voucherNumber: FieldRef<"DisposalVoucher", 'String'>
+    readonly date: FieldRef<"DisposalVoucher", 'DateTime'>
+    readonly productId: FieldRef<"DisposalVoucher", 'String'>
+    readonly warehouseId: FieldRef<"DisposalVoucher", 'String'>
+    readonly unitId: FieldRef<"DisposalVoucher", 'String'>
+    readonly quantity: FieldRef<"DisposalVoucher", 'Float'>
+    readonly reason: FieldRef<"DisposalVoucher", 'String'>
+    readonly notes: FieldRef<"DisposalVoucher", 'String'>
+    readonly status: FieldRef<"DisposalVoucher", 'String'>
+    readonly createdAt: FieldRef<"DisposalVoucher", 'DateTime'>
+    readonly updatedAt: FieldRef<"DisposalVoucher", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * DisposalVoucher findUnique
+   */
+  export type DisposalVoucherFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DisposalVoucher
+     */
+    select?: DisposalVoucherSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DisposalVoucher
+     */
+    omit?: DisposalVoucherOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DisposalVoucherInclude<ExtArgs> | null
+    /**
+     * Filter, which DisposalVoucher to fetch.
+     */
+    where: DisposalVoucherWhereUniqueInput
+  }
+
+  /**
+   * DisposalVoucher findUniqueOrThrow
+   */
+  export type DisposalVoucherFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DisposalVoucher
+     */
+    select?: DisposalVoucherSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DisposalVoucher
+     */
+    omit?: DisposalVoucherOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DisposalVoucherInclude<ExtArgs> | null
+    /**
+     * Filter, which DisposalVoucher to fetch.
+     */
+    where: DisposalVoucherWhereUniqueInput
+  }
+
+  /**
+   * DisposalVoucher findFirst
+   */
+  export type DisposalVoucherFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DisposalVoucher
+     */
+    select?: DisposalVoucherSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DisposalVoucher
+     */
+    omit?: DisposalVoucherOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DisposalVoucherInclude<ExtArgs> | null
+    /**
+     * Filter, which DisposalVoucher to fetch.
+     */
+    where?: DisposalVoucherWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DisposalVouchers to fetch.
+     */
+    orderBy?: DisposalVoucherOrderByWithRelationInput | DisposalVoucherOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DisposalVouchers.
+     */
+    cursor?: DisposalVoucherWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DisposalVouchers from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DisposalVouchers.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DisposalVouchers.
+     */
+    distinct?: DisposalVoucherScalarFieldEnum | DisposalVoucherScalarFieldEnum[]
+  }
+
+  /**
+   * DisposalVoucher findFirstOrThrow
+   */
+  export type DisposalVoucherFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DisposalVoucher
+     */
+    select?: DisposalVoucherSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DisposalVoucher
+     */
+    omit?: DisposalVoucherOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DisposalVoucherInclude<ExtArgs> | null
+    /**
+     * Filter, which DisposalVoucher to fetch.
+     */
+    where?: DisposalVoucherWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DisposalVouchers to fetch.
+     */
+    orderBy?: DisposalVoucherOrderByWithRelationInput | DisposalVoucherOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DisposalVouchers.
+     */
+    cursor?: DisposalVoucherWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DisposalVouchers from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DisposalVouchers.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DisposalVouchers.
+     */
+    distinct?: DisposalVoucherScalarFieldEnum | DisposalVoucherScalarFieldEnum[]
+  }
+
+  /**
+   * DisposalVoucher findMany
+   */
+  export type DisposalVoucherFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DisposalVoucher
+     */
+    select?: DisposalVoucherSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DisposalVoucher
+     */
+    omit?: DisposalVoucherOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DisposalVoucherInclude<ExtArgs> | null
+    /**
+     * Filter, which DisposalVouchers to fetch.
+     */
+    where?: DisposalVoucherWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DisposalVouchers to fetch.
+     */
+    orderBy?: DisposalVoucherOrderByWithRelationInput | DisposalVoucherOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing DisposalVouchers.
+     */
+    cursor?: DisposalVoucherWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DisposalVouchers from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DisposalVouchers.
+     */
+    skip?: number
+    distinct?: DisposalVoucherScalarFieldEnum | DisposalVoucherScalarFieldEnum[]
+  }
+
+  /**
+   * DisposalVoucher create
+   */
+  export type DisposalVoucherCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DisposalVoucher
+     */
+    select?: DisposalVoucherSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DisposalVoucher
+     */
+    omit?: DisposalVoucherOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DisposalVoucherInclude<ExtArgs> | null
+    /**
+     * The data needed to create a DisposalVoucher.
+     */
+    data: XOR<DisposalVoucherCreateInput, DisposalVoucherUncheckedCreateInput>
+  }
+
+  /**
+   * DisposalVoucher createMany
+   */
+  export type DisposalVoucherCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many DisposalVouchers.
+     */
+    data: DisposalVoucherCreateManyInput | DisposalVoucherCreateManyInput[]
+  }
+
+  /**
+   * DisposalVoucher createManyAndReturn
+   */
+  export type DisposalVoucherCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DisposalVoucher
+     */
+    select?: DisposalVoucherSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the DisposalVoucher
+     */
+    omit?: DisposalVoucherOmit<ExtArgs> | null
+    /**
+     * The data used to create many DisposalVouchers.
+     */
+    data: DisposalVoucherCreateManyInput | DisposalVoucherCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DisposalVoucherIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * DisposalVoucher update
+   */
+  export type DisposalVoucherUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DisposalVoucher
+     */
+    select?: DisposalVoucherSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DisposalVoucher
+     */
+    omit?: DisposalVoucherOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DisposalVoucherInclude<ExtArgs> | null
+    /**
+     * The data needed to update a DisposalVoucher.
+     */
+    data: XOR<DisposalVoucherUpdateInput, DisposalVoucherUncheckedUpdateInput>
+    /**
+     * Choose, which DisposalVoucher to update.
+     */
+    where: DisposalVoucherWhereUniqueInput
+  }
+
+  /**
+   * DisposalVoucher updateMany
+   */
+  export type DisposalVoucherUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update DisposalVouchers.
+     */
+    data: XOR<DisposalVoucherUpdateManyMutationInput, DisposalVoucherUncheckedUpdateManyInput>
+    /**
+     * Filter which DisposalVouchers to update
+     */
+    where?: DisposalVoucherWhereInput
+    /**
+     * Limit how many DisposalVouchers to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * DisposalVoucher updateManyAndReturn
+   */
+  export type DisposalVoucherUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DisposalVoucher
+     */
+    select?: DisposalVoucherSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the DisposalVoucher
+     */
+    omit?: DisposalVoucherOmit<ExtArgs> | null
+    /**
+     * The data used to update DisposalVouchers.
+     */
+    data: XOR<DisposalVoucherUpdateManyMutationInput, DisposalVoucherUncheckedUpdateManyInput>
+    /**
+     * Filter which DisposalVouchers to update
+     */
+    where?: DisposalVoucherWhereInput
+    /**
+     * Limit how many DisposalVouchers to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DisposalVoucherIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * DisposalVoucher upsert
+   */
+  export type DisposalVoucherUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DisposalVoucher
+     */
+    select?: DisposalVoucherSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DisposalVoucher
+     */
+    omit?: DisposalVoucherOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DisposalVoucherInclude<ExtArgs> | null
+    /**
+     * The filter to search for the DisposalVoucher to update in case it exists.
+     */
+    where: DisposalVoucherWhereUniqueInput
+    /**
+     * In case the DisposalVoucher found by the `where` argument doesn't exist, create a new DisposalVoucher with this data.
+     */
+    create: XOR<DisposalVoucherCreateInput, DisposalVoucherUncheckedCreateInput>
+    /**
+     * In case the DisposalVoucher was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<DisposalVoucherUpdateInput, DisposalVoucherUncheckedUpdateInput>
+  }
+
+  /**
+   * DisposalVoucher delete
+   */
+  export type DisposalVoucherDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DisposalVoucher
+     */
+    select?: DisposalVoucherSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DisposalVoucher
+     */
+    omit?: DisposalVoucherOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DisposalVoucherInclude<ExtArgs> | null
+    /**
+     * Filter which DisposalVoucher to delete.
+     */
+    where: DisposalVoucherWhereUniqueInput
+  }
+
+  /**
+   * DisposalVoucher deleteMany
+   */
+  export type DisposalVoucherDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DisposalVouchers to delete
+     */
+    where?: DisposalVoucherWhereInput
+    /**
+     * Limit how many DisposalVouchers to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * DisposalVoucher without action
+   */
+  export type DisposalVoucherDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DisposalVoucher
+     */
+    select?: DisposalVoucherSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DisposalVoucher
+     */
+    omit?: DisposalVoucherOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DisposalVoucherInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -33762,6 +36416,7 @@ export namespace Prisma {
     id: 'id',
     invoiceId: 'invoiceId',
     productId: 'productId',
+    unitId: 'unitId',
     quantity: 'quantity',
     unitPrice: 'unitPrice',
     total: 'total'
@@ -33774,6 +36429,7 @@ export namespace Prisma {
     id: 'id',
     invoiceId: 'invoiceId',
     productId: 'productId',
+    unitId: 'unitId',
     quantity: 'quantity',
     unitPrice: 'unitPrice',
     total: 'total'
@@ -33810,6 +36466,8 @@ export namespace Prisma {
     id: 'id',
     productId: 'productId',
     warehouseId: 'warehouseId',
+    unitId: 'unitId',
+    unitName: 'unitName',
     date: 'date',
     type: 'type',
     quantity: 'quantity',
@@ -34017,6 +36675,45 @@ export namespace Prisma {
   };
 
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+  export const EmployeeScalarFieldEnum: {
+    id: 'id',
+    code: 'code',
+    name: 'name',
+    nameAr: 'nameAr',
+    jobTitle: 'jobTitle',
+    jobTitleAr: 'jobTitleAr',
+    department: 'department',
+    basicSalary: 'basicSalary',
+    joinDate: 'joinDate',
+    status: 'status',
+    phone: 'phone',
+    email: 'email',
+    address: 'address',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type EmployeeScalarFieldEnum = (typeof EmployeeScalarFieldEnum)[keyof typeof EmployeeScalarFieldEnum]
+
+
+  export const DisposalVoucherScalarFieldEnum: {
+    id: 'id',
+    voucherNumber: 'voucherNumber',
+    date: 'date',
+    productId: 'productId',
+    warehouseId: 'warehouseId',
+    unitId: 'unitId',
+    quantity: 'quantity',
+    reason: 'reason',
+    notes: 'notes',
+    status: 'status',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type DisposalVoucherScalarFieldEnum = (typeof DisposalVoucherScalarFieldEnum)[keyof typeof DisposalVoucherScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -34264,6 +36961,7 @@ export namespace Prisma {
     transfersTo?: StockTransferListRelationFilter
     transfersFrom?: StockTransferListRelationFilter
     stockItems?: WarehouseStockListRelationFilter
+    disposalVouchers?: DisposalVoucherListRelationFilter
   }
 
   export type WarehouseOrderByWithRelationInput = {
@@ -34282,6 +36980,7 @@ export namespace Prisma {
     transfersTo?: StockTransferOrderByRelationAggregateInput
     transfersFrom?: StockTransferOrderByRelationAggregateInput
     stockItems?: WarehouseStockOrderByRelationAggregateInput
+    disposalVouchers?: DisposalVoucherOrderByRelationAggregateInput
   }
 
   export type WarehouseWhereUniqueInput = Prisma.AtLeast<{
@@ -34303,6 +37002,7 @@ export namespace Prisma {
     transfersTo?: StockTransferListRelationFilter
     transfersFrom?: StockTransferListRelationFilter
     stockItems?: WarehouseStockListRelationFilter
+    disposalVouchers?: DisposalVoucherListRelationFilter
   }, "id" | "code">
 
   export type WarehouseOrderByWithAggregationInput = {
@@ -34422,6 +37122,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemListRelationFilter
     transfers?: StockTransferItemListRelationFilter
     warehouseStocks?: WarehouseStockListRelationFilter
+    disposalVouchers?: DisposalVoucherListRelationFilter
   }
 
   export type ProductOrderByWithRelationInput = {
@@ -34456,6 +37157,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemOrderByRelationAggregateInput
     transfers?: StockTransferItemOrderByRelationAggregateInput
     warehouseStocks?: WarehouseStockOrderByRelationAggregateInput
+    disposalVouchers?: DisposalVoucherOrderByRelationAggregateInput
   }
 
   export type ProductWhereUniqueInput = Prisma.AtLeast<{
@@ -34493,6 +37195,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemListRelationFilter
     transfers?: StockTransferItemListRelationFilter
     warehouseStocks?: WarehouseStockListRelationFilter
+    disposalVouchers?: DisposalVoucherListRelationFilter
   }, "id" | "sku">
 
   export type ProductOrderByWithAggregationInput = {
@@ -34769,6 +37472,7 @@ export namespace Prisma {
     id?: StringFilter<"InvoiceItem"> | string
     invoiceId?: StringFilter<"InvoiceItem"> | string
     productId?: StringFilter<"InvoiceItem"> | string
+    unitId?: StringNullableFilter<"InvoiceItem"> | string | null
     quantity?: FloatFilter<"InvoiceItem"> | number
     unitPrice?: FloatFilter<"InvoiceItem"> | number
     total?: FloatFilter<"InvoiceItem"> | number
@@ -34780,6 +37484,7 @@ export namespace Prisma {
     id?: SortOrder
     invoiceId?: SortOrder
     productId?: SortOrder
+    unitId?: SortOrderInput | SortOrder
     quantity?: SortOrder
     unitPrice?: SortOrder
     total?: SortOrder
@@ -34794,6 +37499,7 @@ export namespace Prisma {
     NOT?: InvoiceItemWhereInput | InvoiceItemWhereInput[]
     invoiceId?: StringFilter<"InvoiceItem"> | string
     productId?: StringFilter<"InvoiceItem"> | string
+    unitId?: StringNullableFilter<"InvoiceItem"> | string | null
     quantity?: FloatFilter<"InvoiceItem"> | number
     unitPrice?: FloatFilter<"InvoiceItem"> | number
     total?: FloatFilter<"InvoiceItem"> | number
@@ -34805,6 +37511,7 @@ export namespace Prisma {
     id?: SortOrder
     invoiceId?: SortOrder
     productId?: SortOrder
+    unitId?: SortOrderInput | SortOrder
     quantity?: SortOrder
     unitPrice?: SortOrder
     total?: SortOrder
@@ -34822,6 +37529,7 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"InvoiceItem"> | string
     invoiceId?: StringWithAggregatesFilter<"InvoiceItem"> | string
     productId?: StringWithAggregatesFilter<"InvoiceItem"> | string
+    unitId?: StringNullableWithAggregatesFilter<"InvoiceItem"> | string | null
     quantity?: FloatWithAggregatesFilter<"InvoiceItem"> | number
     unitPrice?: FloatWithAggregatesFilter<"InvoiceItem"> | number
     total?: FloatWithAggregatesFilter<"InvoiceItem"> | number
@@ -34834,6 +37542,7 @@ export namespace Prisma {
     id?: StringFilter<"PurchaseItem"> | string
     invoiceId?: StringFilter<"PurchaseItem"> | string
     productId?: StringFilter<"PurchaseItem"> | string
+    unitId?: StringNullableFilter<"PurchaseItem"> | string | null
     quantity?: FloatFilter<"PurchaseItem"> | number
     unitPrice?: FloatFilter<"PurchaseItem"> | number
     total?: FloatFilter<"PurchaseItem"> | number
@@ -34845,6 +37554,7 @@ export namespace Prisma {
     id?: SortOrder
     invoiceId?: SortOrder
     productId?: SortOrder
+    unitId?: SortOrderInput | SortOrder
     quantity?: SortOrder
     unitPrice?: SortOrder
     total?: SortOrder
@@ -34859,6 +37569,7 @@ export namespace Prisma {
     NOT?: PurchaseItemWhereInput | PurchaseItemWhereInput[]
     invoiceId?: StringFilter<"PurchaseItem"> | string
     productId?: StringFilter<"PurchaseItem"> | string
+    unitId?: StringNullableFilter<"PurchaseItem"> | string | null
     quantity?: FloatFilter<"PurchaseItem"> | number
     unitPrice?: FloatFilter<"PurchaseItem"> | number
     total?: FloatFilter<"PurchaseItem"> | number
@@ -34870,6 +37581,7 @@ export namespace Prisma {
     id?: SortOrder
     invoiceId?: SortOrder
     productId?: SortOrder
+    unitId?: SortOrderInput | SortOrder
     quantity?: SortOrder
     unitPrice?: SortOrder
     total?: SortOrder
@@ -34887,6 +37599,7 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"PurchaseItem"> | string
     invoiceId?: StringWithAggregatesFilter<"PurchaseItem"> | string
     productId?: StringWithAggregatesFilter<"PurchaseItem"> | string
+    unitId?: StringNullableWithAggregatesFilter<"PurchaseItem"> | string | null
     quantity?: FloatWithAggregatesFilter<"PurchaseItem"> | number
     unitPrice?: FloatWithAggregatesFilter<"PurchaseItem"> | number
     total?: FloatWithAggregatesFilter<"PurchaseItem"> | number
@@ -35030,6 +37743,8 @@ export namespace Prisma {
     id?: StringFilter<"InventoryLog"> | string
     productId?: StringFilter<"InventoryLog"> | string
     warehouseId?: StringNullableFilter<"InventoryLog"> | string | null
+    unitId?: StringNullableFilter<"InventoryLog"> | string | null
+    unitName?: StringNullableFilter<"InventoryLog"> | string | null
     date?: DateTimeFilter<"InventoryLog"> | Date | string
     type?: StringFilter<"InventoryLog"> | string
     quantity?: FloatFilter<"InventoryLog"> | number
@@ -35043,6 +37758,8 @@ export namespace Prisma {
     id?: SortOrder
     productId?: SortOrder
     warehouseId?: SortOrderInput | SortOrder
+    unitId?: SortOrderInput | SortOrder
+    unitName?: SortOrderInput | SortOrder
     date?: SortOrder
     type?: SortOrder
     quantity?: SortOrder
@@ -35059,6 +37776,8 @@ export namespace Prisma {
     NOT?: InventoryLogWhereInput | InventoryLogWhereInput[]
     productId?: StringFilter<"InventoryLog"> | string
     warehouseId?: StringNullableFilter<"InventoryLog"> | string | null
+    unitId?: StringNullableFilter<"InventoryLog"> | string | null
+    unitName?: StringNullableFilter<"InventoryLog"> | string | null
     date?: DateTimeFilter<"InventoryLog"> | Date | string
     type?: StringFilter<"InventoryLog"> | string
     quantity?: FloatFilter<"InventoryLog"> | number
@@ -35072,6 +37791,8 @@ export namespace Prisma {
     id?: SortOrder
     productId?: SortOrder
     warehouseId?: SortOrderInput | SortOrder
+    unitId?: SortOrderInput | SortOrder
+    unitName?: SortOrderInput | SortOrder
     date?: SortOrder
     type?: SortOrder
     quantity?: SortOrder
@@ -35091,6 +37812,8 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"InventoryLog"> | string
     productId?: StringWithAggregatesFilter<"InventoryLog"> | string
     warehouseId?: StringNullableWithAggregatesFilter<"InventoryLog"> | string | null
+    unitId?: StringNullableWithAggregatesFilter<"InventoryLog"> | string | null
+    unitName?: StringNullableWithAggregatesFilter<"InventoryLog"> | string | null
     date?: DateTimeWithAggregatesFilter<"InventoryLog"> | Date | string
     type?: StringWithAggregatesFilter<"InventoryLog"> | string
     quantity?: FloatWithAggregatesFilter<"InventoryLog"> | number
@@ -36183,6 +38906,205 @@ export namespace Prisma {
     permissions?: StringNullableWithAggregatesFilter<"User"> | string | null
   }
 
+  export type EmployeeWhereInput = {
+    AND?: EmployeeWhereInput | EmployeeWhereInput[]
+    OR?: EmployeeWhereInput[]
+    NOT?: EmployeeWhereInput | EmployeeWhereInput[]
+    id?: StringFilter<"Employee"> | string
+    code?: StringFilter<"Employee"> | string
+    name?: StringFilter<"Employee"> | string
+    nameAr?: StringNullableFilter<"Employee"> | string | null
+    jobTitle?: StringNullableFilter<"Employee"> | string | null
+    jobTitleAr?: StringNullableFilter<"Employee"> | string | null
+    department?: StringNullableFilter<"Employee"> | string | null
+    basicSalary?: FloatFilter<"Employee"> | number
+    joinDate?: DateTimeFilter<"Employee"> | Date | string
+    status?: StringFilter<"Employee"> | string
+    phone?: StringNullableFilter<"Employee"> | string | null
+    email?: StringNullableFilter<"Employee"> | string | null
+    address?: StringNullableFilter<"Employee"> | string | null
+    createdAt?: DateTimeFilter<"Employee"> | Date | string
+    updatedAt?: DateTimeFilter<"Employee"> | Date | string
+  }
+
+  export type EmployeeOrderByWithRelationInput = {
+    id?: SortOrder
+    code?: SortOrder
+    name?: SortOrder
+    nameAr?: SortOrderInput | SortOrder
+    jobTitle?: SortOrderInput | SortOrder
+    jobTitleAr?: SortOrderInput | SortOrder
+    department?: SortOrderInput | SortOrder
+    basicSalary?: SortOrder
+    joinDate?: SortOrder
+    status?: SortOrder
+    phone?: SortOrderInput | SortOrder
+    email?: SortOrderInput | SortOrder
+    address?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type EmployeeWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    code?: string
+    AND?: EmployeeWhereInput | EmployeeWhereInput[]
+    OR?: EmployeeWhereInput[]
+    NOT?: EmployeeWhereInput | EmployeeWhereInput[]
+    name?: StringFilter<"Employee"> | string
+    nameAr?: StringNullableFilter<"Employee"> | string | null
+    jobTitle?: StringNullableFilter<"Employee"> | string | null
+    jobTitleAr?: StringNullableFilter<"Employee"> | string | null
+    department?: StringNullableFilter<"Employee"> | string | null
+    basicSalary?: FloatFilter<"Employee"> | number
+    joinDate?: DateTimeFilter<"Employee"> | Date | string
+    status?: StringFilter<"Employee"> | string
+    phone?: StringNullableFilter<"Employee"> | string | null
+    email?: StringNullableFilter<"Employee"> | string | null
+    address?: StringNullableFilter<"Employee"> | string | null
+    createdAt?: DateTimeFilter<"Employee"> | Date | string
+    updatedAt?: DateTimeFilter<"Employee"> | Date | string
+  }, "id" | "code">
+
+  export type EmployeeOrderByWithAggregationInput = {
+    id?: SortOrder
+    code?: SortOrder
+    name?: SortOrder
+    nameAr?: SortOrderInput | SortOrder
+    jobTitle?: SortOrderInput | SortOrder
+    jobTitleAr?: SortOrderInput | SortOrder
+    department?: SortOrderInput | SortOrder
+    basicSalary?: SortOrder
+    joinDate?: SortOrder
+    status?: SortOrder
+    phone?: SortOrderInput | SortOrder
+    email?: SortOrderInput | SortOrder
+    address?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: EmployeeCountOrderByAggregateInput
+    _avg?: EmployeeAvgOrderByAggregateInput
+    _max?: EmployeeMaxOrderByAggregateInput
+    _min?: EmployeeMinOrderByAggregateInput
+    _sum?: EmployeeSumOrderByAggregateInput
+  }
+
+  export type EmployeeScalarWhereWithAggregatesInput = {
+    AND?: EmployeeScalarWhereWithAggregatesInput | EmployeeScalarWhereWithAggregatesInput[]
+    OR?: EmployeeScalarWhereWithAggregatesInput[]
+    NOT?: EmployeeScalarWhereWithAggregatesInput | EmployeeScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Employee"> | string
+    code?: StringWithAggregatesFilter<"Employee"> | string
+    name?: StringWithAggregatesFilter<"Employee"> | string
+    nameAr?: StringNullableWithAggregatesFilter<"Employee"> | string | null
+    jobTitle?: StringNullableWithAggregatesFilter<"Employee"> | string | null
+    jobTitleAr?: StringNullableWithAggregatesFilter<"Employee"> | string | null
+    department?: StringNullableWithAggregatesFilter<"Employee"> | string | null
+    basicSalary?: FloatWithAggregatesFilter<"Employee"> | number
+    joinDate?: DateTimeWithAggregatesFilter<"Employee"> | Date | string
+    status?: StringWithAggregatesFilter<"Employee"> | string
+    phone?: StringNullableWithAggregatesFilter<"Employee"> | string | null
+    email?: StringNullableWithAggregatesFilter<"Employee"> | string | null
+    address?: StringNullableWithAggregatesFilter<"Employee"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"Employee"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Employee"> | Date | string
+  }
+
+  export type DisposalVoucherWhereInput = {
+    AND?: DisposalVoucherWhereInput | DisposalVoucherWhereInput[]
+    OR?: DisposalVoucherWhereInput[]
+    NOT?: DisposalVoucherWhereInput | DisposalVoucherWhereInput[]
+    id?: StringFilter<"DisposalVoucher"> | string
+    voucherNumber?: StringFilter<"DisposalVoucher"> | string
+    date?: DateTimeFilter<"DisposalVoucher"> | Date | string
+    productId?: StringFilter<"DisposalVoucher"> | string
+    warehouseId?: StringFilter<"DisposalVoucher"> | string
+    unitId?: StringNullableFilter<"DisposalVoucher"> | string | null
+    quantity?: FloatFilter<"DisposalVoucher"> | number
+    reason?: StringFilter<"DisposalVoucher"> | string
+    notes?: StringNullableFilter<"DisposalVoucher"> | string | null
+    status?: StringFilter<"DisposalVoucher"> | string
+    createdAt?: DateTimeFilter<"DisposalVoucher"> | Date | string
+    updatedAt?: DateTimeFilter<"DisposalVoucher"> | Date | string
+    product?: XOR<ProductScalarRelationFilter, ProductWhereInput>
+    warehouse?: XOR<WarehouseScalarRelationFilter, WarehouseWhereInput>
+  }
+
+  export type DisposalVoucherOrderByWithRelationInput = {
+    id?: SortOrder
+    voucherNumber?: SortOrder
+    date?: SortOrder
+    productId?: SortOrder
+    warehouseId?: SortOrder
+    unitId?: SortOrderInput | SortOrder
+    quantity?: SortOrder
+    reason?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    product?: ProductOrderByWithRelationInput
+    warehouse?: WarehouseOrderByWithRelationInput
+  }
+
+  export type DisposalVoucherWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    voucherNumber?: string
+    AND?: DisposalVoucherWhereInput | DisposalVoucherWhereInput[]
+    OR?: DisposalVoucherWhereInput[]
+    NOT?: DisposalVoucherWhereInput | DisposalVoucherWhereInput[]
+    date?: DateTimeFilter<"DisposalVoucher"> | Date | string
+    productId?: StringFilter<"DisposalVoucher"> | string
+    warehouseId?: StringFilter<"DisposalVoucher"> | string
+    unitId?: StringNullableFilter<"DisposalVoucher"> | string | null
+    quantity?: FloatFilter<"DisposalVoucher"> | number
+    reason?: StringFilter<"DisposalVoucher"> | string
+    notes?: StringNullableFilter<"DisposalVoucher"> | string | null
+    status?: StringFilter<"DisposalVoucher"> | string
+    createdAt?: DateTimeFilter<"DisposalVoucher"> | Date | string
+    updatedAt?: DateTimeFilter<"DisposalVoucher"> | Date | string
+    product?: XOR<ProductScalarRelationFilter, ProductWhereInput>
+    warehouse?: XOR<WarehouseScalarRelationFilter, WarehouseWhereInput>
+  }, "id" | "voucherNumber">
+
+  export type DisposalVoucherOrderByWithAggregationInput = {
+    id?: SortOrder
+    voucherNumber?: SortOrder
+    date?: SortOrder
+    productId?: SortOrder
+    warehouseId?: SortOrder
+    unitId?: SortOrderInput | SortOrder
+    quantity?: SortOrder
+    reason?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: DisposalVoucherCountOrderByAggregateInput
+    _avg?: DisposalVoucherAvgOrderByAggregateInput
+    _max?: DisposalVoucherMaxOrderByAggregateInput
+    _min?: DisposalVoucherMinOrderByAggregateInput
+    _sum?: DisposalVoucherSumOrderByAggregateInput
+  }
+
+  export type DisposalVoucherScalarWhereWithAggregatesInput = {
+    AND?: DisposalVoucherScalarWhereWithAggregatesInput | DisposalVoucherScalarWhereWithAggregatesInput[]
+    OR?: DisposalVoucherScalarWhereWithAggregatesInput[]
+    NOT?: DisposalVoucherScalarWhereWithAggregatesInput | DisposalVoucherScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"DisposalVoucher"> | string
+    voucherNumber?: StringWithAggregatesFilter<"DisposalVoucher"> | string
+    date?: DateTimeWithAggregatesFilter<"DisposalVoucher"> | Date | string
+    productId?: StringWithAggregatesFilter<"DisposalVoucher"> | string
+    warehouseId?: StringWithAggregatesFilter<"DisposalVoucher"> | string
+    unitId?: StringNullableWithAggregatesFilter<"DisposalVoucher"> | string | null
+    quantity?: FloatWithAggregatesFilter<"DisposalVoucher"> | number
+    reason?: StringWithAggregatesFilter<"DisposalVoucher"> | string
+    notes?: StringNullableWithAggregatesFilter<"DisposalVoucher"> | string | null
+    status?: StringWithAggregatesFilter<"DisposalVoucher"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"DisposalVoucher"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"DisposalVoucher"> | Date | string
+  }
+
   export type CustomerCreateInput = {
     id?: string
     code: string
@@ -36393,6 +39315,7 @@ export namespace Prisma {
     transfersTo?: StockTransferCreateNestedManyWithoutToWarehouseInput
     transfersFrom?: StockTransferCreateNestedManyWithoutFromWarehouseInput
     stockItems?: WarehouseStockCreateNestedManyWithoutWarehouseInput
+    disposalVouchers?: DisposalVoucherCreateNestedManyWithoutWarehouseInput
   }
 
   export type WarehouseUncheckedCreateInput = {
@@ -36411,6 +39334,7 @@ export namespace Prisma {
     transfersTo?: StockTransferUncheckedCreateNestedManyWithoutToWarehouseInput
     transfersFrom?: StockTransferUncheckedCreateNestedManyWithoutFromWarehouseInput
     stockItems?: WarehouseStockUncheckedCreateNestedManyWithoutWarehouseInput
+    disposalVouchers?: DisposalVoucherUncheckedCreateNestedManyWithoutWarehouseInput
   }
 
   export type WarehouseUpdateInput = {
@@ -36429,6 +39353,7 @@ export namespace Prisma {
     transfersTo?: StockTransferUpdateManyWithoutToWarehouseNestedInput
     transfersFrom?: StockTransferUpdateManyWithoutFromWarehouseNestedInput
     stockItems?: WarehouseStockUpdateManyWithoutWarehouseNestedInput
+    disposalVouchers?: DisposalVoucherUpdateManyWithoutWarehouseNestedInput
   }
 
   export type WarehouseUncheckedUpdateInput = {
@@ -36447,6 +39372,7 @@ export namespace Prisma {
     transfersTo?: StockTransferUncheckedUpdateManyWithoutToWarehouseNestedInput
     transfersFrom?: StockTransferUncheckedUpdateManyWithoutFromWarehouseNestedInput
     stockItems?: WarehouseStockUncheckedUpdateManyWithoutWarehouseNestedInput
+    disposalVouchers?: DisposalVoucherUncheckedUpdateManyWithoutWarehouseNestedInput
   }
 
   export type WarehouseCreateManyInput = {
@@ -36556,6 +39482,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemCreateNestedManyWithoutProductInput
     transfers?: StockTransferItemCreateNestedManyWithoutProductInput
     warehouseStocks?: WarehouseStockCreateNestedManyWithoutProductInput
+    disposalVouchers?: DisposalVoucherCreateNestedManyWithoutProductInput
   }
 
   export type ProductUncheckedCreateInput = {
@@ -36588,6 +39515,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUncheckedCreateNestedManyWithoutProductInput
     transfers?: StockTransferItemUncheckedCreateNestedManyWithoutProductInput
     warehouseStocks?: WarehouseStockUncheckedCreateNestedManyWithoutProductInput
+    disposalVouchers?: DisposalVoucherUncheckedCreateNestedManyWithoutProductInput
   }
 
   export type ProductUpdateInput = {
@@ -36620,6 +39548,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUpdateManyWithoutProductNestedInput
     transfers?: StockTransferItemUpdateManyWithoutProductNestedInput
     warehouseStocks?: WarehouseStockUpdateManyWithoutProductNestedInput
+    disposalVouchers?: DisposalVoucherUpdateManyWithoutProductNestedInput
   }
 
   export type ProductUncheckedUpdateInput = {
@@ -36652,6 +39581,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUncheckedUpdateManyWithoutProductNestedInput
     transfers?: StockTransferItemUncheckedUpdateManyWithoutProductNestedInput
     warehouseStocks?: WarehouseStockUncheckedUpdateManyWithoutProductNestedInput
+    disposalVouchers?: DisposalVoucherUncheckedUpdateManyWithoutProductNestedInput
   }
 
   export type ProductCreateManyInput = {
@@ -36950,6 +39880,7 @@ export namespace Prisma {
 
   export type InvoiceItemCreateInput = {
     id?: string
+    unitId?: string | null
     quantity: number
     unitPrice: number
     total: number
@@ -36961,6 +39892,7 @@ export namespace Prisma {
     id?: string
     invoiceId: string
     productId: string
+    unitId?: string | null
     quantity: number
     unitPrice: number
     total: number
@@ -36968,6 +39900,7 @@ export namespace Prisma {
 
   export type InvoiceItemUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     unitPrice?: FloatFieldUpdateOperationsInput | number
     total?: FloatFieldUpdateOperationsInput | number
@@ -36979,6 +39912,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     invoiceId?: StringFieldUpdateOperationsInput | string
     productId?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     unitPrice?: FloatFieldUpdateOperationsInput | number
     total?: FloatFieldUpdateOperationsInput | number
@@ -36988,6 +39922,7 @@ export namespace Prisma {
     id?: string
     invoiceId: string
     productId: string
+    unitId?: string | null
     quantity: number
     unitPrice: number
     total: number
@@ -36995,6 +39930,7 @@ export namespace Prisma {
 
   export type InvoiceItemUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     unitPrice?: FloatFieldUpdateOperationsInput | number
     total?: FloatFieldUpdateOperationsInput | number
@@ -37004,6 +39940,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     invoiceId?: StringFieldUpdateOperationsInput | string
     productId?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     unitPrice?: FloatFieldUpdateOperationsInput | number
     total?: FloatFieldUpdateOperationsInput | number
@@ -37011,6 +39948,7 @@ export namespace Prisma {
 
   export type PurchaseItemCreateInput = {
     id?: string
+    unitId?: string | null
     quantity: number
     unitPrice: number
     total: number
@@ -37022,6 +39960,7 @@ export namespace Prisma {
     id?: string
     invoiceId: string
     productId: string
+    unitId?: string | null
     quantity: number
     unitPrice: number
     total: number
@@ -37029,6 +39968,7 @@ export namespace Prisma {
 
   export type PurchaseItemUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     unitPrice?: FloatFieldUpdateOperationsInput | number
     total?: FloatFieldUpdateOperationsInput | number
@@ -37040,6 +39980,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     invoiceId?: StringFieldUpdateOperationsInput | string
     productId?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     unitPrice?: FloatFieldUpdateOperationsInput | number
     total?: FloatFieldUpdateOperationsInput | number
@@ -37049,6 +39990,7 @@ export namespace Prisma {
     id?: string
     invoiceId: string
     productId: string
+    unitId?: string | null
     quantity: number
     unitPrice: number
     total: number
@@ -37056,6 +39998,7 @@ export namespace Prisma {
 
   export type PurchaseItemUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     unitPrice?: FloatFieldUpdateOperationsInput | number
     total?: FloatFieldUpdateOperationsInput | number
@@ -37065,6 +40008,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     invoiceId?: StringFieldUpdateOperationsInput | string
     productId?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     unitPrice?: FloatFieldUpdateOperationsInput | number
     total?: FloatFieldUpdateOperationsInput | number
@@ -37198,6 +40142,8 @@ export namespace Prisma {
 
   export type InventoryLogCreateInput = {
     id?: string
+    unitId?: string | null
+    unitName?: string | null
     date?: Date | string
     type: string
     quantity: number
@@ -37211,6 +40157,8 @@ export namespace Prisma {
     id?: string
     productId: string
     warehouseId?: string | null
+    unitId?: string | null
+    unitName?: string | null
     date?: Date | string
     type: string
     quantity: number
@@ -37220,6 +40168,8 @@ export namespace Prisma {
 
   export type InventoryLogUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
+    unitName?: NullableStringFieldUpdateOperationsInput | string | null
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     type?: StringFieldUpdateOperationsInput | string
     quantity?: FloatFieldUpdateOperationsInput | number
@@ -37233,6 +40183,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     productId?: StringFieldUpdateOperationsInput | string
     warehouseId?: NullableStringFieldUpdateOperationsInput | string | null
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
+    unitName?: NullableStringFieldUpdateOperationsInput | string | null
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     type?: StringFieldUpdateOperationsInput | string
     quantity?: FloatFieldUpdateOperationsInput | number
@@ -37244,6 +40196,8 @@ export namespace Prisma {
     id?: string
     productId: string
     warehouseId?: string | null
+    unitId?: string | null
+    unitName?: string | null
     date?: Date | string
     type: string
     quantity: number
@@ -37253,6 +40207,8 @@ export namespace Prisma {
 
   export type InventoryLogUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
+    unitName?: NullableStringFieldUpdateOperationsInput | string | null
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     type?: StringFieldUpdateOperationsInput | string
     quantity?: FloatFieldUpdateOperationsInput | number
@@ -37264,6 +40220,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     productId?: StringFieldUpdateOperationsInput | string
     warehouseId?: NullableStringFieldUpdateOperationsInput | string | null
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
+    unitName?: NullableStringFieldUpdateOperationsInput | string | null
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     type?: StringFieldUpdateOperationsInput | string
     quantity?: FloatFieldUpdateOperationsInput | number
@@ -38434,6 +41392,235 @@ export namespace Prisma {
     permissions?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
+  export type EmployeeCreateInput = {
+    id?: string
+    code: string
+    name: string
+    nameAr?: string | null
+    jobTitle?: string | null
+    jobTitleAr?: string | null
+    department?: string | null
+    basicSalary?: number
+    joinDate?: Date | string
+    status?: string
+    phone?: string | null
+    email?: string | null
+    address?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type EmployeeUncheckedCreateInput = {
+    id?: string
+    code: string
+    name: string
+    nameAr?: string | null
+    jobTitle?: string | null
+    jobTitleAr?: string | null
+    department?: string | null
+    basicSalary?: number
+    joinDate?: Date | string
+    status?: string
+    phone?: string | null
+    email?: string | null
+    address?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type EmployeeUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    nameAr?: NullableStringFieldUpdateOperationsInput | string | null
+    jobTitle?: NullableStringFieldUpdateOperationsInput | string | null
+    jobTitleAr?: NullableStringFieldUpdateOperationsInput | string | null
+    department?: NullableStringFieldUpdateOperationsInput | string | null
+    basicSalary?: FloatFieldUpdateOperationsInput | number
+    joinDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type EmployeeUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    nameAr?: NullableStringFieldUpdateOperationsInput | string | null
+    jobTitle?: NullableStringFieldUpdateOperationsInput | string | null
+    jobTitleAr?: NullableStringFieldUpdateOperationsInput | string | null
+    department?: NullableStringFieldUpdateOperationsInput | string | null
+    basicSalary?: FloatFieldUpdateOperationsInput | number
+    joinDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type EmployeeCreateManyInput = {
+    id?: string
+    code: string
+    name: string
+    nameAr?: string | null
+    jobTitle?: string | null
+    jobTitleAr?: string | null
+    department?: string | null
+    basicSalary?: number
+    joinDate?: Date | string
+    status?: string
+    phone?: string | null
+    email?: string | null
+    address?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type EmployeeUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    nameAr?: NullableStringFieldUpdateOperationsInput | string | null
+    jobTitle?: NullableStringFieldUpdateOperationsInput | string | null
+    jobTitleAr?: NullableStringFieldUpdateOperationsInput | string | null
+    department?: NullableStringFieldUpdateOperationsInput | string | null
+    basicSalary?: FloatFieldUpdateOperationsInput | number
+    joinDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type EmployeeUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    nameAr?: NullableStringFieldUpdateOperationsInput | string | null
+    jobTitle?: NullableStringFieldUpdateOperationsInput | string | null
+    jobTitleAr?: NullableStringFieldUpdateOperationsInput | string | null
+    department?: NullableStringFieldUpdateOperationsInput | string | null
+    basicSalary?: FloatFieldUpdateOperationsInput | number
+    joinDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DisposalVoucherCreateInput = {
+    id?: string
+    voucherNumber: string
+    date?: Date | string
+    unitId?: string | null
+    quantity: number
+    reason: string
+    notes?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    product: ProductCreateNestedOneWithoutDisposalVouchersInput
+    warehouse: WarehouseCreateNestedOneWithoutDisposalVouchersInput
+  }
+
+  export type DisposalVoucherUncheckedCreateInput = {
+    id?: string
+    voucherNumber: string
+    date?: Date | string
+    productId: string
+    warehouseId: string
+    unitId?: string | null
+    quantity: number
+    reason: string
+    notes?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type DisposalVoucherUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    voucherNumber?: StringFieldUpdateOperationsInput | string
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: FloatFieldUpdateOperationsInput | number
+    reason?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    product?: ProductUpdateOneRequiredWithoutDisposalVouchersNestedInput
+    warehouse?: WarehouseUpdateOneRequiredWithoutDisposalVouchersNestedInput
+  }
+
+  export type DisposalVoucherUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    voucherNumber?: StringFieldUpdateOperationsInput | string
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    productId?: StringFieldUpdateOperationsInput | string
+    warehouseId?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: FloatFieldUpdateOperationsInput | number
+    reason?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DisposalVoucherCreateManyInput = {
+    id?: string
+    voucherNumber: string
+    date?: Date | string
+    productId: string
+    warehouseId: string
+    unitId?: string | null
+    quantity: number
+    reason: string
+    notes?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type DisposalVoucherUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    voucherNumber?: StringFieldUpdateOperationsInput | string
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: FloatFieldUpdateOperationsInput | number
+    reason?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DisposalVoucherUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    voucherNumber?: StringFieldUpdateOperationsInput | string
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    productId?: StringFieldUpdateOperationsInput | string
+    warehouseId?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: FloatFieldUpdateOperationsInput | number
+    reason?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -38701,6 +41888,12 @@ export namespace Prisma {
     none?: WarehouseStockWhereInput
   }
 
+  export type DisposalVoucherListRelationFilter = {
+    every?: DisposalVoucherWhereInput
+    some?: DisposalVoucherWhereInput
+    none?: DisposalVoucherWhereInput
+  }
+
   export type InventoryLogOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -38714,6 +41907,10 @@ export namespace Prisma {
   }
 
   export type WarehouseStockOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type DisposalVoucherOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -39133,6 +42330,7 @@ export namespace Prisma {
     id?: SortOrder
     invoiceId?: SortOrder
     productId?: SortOrder
+    unitId?: SortOrder
     quantity?: SortOrder
     unitPrice?: SortOrder
     total?: SortOrder
@@ -39148,6 +42346,7 @@ export namespace Prisma {
     id?: SortOrder
     invoiceId?: SortOrder
     productId?: SortOrder
+    unitId?: SortOrder
     quantity?: SortOrder
     unitPrice?: SortOrder
     total?: SortOrder
@@ -39157,6 +42356,7 @@ export namespace Prisma {
     id?: SortOrder
     invoiceId?: SortOrder
     productId?: SortOrder
+    unitId?: SortOrder
     quantity?: SortOrder
     unitPrice?: SortOrder
     total?: SortOrder
@@ -39177,6 +42377,7 @@ export namespace Prisma {
     id?: SortOrder
     invoiceId?: SortOrder
     productId?: SortOrder
+    unitId?: SortOrder
     quantity?: SortOrder
     unitPrice?: SortOrder
     total?: SortOrder
@@ -39192,6 +42393,7 @@ export namespace Prisma {
     id?: SortOrder
     invoiceId?: SortOrder
     productId?: SortOrder
+    unitId?: SortOrder
     quantity?: SortOrder
     unitPrice?: SortOrder
     total?: SortOrder
@@ -39201,6 +42403,7 @@ export namespace Prisma {
     id?: SortOrder
     invoiceId?: SortOrder
     productId?: SortOrder
+    unitId?: SortOrder
     quantity?: SortOrder
     unitPrice?: SortOrder
     total?: SortOrder
@@ -39283,6 +42486,8 @@ export namespace Prisma {
     id?: SortOrder
     productId?: SortOrder
     warehouseId?: SortOrder
+    unitId?: SortOrder
+    unitName?: SortOrder
     date?: SortOrder
     type?: SortOrder
     quantity?: SortOrder
@@ -39298,6 +42503,8 @@ export namespace Prisma {
     id?: SortOrder
     productId?: SortOrder
     warehouseId?: SortOrder
+    unitId?: SortOrder
+    unitName?: SortOrder
     date?: SortOrder
     type?: SortOrder
     quantity?: SortOrder
@@ -39309,6 +42516,8 @@ export namespace Prisma {
     id?: SortOrder
     productId?: SortOrder
     warehouseId?: SortOrder
+    unitId?: SortOrder
+    unitName?: SortOrder
     date?: SortOrder
     type?: SortOrder
     quantity?: SortOrder
@@ -40024,6 +43233,121 @@ export namespace Prisma {
     permissions?: SortOrder
   }
 
+  export type EmployeeCountOrderByAggregateInput = {
+    id?: SortOrder
+    code?: SortOrder
+    name?: SortOrder
+    nameAr?: SortOrder
+    jobTitle?: SortOrder
+    jobTitleAr?: SortOrder
+    department?: SortOrder
+    basicSalary?: SortOrder
+    joinDate?: SortOrder
+    status?: SortOrder
+    phone?: SortOrder
+    email?: SortOrder
+    address?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type EmployeeAvgOrderByAggregateInput = {
+    basicSalary?: SortOrder
+  }
+
+  export type EmployeeMaxOrderByAggregateInput = {
+    id?: SortOrder
+    code?: SortOrder
+    name?: SortOrder
+    nameAr?: SortOrder
+    jobTitle?: SortOrder
+    jobTitleAr?: SortOrder
+    department?: SortOrder
+    basicSalary?: SortOrder
+    joinDate?: SortOrder
+    status?: SortOrder
+    phone?: SortOrder
+    email?: SortOrder
+    address?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type EmployeeMinOrderByAggregateInput = {
+    id?: SortOrder
+    code?: SortOrder
+    name?: SortOrder
+    nameAr?: SortOrder
+    jobTitle?: SortOrder
+    jobTitleAr?: SortOrder
+    department?: SortOrder
+    basicSalary?: SortOrder
+    joinDate?: SortOrder
+    status?: SortOrder
+    phone?: SortOrder
+    email?: SortOrder
+    address?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type EmployeeSumOrderByAggregateInput = {
+    basicSalary?: SortOrder
+  }
+
+  export type DisposalVoucherCountOrderByAggregateInput = {
+    id?: SortOrder
+    voucherNumber?: SortOrder
+    date?: SortOrder
+    productId?: SortOrder
+    warehouseId?: SortOrder
+    unitId?: SortOrder
+    quantity?: SortOrder
+    reason?: SortOrder
+    notes?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DisposalVoucherAvgOrderByAggregateInput = {
+    quantity?: SortOrder
+  }
+
+  export type DisposalVoucherMaxOrderByAggregateInput = {
+    id?: SortOrder
+    voucherNumber?: SortOrder
+    date?: SortOrder
+    productId?: SortOrder
+    warehouseId?: SortOrder
+    unitId?: SortOrder
+    quantity?: SortOrder
+    reason?: SortOrder
+    notes?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DisposalVoucherMinOrderByAggregateInput = {
+    id?: SortOrder
+    voucherNumber?: SortOrder
+    date?: SortOrder
+    productId?: SortOrder
+    warehouseId?: SortOrder
+    unitId?: SortOrder
+    quantity?: SortOrder
+    reason?: SortOrder
+    notes?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DisposalVoucherSumOrderByAggregateInput = {
+    quantity?: SortOrder
+  }
+
   export type SalesInvoiceCreateNestedManyWithoutCustomerInput = {
     create?: XOR<SalesInvoiceCreateWithoutCustomerInput, SalesInvoiceUncheckedCreateWithoutCustomerInput> | SalesInvoiceCreateWithoutCustomerInput[] | SalesInvoiceUncheckedCreateWithoutCustomerInput[]
     connectOrCreate?: SalesInvoiceCreateOrConnectWithoutCustomerInput | SalesInvoiceCreateOrConnectWithoutCustomerInput[]
@@ -40226,6 +43550,13 @@ export namespace Prisma {
     connect?: WarehouseStockWhereUniqueInput | WarehouseStockWhereUniqueInput[]
   }
 
+  export type DisposalVoucherCreateNestedManyWithoutWarehouseInput = {
+    create?: XOR<DisposalVoucherCreateWithoutWarehouseInput, DisposalVoucherUncheckedCreateWithoutWarehouseInput> | DisposalVoucherCreateWithoutWarehouseInput[] | DisposalVoucherUncheckedCreateWithoutWarehouseInput[]
+    connectOrCreate?: DisposalVoucherCreateOrConnectWithoutWarehouseInput | DisposalVoucherCreateOrConnectWithoutWarehouseInput[]
+    createMany?: DisposalVoucherCreateManyWarehouseInputEnvelope
+    connect?: DisposalVoucherWhereUniqueInput | DisposalVoucherWhereUniqueInput[]
+  }
+
   export type InventoryLogUncheckedCreateNestedManyWithoutWarehouseInput = {
     create?: XOR<InventoryLogCreateWithoutWarehouseInput, InventoryLogUncheckedCreateWithoutWarehouseInput> | InventoryLogCreateWithoutWarehouseInput[] | InventoryLogUncheckedCreateWithoutWarehouseInput[]
     connectOrCreate?: InventoryLogCreateOrConnectWithoutWarehouseInput | InventoryLogCreateOrConnectWithoutWarehouseInput[]
@@ -40280,6 +43611,13 @@ export namespace Prisma {
     connectOrCreate?: WarehouseStockCreateOrConnectWithoutWarehouseInput | WarehouseStockCreateOrConnectWithoutWarehouseInput[]
     createMany?: WarehouseStockCreateManyWarehouseInputEnvelope
     connect?: WarehouseStockWhereUniqueInput | WarehouseStockWhereUniqueInput[]
+  }
+
+  export type DisposalVoucherUncheckedCreateNestedManyWithoutWarehouseInput = {
+    create?: XOR<DisposalVoucherCreateWithoutWarehouseInput, DisposalVoucherUncheckedCreateWithoutWarehouseInput> | DisposalVoucherCreateWithoutWarehouseInput[] | DisposalVoucherUncheckedCreateWithoutWarehouseInput[]
+    connectOrCreate?: DisposalVoucherCreateOrConnectWithoutWarehouseInput | DisposalVoucherCreateOrConnectWithoutWarehouseInput[]
+    createMany?: DisposalVoucherCreateManyWarehouseInputEnvelope
+    connect?: DisposalVoucherWhereUniqueInput | DisposalVoucherWhereUniqueInput[]
   }
 
   export type InventoryLogUpdateManyWithoutWarehouseNestedInput = {
@@ -40394,6 +43732,20 @@ export namespace Prisma {
     deleteMany?: WarehouseStockScalarWhereInput | WarehouseStockScalarWhereInput[]
   }
 
+  export type DisposalVoucherUpdateManyWithoutWarehouseNestedInput = {
+    create?: XOR<DisposalVoucherCreateWithoutWarehouseInput, DisposalVoucherUncheckedCreateWithoutWarehouseInput> | DisposalVoucherCreateWithoutWarehouseInput[] | DisposalVoucherUncheckedCreateWithoutWarehouseInput[]
+    connectOrCreate?: DisposalVoucherCreateOrConnectWithoutWarehouseInput | DisposalVoucherCreateOrConnectWithoutWarehouseInput[]
+    upsert?: DisposalVoucherUpsertWithWhereUniqueWithoutWarehouseInput | DisposalVoucherUpsertWithWhereUniqueWithoutWarehouseInput[]
+    createMany?: DisposalVoucherCreateManyWarehouseInputEnvelope
+    set?: DisposalVoucherWhereUniqueInput | DisposalVoucherWhereUniqueInput[]
+    disconnect?: DisposalVoucherWhereUniqueInput | DisposalVoucherWhereUniqueInput[]
+    delete?: DisposalVoucherWhereUniqueInput | DisposalVoucherWhereUniqueInput[]
+    connect?: DisposalVoucherWhereUniqueInput | DisposalVoucherWhereUniqueInput[]
+    update?: DisposalVoucherUpdateWithWhereUniqueWithoutWarehouseInput | DisposalVoucherUpdateWithWhereUniqueWithoutWarehouseInput[]
+    updateMany?: DisposalVoucherUpdateManyWithWhereWithoutWarehouseInput | DisposalVoucherUpdateManyWithWhereWithoutWarehouseInput[]
+    deleteMany?: DisposalVoucherScalarWhereInput | DisposalVoucherScalarWhereInput[]
+  }
+
   export type InventoryLogUncheckedUpdateManyWithoutWarehouseNestedInput = {
     create?: XOR<InventoryLogCreateWithoutWarehouseInput, InventoryLogUncheckedCreateWithoutWarehouseInput> | InventoryLogCreateWithoutWarehouseInput[] | InventoryLogUncheckedCreateWithoutWarehouseInput[]
     connectOrCreate?: InventoryLogCreateOrConnectWithoutWarehouseInput | InventoryLogCreateOrConnectWithoutWarehouseInput[]
@@ -40506,6 +43858,20 @@ export namespace Prisma {
     deleteMany?: WarehouseStockScalarWhereInput | WarehouseStockScalarWhereInput[]
   }
 
+  export type DisposalVoucherUncheckedUpdateManyWithoutWarehouseNestedInput = {
+    create?: XOR<DisposalVoucherCreateWithoutWarehouseInput, DisposalVoucherUncheckedCreateWithoutWarehouseInput> | DisposalVoucherCreateWithoutWarehouseInput[] | DisposalVoucherUncheckedCreateWithoutWarehouseInput[]
+    connectOrCreate?: DisposalVoucherCreateOrConnectWithoutWarehouseInput | DisposalVoucherCreateOrConnectWithoutWarehouseInput[]
+    upsert?: DisposalVoucherUpsertWithWhereUniqueWithoutWarehouseInput | DisposalVoucherUpsertWithWhereUniqueWithoutWarehouseInput[]
+    createMany?: DisposalVoucherCreateManyWarehouseInputEnvelope
+    set?: DisposalVoucherWhereUniqueInput | DisposalVoucherWhereUniqueInput[]
+    disconnect?: DisposalVoucherWhereUniqueInput | DisposalVoucherWhereUniqueInput[]
+    delete?: DisposalVoucherWhereUniqueInput | DisposalVoucherWhereUniqueInput[]
+    connect?: DisposalVoucherWhereUniqueInput | DisposalVoucherWhereUniqueInput[]
+    update?: DisposalVoucherUpdateWithWhereUniqueWithoutWarehouseInput | DisposalVoucherUpdateWithWhereUniqueWithoutWarehouseInput[]
+    updateMany?: DisposalVoucherUpdateManyWithWhereWithoutWarehouseInput | DisposalVoucherUpdateManyWithWhereWithoutWarehouseInput[]
+    deleteMany?: DisposalVoucherScalarWhereInput | DisposalVoucherScalarWhereInput[]
+  }
+
   export type ProductCreateNestedOneWithoutWarehouseStocksInput = {
     create?: XOR<ProductCreateWithoutWarehouseStocksInput, ProductUncheckedCreateWithoutWarehouseStocksInput>
     connectOrCreate?: ProductCreateOrConnectWithoutWarehouseStocksInput
@@ -40616,6 +43982,13 @@ export namespace Prisma {
     connect?: WarehouseStockWhereUniqueInput | WarehouseStockWhereUniqueInput[]
   }
 
+  export type DisposalVoucherCreateNestedManyWithoutProductInput = {
+    create?: XOR<DisposalVoucherCreateWithoutProductInput, DisposalVoucherUncheckedCreateWithoutProductInput> | DisposalVoucherCreateWithoutProductInput[] | DisposalVoucherUncheckedCreateWithoutProductInput[]
+    connectOrCreate?: DisposalVoucherCreateOrConnectWithoutProductInput | DisposalVoucherCreateOrConnectWithoutProductInput[]
+    createMany?: DisposalVoucherCreateManyProductInputEnvelope
+    connect?: DisposalVoucherWhereUniqueInput | DisposalVoucherWhereUniqueInput[]
+  }
+
   export type CostCenterUncheckedCreateNestedManyWithoutProductInput = {
     create?: XOR<CostCenterCreateWithoutProductInput, CostCenterUncheckedCreateWithoutProductInput> | CostCenterCreateWithoutProductInput[] | CostCenterUncheckedCreateWithoutProductInput[]
     connectOrCreate?: CostCenterCreateOrConnectWithoutProductInput | CostCenterCreateOrConnectWithoutProductInput[]
@@ -40684,6 +44057,13 @@ export namespace Prisma {
     connectOrCreate?: WarehouseStockCreateOrConnectWithoutProductInput | WarehouseStockCreateOrConnectWithoutProductInput[]
     createMany?: WarehouseStockCreateManyProductInputEnvelope
     connect?: WarehouseStockWhereUniqueInput | WarehouseStockWhereUniqueInput[]
+  }
+
+  export type DisposalVoucherUncheckedCreateNestedManyWithoutProductInput = {
+    create?: XOR<DisposalVoucherCreateWithoutProductInput, DisposalVoucherUncheckedCreateWithoutProductInput> | DisposalVoucherCreateWithoutProductInput[] | DisposalVoucherUncheckedCreateWithoutProductInput[]
+    connectOrCreate?: DisposalVoucherCreateOrConnectWithoutProductInput | DisposalVoucherCreateOrConnectWithoutProductInput[]
+    createMany?: DisposalVoucherCreateManyProductInputEnvelope
+    connect?: DisposalVoucherWhereUniqueInput | DisposalVoucherWhereUniqueInput[]
   }
 
   export type NullableDateTimeFieldUpdateOperationsInput = {
@@ -40850,6 +44230,20 @@ export namespace Prisma {
     deleteMany?: WarehouseStockScalarWhereInput | WarehouseStockScalarWhereInput[]
   }
 
+  export type DisposalVoucherUpdateManyWithoutProductNestedInput = {
+    create?: XOR<DisposalVoucherCreateWithoutProductInput, DisposalVoucherUncheckedCreateWithoutProductInput> | DisposalVoucherCreateWithoutProductInput[] | DisposalVoucherUncheckedCreateWithoutProductInput[]
+    connectOrCreate?: DisposalVoucherCreateOrConnectWithoutProductInput | DisposalVoucherCreateOrConnectWithoutProductInput[]
+    upsert?: DisposalVoucherUpsertWithWhereUniqueWithoutProductInput | DisposalVoucherUpsertWithWhereUniqueWithoutProductInput[]
+    createMany?: DisposalVoucherCreateManyProductInputEnvelope
+    set?: DisposalVoucherWhereUniqueInput | DisposalVoucherWhereUniqueInput[]
+    disconnect?: DisposalVoucherWhereUniqueInput | DisposalVoucherWhereUniqueInput[]
+    delete?: DisposalVoucherWhereUniqueInput | DisposalVoucherWhereUniqueInput[]
+    connect?: DisposalVoucherWhereUniqueInput | DisposalVoucherWhereUniqueInput[]
+    update?: DisposalVoucherUpdateWithWhereUniqueWithoutProductInput | DisposalVoucherUpdateWithWhereUniqueWithoutProductInput[]
+    updateMany?: DisposalVoucherUpdateManyWithWhereWithoutProductInput | DisposalVoucherUpdateManyWithWhereWithoutProductInput[]
+    deleteMany?: DisposalVoucherScalarWhereInput | DisposalVoucherScalarWhereInput[]
+  }
+
   export type CostCenterUncheckedUpdateManyWithoutProductNestedInput = {
     create?: XOR<CostCenterCreateWithoutProductInput, CostCenterUncheckedCreateWithoutProductInput> | CostCenterCreateWithoutProductInput[] | CostCenterUncheckedCreateWithoutProductInput[]
     connectOrCreate?: CostCenterCreateOrConnectWithoutProductInput | CostCenterCreateOrConnectWithoutProductInput[]
@@ -40988,6 +44382,20 @@ export namespace Prisma {
     update?: WarehouseStockUpdateWithWhereUniqueWithoutProductInput | WarehouseStockUpdateWithWhereUniqueWithoutProductInput[]
     updateMany?: WarehouseStockUpdateManyWithWhereWithoutProductInput | WarehouseStockUpdateManyWithWhereWithoutProductInput[]
     deleteMany?: WarehouseStockScalarWhereInput | WarehouseStockScalarWhereInput[]
+  }
+
+  export type DisposalVoucherUncheckedUpdateManyWithoutProductNestedInput = {
+    create?: XOR<DisposalVoucherCreateWithoutProductInput, DisposalVoucherUncheckedCreateWithoutProductInput> | DisposalVoucherCreateWithoutProductInput[] | DisposalVoucherUncheckedCreateWithoutProductInput[]
+    connectOrCreate?: DisposalVoucherCreateOrConnectWithoutProductInput | DisposalVoucherCreateOrConnectWithoutProductInput[]
+    upsert?: DisposalVoucherUpsertWithWhereUniqueWithoutProductInput | DisposalVoucherUpsertWithWhereUniqueWithoutProductInput[]
+    createMany?: DisposalVoucherCreateManyProductInputEnvelope
+    set?: DisposalVoucherWhereUniqueInput | DisposalVoucherWhereUniqueInput[]
+    disconnect?: DisposalVoucherWhereUniqueInput | DisposalVoucherWhereUniqueInput[]
+    delete?: DisposalVoucherWhereUniqueInput | DisposalVoucherWhereUniqueInput[]
+    connect?: DisposalVoucherWhereUniqueInput | DisposalVoucherWhereUniqueInput[]
+    update?: DisposalVoucherUpdateWithWhereUniqueWithoutProductInput | DisposalVoucherUpdateWithWhereUniqueWithoutProductInput[]
+    updateMany?: DisposalVoucherUpdateManyWithWhereWithoutProductInput | DisposalVoucherUpdateManyWithWhereWithoutProductInput[]
+    deleteMany?: DisposalVoucherScalarWhereInput | DisposalVoucherScalarWhereInput[]
   }
 
   export type InvoiceItemCreateNestedManyWithoutInvoiceInput = {
@@ -42368,6 +45776,34 @@ export namespace Prisma {
     update?: XOR<XOR<ProductionOrderUpdateToOneWithWhereWithoutItemsInput, ProductionOrderUpdateWithoutItemsInput>, ProductionOrderUncheckedUpdateWithoutItemsInput>
   }
 
+  export type ProductCreateNestedOneWithoutDisposalVouchersInput = {
+    create?: XOR<ProductCreateWithoutDisposalVouchersInput, ProductUncheckedCreateWithoutDisposalVouchersInput>
+    connectOrCreate?: ProductCreateOrConnectWithoutDisposalVouchersInput
+    connect?: ProductWhereUniqueInput
+  }
+
+  export type WarehouseCreateNestedOneWithoutDisposalVouchersInput = {
+    create?: XOR<WarehouseCreateWithoutDisposalVouchersInput, WarehouseUncheckedCreateWithoutDisposalVouchersInput>
+    connectOrCreate?: WarehouseCreateOrConnectWithoutDisposalVouchersInput
+    connect?: WarehouseWhereUniqueInput
+  }
+
+  export type ProductUpdateOneRequiredWithoutDisposalVouchersNestedInput = {
+    create?: XOR<ProductCreateWithoutDisposalVouchersInput, ProductUncheckedCreateWithoutDisposalVouchersInput>
+    connectOrCreate?: ProductCreateOrConnectWithoutDisposalVouchersInput
+    upsert?: ProductUpsertWithoutDisposalVouchersInput
+    connect?: ProductWhereUniqueInput
+    update?: XOR<XOR<ProductUpdateToOneWithWhereWithoutDisposalVouchersInput, ProductUpdateWithoutDisposalVouchersInput>, ProductUncheckedUpdateWithoutDisposalVouchersInput>
+  }
+
+  export type WarehouseUpdateOneRequiredWithoutDisposalVouchersNestedInput = {
+    create?: XOR<WarehouseCreateWithoutDisposalVouchersInput, WarehouseUncheckedCreateWithoutDisposalVouchersInput>
+    connectOrCreate?: WarehouseCreateOrConnectWithoutDisposalVouchersInput
+    upsert?: WarehouseUpsertWithoutDisposalVouchersInput
+    connect?: WarehouseWhereUniqueInput
+    update?: XOR<XOR<WarehouseUpdateToOneWithWhereWithoutDisposalVouchersInput, WarehouseUpdateWithoutDisposalVouchersInput>, WarehouseUncheckedUpdateWithoutDisposalVouchersInput>
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -42804,6 +46240,8 @@ export namespace Prisma {
 
   export type InventoryLogCreateWithoutWarehouseInput = {
     id?: string
+    unitId?: string | null
+    unitName?: string | null
     date?: Date | string
     type: string
     quantity: number
@@ -42815,6 +46253,8 @@ export namespace Prisma {
   export type InventoryLogUncheckedCreateWithoutWarehouseInput = {
     id?: string
     productId: string
+    unitId?: string | null
+    unitName?: string | null
     date?: Date | string
     type: string
     quantity: number
@@ -43076,6 +46516,43 @@ export namespace Prisma {
     data: WarehouseStockCreateManyWarehouseInput | WarehouseStockCreateManyWarehouseInput[]
   }
 
+  export type DisposalVoucherCreateWithoutWarehouseInput = {
+    id?: string
+    voucherNumber: string
+    date?: Date | string
+    unitId?: string | null
+    quantity: number
+    reason: string
+    notes?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    product: ProductCreateNestedOneWithoutDisposalVouchersInput
+  }
+
+  export type DisposalVoucherUncheckedCreateWithoutWarehouseInput = {
+    id?: string
+    voucherNumber: string
+    date?: Date | string
+    productId: string
+    unitId?: string | null
+    quantity: number
+    reason: string
+    notes?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type DisposalVoucherCreateOrConnectWithoutWarehouseInput = {
+    where: DisposalVoucherWhereUniqueInput
+    create: XOR<DisposalVoucherCreateWithoutWarehouseInput, DisposalVoucherUncheckedCreateWithoutWarehouseInput>
+  }
+
+  export type DisposalVoucherCreateManyWarehouseInputEnvelope = {
+    data: DisposalVoucherCreateManyWarehouseInput | DisposalVoucherCreateManyWarehouseInput[]
+  }
+
   export type InventoryLogUpsertWithWhereUniqueWithoutWarehouseInput = {
     where: InventoryLogWhereUniqueInput
     update: XOR<InventoryLogUpdateWithoutWarehouseInput, InventoryLogUncheckedUpdateWithoutWarehouseInput>
@@ -43099,6 +46576,8 @@ export namespace Prisma {
     id?: StringFilter<"InventoryLog"> | string
     productId?: StringFilter<"InventoryLog"> | string
     warehouseId?: StringNullableFilter<"InventoryLog"> | string | null
+    unitId?: StringNullableFilter<"InventoryLog"> | string | null
+    unitName?: StringNullableFilter<"InventoryLog"> | string | null
     date?: DateTimeFilter<"InventoryLog"> | Date | string
     type?: StringFilter<"InventoryLog"> | string
     quantity?: FloatFilter<"InventoryLog"> | number
@@ -43258,6 +46737,40 @@ export namespace Prisma {
     quantity?: FloatFilter<"WarehouseStock"> | number
   }
 
+  export type DisposalVoucherUpsertWithWhereUniqueWithoutWarehouseInput = {
+    where: DisposalVoucherWhereUniqueInput
+    update: XOR<DisposalVoucherUpdateWithoutWarehouseInput, DisposalVoucherUncheckedUpdateWithoutWarehouseInput>
+    create: XOR<DisposalVoucherCreateWithoutWarehouseInput, DisposalVoucherUncheckedCreateWithoutWarehouseInput>
+  }
+
+  export type DisposalVoucherUpdateWithWhereUniqueWithoutWarehouseInput = {
+    where: DisposalVoucherWhereUniqueInput
+    data: XOR<DisposalVoucherUpdateWithoutWarehouseInput, DisposalVoucherUncheckedUpdateWithoutWarehouseInput>
+  }
+
+  export type DisposalVoucherUpdateManyWithWhereWithoutWarehouseInput = {
+    where: DisposalVoucherScalarWhereInput
+    data: XOR<DisposalVoucherUpdateManyMutationInput, DisposalVoucherUncheckedUpdateManyWithoutWarehouseInput>
+  }
+
+  export type DisposalVoucherScalarWhereInput = {
+    AND?: DisposalVoucherScalarWhereInput | DisposalVoucherScalarWhereInput[]
+    OR?: DisposalVoucherScalarWhereInput[]
+    NOT?: DisposalVoucherScalarWhereInput | DisposalVoucherScalarWhereInput[]
+    id?: StringFilter<"DisposalVoucher"> | string
+    voucherNumber?: StringFilter<"DisposalVoucher"> | string
+    date?: DateTimeFilter<"DisposalVoucher"> | Date | string
+    productId?: StringFilter<"DisposalVoucher"> | string
+    warehouseId?: StringFilter<"DisposalVoucher"> | string
+    unitId?: StringNullableFilter<"DisposalVoucher"> | string | null
+    quantity?: FloatFilter<"DisposalVoucher"> | number
+    reason?: StringFilter<"DisposalVoucher"> | string
+    notes?: StringNullableFilter<"DisposalVoucher"> | string | null
+    status?: StringFilter<"DisposalVoucher"> | string
+    createdAt?: DateTimeFilter<"DisposalVoucher"> | Date | string
+    updatedAt?: DateTimeFilter<"DisposalVoucher"> | Date | string
+  }
+
   export type ProductCreateWithoutWarehouseStocksInput = {
     id?: string
     sku: string
@@ -43287,6 +46800,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseItemCreateNestedManyWithoutProductInput
     quotationItems?: QuotationItemCreateNestedManyWithoutProductInput
     transfers?: StockTransferItemCreateNestedManyWithoutProductInput
+    disposalVouchers?: DisposalVoucherCreateNestedManyWithoutProductInput
   }
 
   export type ProductUncheckedCreateWithoutWarehouseStocksInput = {
@@ -43318,6 +46832,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseItemUncheckedCreateNestedManyWithoutProductInput
     quotationItems?: QuotationItemUncheckedCreateNestedManyWithoutProductInput
     transfers?: StockTransferItemUncheckedCreateNestedManyWithoutProductInput
+    disposalVouchers?: DisposalVoucherUncheckedCreateNestedManyWithoutProductInput
   }
 
   export type ProductCreateOrConnectWithoutWarehouseStocksInput = {
@@ -43340,6 +46855,7 @@ export namespace Prisma {
     quotations?: SalesQuotationCreateNestedManyWithoutWarehouseInput
     transfersTo?: StockTransferCreateNestedManyWithoutToWarehouseInput
     transfersFrom?: StockTransferCreateNestedManyWithoutFromWarehouseInput
+    disposalVouchers?: DisposalVoucherCreateNestedManyWithoutWarehouseInput
   }
 
   export type WarehouseUncheckedCreateWithoutStockItemsInput = {
@@ -43357,6 +46873,7 @@ export namespace Prisma {
     quotations?: SalesQuotationUncheckedCreateNestedManyWithoutWarehouseInput
     transfersTo?: StockTransferUncheckedCreateNestedManyWithoutToWarehouseInput
     transfersFrom?: StockTransferUncheckedCreateNestedManyWithoutFromWarehouseInput
+    disposalVouchers?: DisposalVoucherUncheckedCreateNestedManyWithoutWarehouseInput
   }
 
   export type WarehouseCreateOrConnectWithoutStockItemsInput = {
@@ -43404,6 +46921,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseItemUpdateManyWithoutProductNestedInput
     quotationItems?: QuotationItemUpdateManyWithoutProductNestedInput
     transfers?: StockTransferItemUpdateManyWithoutProductNestedInput
+    disposalVouchers?: DisposalVoucherUpdateManyWithoutProductNestedInput
   }
 
   export type ProductUncheckedUpdateWithoutWarehouseStocksInput = {
@@ -43435,6 +46953,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseItemUncheckedUpdateManyWithoutProductNestedInput
     quotationItems?: QuotationItemUncheckedUpdateManyWithoutProductNestedInput
     transfers?: StockTransferItemUncheckedUpdateManyWithoutProductNestedInput
+    disposalVouchers?: DisposalVoucherUncheckedUpdateManyWithoutProductNestedInput
   }
 
   export type WarehouseUpsertWithoutStockItemsInput = {
@@ -43463,6 +46982,7 @@ export namespace Prisma {
     quotations?: SalesQuotationUpdateManyWithoutWarehouseNestedInput
     transfersTo?: StockTransferUpdateManyWithoutToWarehouseNestedInput
     transfersFrom?: StockTransferUpdateManyWithoutFromWarehouseNestedInput
+    disposalVouchers?: DisposalVoucherUpdateManyWithoutWarehouseNestedInput
   }
 
   export type WarehouseUncheckedUpdateWithoutStockItemsInput = {
@@ -43480,6 +47000,7 @@ export namespace Prisma {
     quotations?: SalesQuotationUncheckedUpdateManyWithoutWarehouseNestedInput
     transfersTo?: StockTransferUncheckedUpdateManyWithoutToWarehouseNestedInput
     transfersFrom?: StockTransferUncheckedUpdateManyWithoutFromWarehouseNestedInput
+    disposalVouchers?: DisposalVoucherUncheckedUpdateManyWithoutWarehouseNestedInput
   }
 
   export type CostCenterCreateWithoutProductInput = {
@@ -43546,6 +47067,8 @@ export namespace Prisma {
 
   export type InventoryLogCreateWithoutProductInput = {
     id?: string
+    unitId?: string | null
+    unitName?: string | null
     date?: Date | string
     type: string
     quantity: number
@@ -43557,6 +47080,8 @@ export namespace Prisma {
   export type InventoryLogUncheckedCreateWithoutProductInput = {
     id?: string
     warehouseId?: string | null
+    unitId?: string | null
+    unitName?: string | null
     date?: Date | string
     type: string
     quantity: number
@@ -43575,6 +47100,7 @@ export namespace Prisma {
 
   export type InvoiceItemCreateWithoutProductInput = {
     id?: string
+    unitId?: string | null
     quantity: number
     unitPrice: number
     total: number
@@ -43584,6 +47110,7 @@ export namespace Prisma {
   export type InvoiceItemUncheckedCreateWithoutProductInput = {
     id?: string
     invoiceId: string
+    unitId?: string | null
     quantity: number
     unitPrice: number
     total: number
@@ -43720,6 +47247,7 @@ export namespace Prisma {
 
   export type PurchaseItemCreateWithoutProductInput = {
     id?: string
+    unitId?: string | null
     quantity: number
     unitPrice: number
     total: number
@@ -43729,6 +47257,7 @@ export namespace Prisma {
   export type PurchaseItemUncheckedCreateWithoutProductInput = {
     id?: string
     invoiceId: string
+    unitId?: string | null
     quantity: number
     unitPrice: number
     total: number
@@ -43808,6 +47337,43 @@ export namespace Prisma {
 
   export type WarehouseStockCreateManyProductInputEnvelope = {
     data: WarehouseStockCreateManyProductInput | WarehouseStockCreateManyProductInput[]
+  }
+
+  export type DisposalVoucherCreateWithoutProductInput = {
+    id?: string
+    voucherNumber: string
+    date?: Date | string
+    unitId?: string | null
+    quantity: number
+    reason: string
+    notes?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    warehouse: WarehouseCreateNestedOneWithoutDisposalVouchersInput
+  }
+
+  export type DisposalVoucherUncheckedCreateWithoutProductInput = {
+    id?: string
+    voucherNumber: string
+    date?: Date | string
+    warehouseId: string
+    unitId?: string | null
+    quantity: number
+    reason: string
+    notes?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type DisposalVoucherCreateOrConnectWithoutProductInput = {
+    where: DisposalVoucherWhereUniqueInput
+    create: XOR<DisposalVoucherCreateWithoutProductInput, DisposalVoucherUncheckedCreateWithoutProductInput>
+  }
+
+  export type DisposalVoucherCreateManyProductInputEnvelope = {
+    data: DisposalVoucherCreateManyProductInput | DisposalVoucherCreateManyProductInput[]
   }
 
   export type CostCenterUpsertWithWhereUniqueWithoutProductInput = {
@@ -43910,6 +47476,7 @@ export namespace Prisma {
     id?: StringFilter<"InvoiceItem"> | string
     invoiceId?: StringFilter<"InvoiceItem"> | string
     productId?: StringFilter<"InvoiceItem"> | string
+    unitId?: StringNullableFilter<"InvoiceItem"> | string | null
     quantity?: FloatFilter<"InvoiceItem"> | number
     unitPrice?: FloatFilter<"InvoiceItem"> | number
     total?: FloatFilter<"InvoiceItem"> | number
@@ -44053,6 +47620,7 @@ export namespace Prisma {
     id?: StringFilter<"PurchaseItem"> | string
     invoiceId?: StringFilter<"PurchaseItem"> | string
     productId?: StringFilter<"PurchaseItem"> | string
+    unitId?: StringNullableFilter<"PurchaseItem"> | string | null
     quantity?: FloatFilter<"PurchaseItem"> | number
     unitPrice?: FloatFilter<"PurchaseItem"> | number
     total?: FloatFilter<"PurchaseItem"> | number
@@ -44128,8 +47696,25 @@ export namespace Prisma {
     data: XOR<WarehouseStockUpdateManyMutationInput, WarehouseStockUncheckedUpdateManyWithoutProductInput>
   }
 
+  export type DisposalVoucherUpsertWithWhereUniqueWithoutProductInput = {
+    where: DisposalVoucherWhereUniqueInput
+    update: XOR<DisposalVoucherUpdateWithoutProductInput, DisposalVoucherUncheckedUpdateWithoutProductInput>
+    create: XOR<DisposalVoucherCreateWithoutProductInput, DisposalVoucherUncheckedCreateWithoutProductInput>
+  }
+
+  export type DisposalVoucherUpdateWithWhereUniqueWithoutProductInput = {
+    where: DisposalVoucherWhereUniqueInput
+    data: XOR<DisposalVoucherUpdateWithoutProductInput, DisposalVoucherUncheckedUpdateWithoutProductInput>
+  }
+
+  export type DisposalVoucherUpdateManyWithWhereWithoutProductInput = {
+    where: DisposalVoucherScalarWhereInput
+    data: XOR<DisposalVoucherUpdateManyMutationInput, DisposalVoucherUncheckedUpdateManyWithoutProductInput>
+  }
+
   export type InvoiceItemCreateWithoutInvoiceInput = {
     id?: string
+    unitId?: string | null
     quantity: number
     unitPrice: number
     total: number
@@ -44139,6 +47724,7 @@ export namespace Prisma {
   export type InvoiceItemUncheckedCreateWithoutInvoiceInput = {
     id?: string
     productId: string
+    unitId?: string | null
     quantity: number
     unitPrice: number
     total: number
@@ -44197,6 +47783,7 @@ export namespace Prisma {
     transfersTo?: StockTransferCreateNestedManyWithoutToWarehouseInput
     transfersFrom?: StockTransferCreateNestedManyWithoutFromWarehouseInput
     stockItems?: WarehouseStockCreateNestedManyWithoutWarehouseInput
+    disposalVouchers?: DisposalVoucherCreateNestedManyWithoutWarehouseInput
   }
 
   export type WarehouseUncheckedCreateWithoutInvoicesInput = {
@@ -44214,6 +47801,7 @@ export namespace Prisma {
     transfersTo?: StockTransferUncheckedCreateNestedManyWithoutToWarehouseInput
     transfersFrom?: StockTransferUncheckedCreateNestedManyWithoutFromWarehouseInput
     stockItems?: WarehouseStockUncheckedCreateNestedManyWithoutWarehouseInput
+    disposalVouchers?: DisposalVoucherUncheckedCreateNestedManyWithoutWarehouseInput
   }
 
   export type WarehouseCreateOrConnectWithoutInvoicesInput = {
@@ -44370,6 +47958,7 @@ export namespace Prisma {
     transfersTo?: StockTransferUpdateManyWithoutToWarehouseNestedInput
     transfersFrom?: StockTransferUpdateManyWithoutFromWarehouseNestedInput
     stockItems?: WarehouseStockUpdateManyWithoutWarehouseNestedInput
+    disposalVouchers?: DisposalVoucherUpdateManyWithoutWarehouseNestedInput
   }
 
   export type WarehouseUncheckedUpdateWithoutInvoicesInput = {
@@ -44387,6 +47976,7 @@ export namespace Prisma {
     transfersTo?: StockTransferUncheckedUpdateManyWithoutToWarehouseNestedInput
     transfersFrom?: StockTransferUncheckedUpdateManyWithoutFromWarehouseNestedInput
     stockItems?: WarehouseStockUncheckedUpdateManyWithoutWarehouseNestedInput
+    disposalVouchers?: DisposalVoucherUncheckedUpdateManyWithoutWarehouseNestedInput
   }
 
   export type CustomerUpsertWithoutInvoicesInput = {
@@ -44517,6 +48107,7 @@ export namespace Prisma {
     transfersTo?: StockTransferCreateNestedManyWithoutToWarehouseInput
     transfersFrom?: StockTransferCreateNestedManyWithoutFromWarehouseInput
     stockItems?: WarehouseStockCreateNestedManyWithoutWarehouseInput
+    disposalVouchers?: DisposalVoucherCreateNestedManyWithoutWarehouseInput
   }
 
   export type WarehouseUncheckedCreateWithoutPurchasesInput = {
@@ -44534,6 +48125,7 @@ export namespace Prisma {
     transfersTo?: StockTransferUncheckedCreateNestedManyWithoutToWarehouseInput
     transfersFrom?: StockTransferUncheckedCreateNestedManyWithoutFromWarehouseInput
     stockItems?: WarehouseStockUncheckedCreateNestedManyWithoutWarehouseInput
+    disposalVouchers?: DisposalVoucherUncheckedCreateNestedManyWithoutWarehouseInput
   }
 
   export type WarehouseCreateOrConnectWithoutPurchasesInput = {
@@ -44574,6 +48166,7 @@ export namespace Prisma {
 
   export type PurchaseItemCreateWithoutInvoiceInput = {
     id?: string
+    unitId?: string | null
     quantity: number
     unitPrice: number
     total: number
@@ -44583,6 +48176,7 @@ export namespace Prisma {
   export type PurchaseItemUncheckedCreateWithoutInvoiceInput = {
     id?: string
     productId: string
+    unitId?: string | null
     quantity: number
     unitPrice: number
     total: number
@@ -44658,6 +48252,7 @@ export namespace Prisma {
     transfersTo?: StockTransferUpdateManyWithoutToWarehouseNestedInput
     transfersFrom?: StockTransferUpdateManyWithoutFromWarehouseNestedInput
     stockItems?: WarehouseStockUpdateManyWithoutWarehouseNestedInput
+    disposalVouchers?: DisposalVoucherUpdateManyWithoutWarehouseNestedInput
   }
 
   export type WarehouseUncheckedUpdateWithoutPurchasesInput = {
@@ -44675,6 +48270,7 @@ export namespace Prisma {
     transfersTo?: StockTransferUncheckedUpdateManyWithoutToWarehouseNestedInput
     transfersFrom?: StockTransferUncheckedUpdateManyWithoutFromWarehouseNestedInput
     stockItems?: WarehouseStockUncheckedUpdateManyWithoutWarehouseNestedInput
+    disposalVouchers?: DisposalVoucherUncheckedUpdateManyWithoutWarehouseNestedInput
   }
 
   export type SupplierUpsertWithoutInvoicesInput = {
@@ -44759,6 +48355,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemCreateNestedManyWithoutProductInput
     transfers?: StockTransferItemCreateNestedManyWithoutProductInput
     warehouseStocks?: WarehouseStockCreateNestedManyWithoutProductInput
+    disposalVouchers?: DisposalVoucherCreateNestedManyWithoutProductInput
   }
 
   export type ProductUncheckedCreateWithoutItemsInput = {
@@ -44790,6 +48387,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUncheckedCreateNestedManyWithoutProductInput
     transfers?: StockTransferItemUncheckedCreateNestedManyWithoutProductInput
     warehouseStocks?: WarehouseStockUncheckedCreateNestedManyWithoutProductInput
+    disposalVouchers?: DisposalVoucherUncheckedCreateNestedManyWithoutProductInput
   }
 
   export type ProductCreateOrConnectWithoutItemsInput = {
@@ -44876,6 +48474,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUpdateManyWithoutProductNestedInput
     transfers?: StockTransferItemUpdateManyWithoutProductNestedInput
     warehouseStocks?: WarehouseStockUpdateManyWithoutProductNestedInput
+    disposalVouchers?: DisposalVoucherUpdateManyWithoutProductNestedInput
   }
 
   export type ProductUncheckedUpdateWithoutItemsInput = {
@@ -44907,6 +48506,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUncheckedUpdateManyWithoutProductNestedInput
     transfers?: StockTransferItemUncheckedUpdateManyWithoutProductNestedInput
     warehouseStocks?: WarehouseStockUncheckedUpdateManyWithoutProductNestedInput
+    disposalVouchers?: DisposalVoucherUncheckedUpdateManyWithoutProductNestedInput
   }
 
   export type SalesInvoiceUpsertWithoutItemsInput = {
@@ -44983,6 +48583,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemCreateNestedManyWithoutProductInput
     transfers?: StockTransferItemCreateNestedManyWithoutProductInput
     warehouseStocks?: WarehouseStockCreateNestedManyWithoutProductInput
+    disposalVouchers?: DisposalVoucherCreateNestedManyWithoutProductInput
   }
 
   export type ProductUncheckedCreateWithoutPurchaseItemsInput = {
@@ -45014,6 +48615,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUncheckedCreateNestedManyWithoutProductInput
     transfers?: StockTransferItemUncheckedCreateNestedManyWithoutProductInput
     warehouseStocks?: WarehouseStockUncheckedCreateNestedManyWithoutProductInput
+    disposalVouchers?: DisposalVoucherUncheckedCreateNestedManyWithoutProductInput
   }
 
   export type ProductCreateOrConnectWithoutPurchaseItemsInput = {
@@ -45098,6 +48700,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUpdateManyWithoutProductNestedInput
     transfers?: StockTransferItemUpdateManyWithoutProductNestedInput
     warehouseStocks?: WarehouseStockUpdateManyWithoutProductNestedInput
+    disposalVouchers?: DisposalVoucherUpdateManyWithoutProductNestedInput
   }
 
   export type ProductUncheckedUpdateWithoutPurchaseItemsInput = {
@@ -45129,6 +48732,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUncheckedUpdateManyWithoutProductNestedInput
     transfers?: StockTransferItemUncheckedUpdateManyWithoutProductNestedInput
     warehouseStocks?: WarehouseStockUncheckedUpdateManyWithoutProductNestedInput
+    disposalVouchers?: DisposalVoucherUncheckedUpdateManyWithoutProductNestedInput
   }
 
   export type PurchaseInvoiceUpsertWithoutItemsInput = {
@@ -45189,6 +48793,7 @@ export namespace Prisma {
     quotations?: SalesQuotationCreateNestedManyWithoutWarehouseInput
     transfersFrom?: StockTransferCreateNestedManyWithoutFromWarehouseInput
     stockItems?: WarehouseStockCreateNestedManyWithoutWarehouseInput
+    disposalVouchers?: DisposalVoucherCreateNestedManyWithoutWarehouseInput
   }
 
   export type WarehouseUncheckedCreateWithoutTransfersToInput = {
@@ -45206,6 +48811,7 @@ export namespace Prisma {
     quotations?: SalesQuotationUncheckedCreateNestedManyWithoutWarehouseInput
     transfersFrom?: StockTransferUncheckedCreateNestedManyWithoutFromWarehouseInput
     stockItems?: WarehouseStockUncheckedCreateNestedManyWithoutWarehouseInput
+    disposalVouchers?: DisposalVoucherUncheckedCreateNestedManyWithoutWarehouseInput
   }
 
   export type WarehouseCreateOrConnectWithoutTransfersToInput = {
@@ -45228,6 +48834,7 @@ export namespace Prisma {
     quotations?: SalesQuotationCreateNestedManyWithoutWarehouseInput
     transfersTo?: StockTransferCreateNestedManyWithoutToWarehouseInput
     stockItems?: WarehouseStockCreateNestedManyWithoutWarehouseInput
+    disposalVouchers?: DisposalVoucherCreateNestedManyWithoutWarehouseInput
   }
 
   export type WarehouseUncheckedCreateWithoutTransfersFromInput = {
@@ -45245,6 +48852,7 @@ export namespace Prisma {
     quotations?: SalesQuotationUncheckedCreateNestedManyWithoutWarehouseInput
     transfersTo?: StockTransferUncheckedCreateNestedManyWithoutToWarehouseInput
     stockItems?: WarehouseStockUncheckedCreateNestedManyWithoutWarehouseInput
+    disposalVouchers?: DisposalVoucherUncheckedCreateNestedManyWithoutWarehouseInput
   }
 
   export type WarehouseCreateOrConnectWithoutTransfersFromInput = {
@@ -45299,6 +48907,7 @@ export namespace Prisma {
     quotations?: SalesQuotationUpdateManyWithoutWarehouseNestedInput
     transfersFrom?: StockTransferUpdateManyWithoutFromWarehouseNestedInput
     stockItems?: WarehouseStockUpdateManyWithoutWarehouseNestedInput
+    disposalVouchers?: DisposalVoucherUpdateManyWithoutWarehouseNestedInput
   }
 
   export type WarehouseUncheckedUpdateWithoutTransfersToInput = {
@@ -45316,6 +48925,7 @@ export namespace Prisma {
     quotations?: SalesQuotationUncheckedUpdateManyWithoutWarehouseNestedInput
     transfersFrom?: StockTransferUncheckedUpdateManyWithoutFromWarehouseNestedInput
     stockItems?: WarehouseStockUncheckedUpdateManyWithoutWarehouseNestedInput
+    disposalVouchers?: DisposalVoucherUncheckedUpdateManyWithoutWarehouseNestedInput
   }
 
   export type WarehouseUpsertWithoutTransfersFromInput = {
@@ -45344,6 +48954,7 @@ export namespace Prisma {
     quotations?: SalesQuotationUpdateManyWithoutWarehouseNestedInput
     transfersTo?: StockTransferUpdateManyWithoutToWarehouseNestedInput
     stockItems?: WarehouseStockUpdateManyWithoutWarehouseNestedInput
+    disposalVouchers?: DisposalVoucherUpdateManyWithoutWarehouseNestedInput
   }
 
   export type WarehouseUncheckedUpdateWithoutTransfersFromInput = {
@@ -45361,6 +48972,7 @@ export namespace Prisma {
     quotations?: SalesQuotationUncheckedUpdateManyWithoutWarehouseNestedInput
     transfersTo?: StockTransferUncheckedUpdateManyWithoutToWarehouseNestedInput
     stockItems?: WarehouseStockUncheckedUpdateManyWithoutWarehouseNestedInput
+    disposalVouchers?: DisposalVoucherUncheckedUpdateManyWithoutWarehouseNestedInput
   }
 
   export type StockTransferItemUpsertWithWhereUniqueWithoutTransferInput = {
@@ -45408,6 +49020,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseItemCreateNestedManyWithoutProductInput
     quotationItems?: QuotationItemCreateNestedManyWithoutProductInput
     warehouseStocks?: WarehouseStockCreateNestedManyWithoutProductInput
+    disposalVouchers?: DisposalVoucherCreateNestedManyWithoutProductInput
   }
 
   export type ProductUncheckedCreateWithoutTransfersInput = {
@@ -45439,6 +49052,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseItemUncheckedCreateNestedManyWithoutProductInput
     quotationItems?: QuotationItemUncheckedCreateNestedManyWithoutProductInput
     warehouseStocks?: WarehouseStockUncheckedCreateNestedManyWithoutProductInput
+    disposalVouchers?: DisposalVoucherUncheckedCreateNestedManyWithoutProductInput
   }
 
   export type ProductCreateOrConnectWithoutTransfersInput = {
@@ -45513,6 +49127,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseItemUpdateManyWithoutProductNestedInput
     quotationItems?: QuotationItemUpdateManyWithoutProductNestedInput
     warehouseStocks?: WarehouseStockUpdateManyWithoutProductNestedInput
+    disposalVouchers?: DisposalVoucherUpdateManyWithoutProductNestedInput
   }
 
   export type ProductUncheckedUpdateWithoutTransfersInput = {
@@ -45544,6 +49159,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseItemUncheckedUpdateManyWithoutProductNestedInput
     quotationItems?: QuotationItemUncheckedUpdateManyWithoutProductNestedInput
     warehouseStocks?: WarehouseStockUncheckedUpdateManyWithoutProductNestedInput
+    disposalVouchers?: DisposalVoucherUncheckedUpdateManyWithoutProductNestedInput
   }
 
   export type StockTransferUpsertWithoutItemsInput = {
@@ -45594,6 +49210,7 @@ export namespace Prisma {
     transfersTo?: StockTransferCreateNestedManyWithoutToWarehouseInput
     transfersFrom?: StockTransferCreateNestedManyWithoutFromWarehouseInput
     stockItems?: WarehouseStockCreateNestedManyWithoutWarehouseInput
+    disposalVouchers?: DisposalVoucherCreateNestedManyWithoutWarehouseInput
   }
 
   export type WarehouseUncheckedCreateWithoutInventoryLogsInput = {
@@ -45611,6 +49228,7 @@ export namespace Prisma {
     transfersTo?: StockTransferUncheckedCreateNestedManyWithoutToWarehouseInput
     transfersFrom?: StockTransferUncheckedCreateNestedManyWithoutFromWarehouseInput
     stockItems?: WarehouseStockUncheckedCreateNestedManyWithoutWarehouseInput
+    disposalVouchers?: DisposalVoucherUncheckedCreateNestedManyWithoutWarehouseInput
   }
 
   export type WarehouseCreateOrConnectWithoutInventoryLogsInput = {
@@ -45647,6 +49265,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemCreateNestedManyWithoutProductInput
     transfers?: StockTransferItemCreateNestedManyWithoutProductInput
     warehouseStocks?: WarehouseStockCreateNestedManyWithoutProductInput
+    disposalVouchers?: DisposalVoucherCreateNestedManyWithoutProductInput
   }
 
   export type ProductUncheckedCreateWithoutInventoryLogsInput = {
@@ -45678,6 +49297,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUncheckedCreateNestedManyWithoutProductInput
     transfers?: StockTransferItemUncheckedCreateNestedManyWithoutProductInput
     warehouseStocks?: WarehouseStockUncheckedCreateNestedManyWithoutProductInput
+    disposalVouchers?: DisposalVoucherUncheckedCreateNestedManyWithoutProductInput
   }
 
   export type ProductCreateOrConnectWithoutInventoryLogsInput = {
@@ -45711,6 +49331,7 @@ export namespace Prisma {
     transfersTo?: StockTransferUpdateManyWithoutToWarehouseNestedInput
     transfersFrom?: StockTransferUpdateManyWithoutFromWarehouseNestedInput
     stockItems?: WarehouseStockUpdateManyWithoutWarehouseNestedInput
+    disposalVouchers?: DisposalVoucherUpdateManyWithoutWarehouseNestedInput
   }
 
   export type WarehouseUncheckedUpdateWithoutInventoryLogsInput = {
@@ -45728,6 +49349,7 @@ export namespace Prisma {
     transfersTo?: StockTransferUncheckedUpdateManyWithoutToWarehouseNestedInput
     transfersFrom?: StockTransferUncheckedUpdateManyWithoutFromWarehouseNestedInput
     stockItems?: WarehouseStockUncheckedUpdateManyWithoutWarehouseNestedInput
+    disposalVouchers?: DisposalVoucherUncheckedUpdateManyWithoutWarehouseNestedInput
   }
 
   export type ProductUpsertWithoutInventoryLogsInput = {
@@ -45770,6 +49392,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUpdateManyWithoutProductNestedInput
     transfers?: StockTransferItemUpdateManyWithoutProductNestedInput
     warehouseStocks?: WarehouseStockUpdateManyWithoutProductNestedInput
+    disposalVouchers?: DisposalVoucherUpdateManyWithoutProductNestedInput
   }
 
   export type ProductUncheckedUpdateWithoutInventoryLogsInput = {
@@ -45801,6 +49424,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUncheckedUpdateManyWithoutProductNestedInput
     transfers?: StockTransferItemUncheckedUpdateManyWithoutProductNestedInput
     warehouseStocks?: WarehouseStockUncheckedUpdateManyWithoutProductNestedInput
+    disposalVouchers?: DisposalVoucherUncheckedUpdateManyWithoutProductNestedInput
   }
 
   export type AccountCreateWithoutChildrenInput = {
@@ -46848,6 +50472,7 @@ export namespace Prisma {
     transfersTo?: StockTransferCreateNestedManyWithoutToWarehouseInput
     transfersFrom?: StockTransferCreateNestedManyWithoutFromWarehouseInput
     stockItems?: WarehouseStockCreateNestedManyWithoutWarehouseInput
+    disposalVouchers?: DisposalVoucherCreateNestedManyWithoutWarehouseInput
   }
 
   export type WarehouseUncheckedCreateWithoutQuotationsInput = {
@@ -46865,6 +50490,7 @@ export namespace Prisma {
     transfersTo?: StockTransferUncheckedCreateNestedManyWithoutToWarehouseInput
     transfersFrom?: StockTransferUncheckedCreateNestedManyWithoutFromWarehouseInput
     stockItems?: WarehouseStockUncheckedCreateNestedManyWithoutWarehouseInput
+    disposalVouchers?: DisposalVoucherUncheckedCreateNestedManyWithoutWarehouseInput
   }
 
   export type WarehouseCreateOrConnectWithoutQuotationsInput = {
@@ -46998,6 +50624,7 @@ export namespace Prisma {
     transfersTo?: StockTransferUpdateManyWithoutToWarehouseNestedInput
     transfersFrom?: StockTransferUpdateManyWithoutFromWarehouseNestedInput
     stockItems?: WarehouseStockUpdateManyWithoutWarehouseNestedInput
+    disposalVouchers?: DisposalVoucherUpdateManyWithoutWarehouseNestedInput
   }
 
   export type WarehouseUncheckedUpdateWithoutQuotationsInput = {
@@ -47015,6 +50642,7 @@ export namespace Prisma {
     transfersTo?: StockTransferUncheckedUpdateManyWithoutToWarehouseNestedInput
     transfersFrom?: StockTransferUncheckedUpdateManyWithoutFromWarehouseNestedInput
     stockItems?: WarehouseStockUncheckedUpdateManyWithoutWarehouseNestedInput
+    disposalVouchers?: DisposalVoucherUncheckedUpdateManyWithoutWarehouseNestedInput
   }
 
   export type SalesQuotationCreateWithoutItemsInput = {
@@ -47085,6 +50713,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseItemCreateNestedManyWithoutProductInput
     transfers?: StockTransferItemCreateNestedManyWithoutProductInput
     warehouseStocks?: WarehouseStockCreateNestedManyWithoutProductInput
+    disposalVouchers?: DisposalVoucherCreateNestedManyWithoutProductInput
   }
 
   export type ProductUncheckedCreateWithoutQuotationItemsInput = {
@@ -47116,6 +50745,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseItemUncheckedCreateNestedManyWithoutProductInput
     transfers?: StockTransferItemUncheckedCreateNestedManyWithoutProductInput
     warehouseStocks?: WarehouseStockUncheckedCreateNestedManyWithoutProductInput
+    disposalVouchers?: DisposalVoucherUncheckedCreateNestedManyWithoutProductInput
   }
 
   export type ProductCreateOrConnectWithoutQuotationItemsInput = {
@@ -47208,6 +50838,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseItemUpdateManyWithoutProductNestedInput
     transfers?: StockTransferItemUpdateManyWithoutProductNestedInput
     warehouseStocks?: WarehouseStockUpdateManyWithoutProductNestedInput
+    disposalVouchers?: DisposalVoucherUpdateManyWithoutProductNestedInput
   }
 
   export type ProductUncheckedUpdateWithoutQuotationItemsInput = {
@@ -47239,6 +50870,7 @@ export namespace Prisma {
     purchaseItems?: PurchaseItemUncheckedUpdateManyWithoutProductNestedInput
     transfers?: StockTransferItemUncheckedUpdateManyWithoutProductNestedInput
     warehouseStocks?: WarehouseStockUncheckedUpdateManyWithoutProductNestedInput
+    disposalVouchers?: DisposalVoucherUncheckedUpdateManyWithoutProductNestedInput
   }
 
   export type CostCenterItemCreateWithoutUnitInput = {
@@ -47297,6 +50929,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemCreateNestedManyWithoutProductInput
     transfers?: StockTransferItemCreateNestedManyWithoutProductInput
     warehouseStocks?: WarehouseStockCreateNestedManyWithoutProductInput
+    disposalVouchers?: DisposalVoucherCreateNestedManyWithoutProductInput
   }
 
   export type ProductUncheckedCreateWithoutSubUnitRefInput = {
@@ -47328,6 +50961,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUncheckedCreateNestedManyWithoutProductInput
     transfers?: StockTransferItemUncheckedCreateNestedManyWithoutProductInput
     warehouseStocks?: WarehouseStockUncheckedCreateNestedManyWithoutProductInput
+    disposalVouchers?: DisposalVoucherUncheckedCreateNestedManyWithoutProductInput
   }
 
   export type ProductCreateOrConnectWithoutSubUnitRefInput = {
@@ -47368,6 +51002,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemCreateNestedManyWithoutProductInput
     transfers?: StockTransferItemCreateNestedManyWithoutProductInput
     warehouseStocks?: WarehouseStockCreateNestedManyWithoutProductInput
+    disposalVouchers?: DisposalVoucherCreateNestedManyWithoutProductInput
   }
 
   export type ProductUncheckedCreateWithoutUnitRefInput = {
@@ -47399,6 +51034,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUncheckedCreateNestedManyWithoutProductInput
     transfers?: StockTransferItemUncheckedCreateNestedManyWithoutProductInput
     warehouseStocks?: WarehouseStockUncheckedCreateNestedManyWithoutProductInput
+    disposalVouchers?: DisposalVoucherUncheckedCreateNestedManyWithoutProductInput
   }
 
   export type ProductCreateOrConnectWithoutUnitRefInput = {
@@ -47679,6 +51315,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemCreateNestedManyWithoutProductInput
     transfers?: StockTransferItemCreateNestedManyWithoutProductInput
     warehouseStocks?: WarehouseStockCreateNestedManyWithoutProductInput
+    disposalVouchers?: DisposalVoucherCreateNestedManyWithoutProductInput
   }
 
   export type ProductUncheckedCreateWithoutCostCentersInput = {
@@ -47710,6 +51347,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUncheckedCreateNestedManyWithoutProductInput
     transfers?: StockTransferItemUncheckedCreateNestedManyWithoutProductInput
     warehouseStocks?: WarehouseStockUncheckedCreateNestedManyWithoutProductInput
+    disposalVouchers?: DisposalVoucherUncheckedCreateNestedManyWithoutProductInput
   }
 
   export type ProductCreateOrConnectWithoutCostCentersInput = {
@@ -47784,6 +51422,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUpdateManyWithoutProductNestedInput
     transfers?: StockTransferItemUpdateManyWithoutProductNestedInput
     warehouseStocks?: WarehouseStockUpdateManyWithoutProductNestedInput
+    disposalVouchers?: DisposalVoucherUpdateManyWithoutProductNestedInput
   }
 
   export type ProductUncheckedUpdateWithoutCostCentersInput = {
@@ -47815,6 +51454,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUncheckedUpdateManyWithoutProductNestedInput
     transfers?: StockTransferItemUncheckedUpdateManyWithoutProductNestedInput
     warehouseStocks?: WarehouseStockUncheckedUpdateManyWithoutProductNestedInput
+    disposalVouchers?: DisposalVoucherUncheckedUpdateManyWithoutProductNestedInput
   }
 
   export type CostCenterItemUpsertWithWhereUniqueWithoutCostCenterInput = {
@@ -47862,6 +51502,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemCreateNestedManyWithoutProductInput
     transfers?: StockTransferItemCreateNestedManyWithoutProductInput
     warehouseStocks?: WarehouseStockCreateNestedManyWithoutProductInput
+    disposalVouchers?: DisposalVoucherCreateNestedManyWithoutProductInput
   }
 
   export type ProductUncheckedCreateWithoutCostCenterItemsInput = {
@@ -47893,6 +51534,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUncheckedCreateNestedManyWithoutProductInput
     transfers?: StockTransferItemUncheckedCreateNestedManyWithoutProductInput
     warehouseStocks?: WarehouseStockUncheckedCreateNestedManyWithoutProductInput
+    disposalVouchers?: DisposalVoucherUncheckedCreateNestedManyWithoutProductInput
   }
 
   export type ProductCreateOrConnectWithoutCostCenterItemsInput = {
@@ -48000,6 +51642,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUpdateManyWithoutProductNestedInput
     transfers?: StockTransferItemUpdateManyWithoutProductNestedInput
     warehouseStocks?: WarehouseStockUpdateManyWithoutProductNestedInput
+    disposalVouchers?: DisposalVoucherUpdateManyWithoutProductNestedInput
   }
 
   export type ProductUncheckedUpdateWithoutCostCenterItemsInput = {
@@ -48031,6 +51674,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUncheckedUpdateManyWithoutProductNestedInput
     transfers?: StockTransferItemUncheckedUpdateManyWithoutProductNestedInput
     warehouseStocks?: WarehouseStockUncheckedUpdateManyWithoutProductNestedInput
+    disposalVouchers?: DisposalVoucherUncheckedUpdateManyWithoutProductNestedInput
   }
 
   export type UnitOfMeasureUpsertWithoutCcItemsInput = {
@@ -48120,6 +51764,7 @@ export namespace Prisma {
     transfersTo?: StockTransferCreateNestedManyWithoutToWarehouseInput
     transfersFrom?: StockTransferCreateNestedManyWithoutFromWarehouseInput
     stockItems?: WarehouseStockCreateNestedManyWithoutWarehouseInput
+    disposalVouchers?: DisposalVoucherCreateNestedManyWithoutWarehouseInput
   }
 
   export type WarehouseUncheckedCreateWithoutProductionOrdersInput = {
@@ -48137,6 +51782,7 @@ export namespace Prisma {
     transfersTo?: StockTransferUncheckedCreateNestedManyWithoutToWarehouseInput
     transfersFrom?: StockTransferUncheckedCreateNestedManyWithoutFromWarehouseInput
     stockItems?: WarehouseStockUncheckedCreateNestedManyWithoutWarehouseInput
+    disposalVouchers?: DisposalVoucherUncheckedCreateNestedManyWithoutWarehouseInput
   }
 
   export type WarehouseCreateOrConnectWithoutProductionOrdersInput = {
@@ -48173,6 +51819,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemCreateNestedManyWithoutProductInput
     transfers?: StockTransferItemCreateNestedManyWithoutProductInput
     warehouseStocks?: WarehouseStockCreateNestedManyWithoutProductInput
+    disposalVouchers?: DisposalVoucherCreateNestedManyWithoutProductInput
   }
 
   export type ProductUncheckedCreateWithoutProductionOrdersInput = {
@@ -48204,6 +51851,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUncheckedCreateNestedManyWithoutProductInput
     transfers?: StockTransferItemUncheckedCreateNestedManyWithoutProductInput
     warehouseStocks?: WarehouseStockUncheckedCreateNestedManyWithoutProductInput
+    disposalVouchers?: DisposalVoucherUncheckedCreateNestedManyWithoutProductInput
   }
 
   export type ProductCreateOrConnectWithoutProductionOrdersInput = {
@@ -48264,6 +51912,7 @@ export namespace Prisma {
     transfersTo?: StockTransferUpdateManyWithoutToWarehouseNestedInput
     transfersFrom?: StockTransferUpdateManyWithoutFromWarehouseNestedInput
     stockItems?: WarehouseStockUpdateManyWithoutWarehouseNestedInput
+    disposalVouchers?: DisposalVoucherUpdateManyWithoutWarehouseNestedInput
   }
 
   export type WarehouseUncheckedUpdateWithoutProductionOrdersInput = {
@@ -48281,6 +51930,7 @@ export namespace Prisma {
     transfersTo?: StockTransferUncheckedUpdateManyWithoutToWarehouseNestedInput
     transfersFrom?: StockTransferUncheckedUpdateManyWithoutFromWarehouseNestedInput
     stockItems?: WarehouseStockUncheckedUpdateManyWithoutWarehouseNestedInput
+    disposalVouchers?: DisposalVoucherUncheckedUpdateManyWithoutWarehouseNestedInput
   }
 
   export type ProductUpsertWithoutProductionOrdersInput = {
@@ -48323,6 +51973,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUpdateManyWithoutProductNestedInput
     transfers?: StockTransferItemUpdateManyWithoutProductNestedInput
     warehouseStocks?: WarehouseStockUpdateManyWithoutProductNestedInput
+    disposalVouchers?: DisposalVoucherUpdateManyWithoutProductNestedInput
   }
 
   export type ProductUncheckedUpdateWithoutProductionOrdersInput = {
@@ -48354,6 +52005,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUncheckedUpdateManyWithoutProductNestedInput
     transfers?: StockTransferItemUncheckedUpdateManyWithoutProductNestedInput
     warehouseStocks?: WarehouseStockUncheckedUpdateManyWithoutProductNestedInput
+    disposalVouchers?: DisposalVoucherUncheckedUpdateManyWithoutProductNestedInput
   }
 
   export type ProductionOrderItemUpsertWithWhereUniqueWithoutProductionOrderInput = {
@@ -48401,6 +52053,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemCreateNestedManyWithoutProductInput
     transfers?: StockTransferItemCreateNestedManyWithoutProductInput
     warehouseStocks?: WarehouseStockCreateNestedManyWithoutProductInput
+    disposalVouchers?: DisposalVoucherCreateNestedManyWithoutProductInput
   }
 
   export type ProductUncheckedCreateWithoutUsagesInput = {
@@ -48432,6 +52085,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUncheckedCreateNestedManyWithoutProductInput
     transfers?: StockTransferItemUncheckedCreateNestedManyWithoutProductInput
     warehouseStocks?: WarehouseStockUncheckedCreateNestedManyWithoutProductInput
+    disposalVouchers?: DisposalVoucherUncheckedCreateNestedManyWithoutProductInput
   }
 
   export type ProductCreateOrConnectWithoutUsagesInput = {
@@ -48539,6 +52193,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUpdateManyWithoutProductNestedInput
     transfers?: StockTransferItemUpdateManyWithoutProductNestedInput
     warehouseStocks?: WarehouseStockUpdateManyWithoutProductNestedInput
+    disposalVouchers?: DisposalVoucherUpdateManyWithoutProductNestedInput
   }
 
   export type ProductUncheckedUpdateWithoutUsagesInput = {
@@ -48570,6 +52225,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUncheckedUpdateManyWithoutProductNestedInput
     transfers?: StockTransferItemUncheckedUpdateManyWithoutProductNestedInput
     warehouseStocks?: WarehouseStockUncheckedUpdateManyWithoutProductNestedInput
+    disposalVouchers?: DisposalVoucherUncheckedUpdateManyWithoutProductNestedInput
   }
 
   export type UnitOfMeasureUpsertWithoutPoItemsInput = {
@@ -48642,6 +52298,238 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProductCreateWithoutDisposalVouchersInput = {
+    id?: string
+    sku: string
+    name: string
+    nameAr?: string | null
+    description?: string | null
+    category?: string | null
+    classification?: string
+    unit?: string
+    costPrice?: number
+    salePrice?: number
+    stockQuantity?: number
+    reorderPoint?: number
+    caloriesPer100g?: number
+    expiryDate?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    unitQuantity?: number
+    costCenters?: CostCenterCreateNestedManyWithoutProductInput
+    costCenterItems?: CostCenterItemCreateNestedManyWithoutProductInput
+    inventoryLogs?: InventoryLogCreateNestedManyWithoutProductInput
+    items?: InvoiceItemCreateNestedManyWithoutProductInput
+    subUnitRef?: UnitOfMeasureCreateNestedOneWithoutSubProductsInput
+    unitRef?: UnitOfMeasureCreateNestedOneWithoutMainProductsInput
+    productionOrders?: ProductionOrderCreateNestedManyWithoutProductInput
+    usages?: ProductionOrderItemCreateNestedManyWithoutProductInput
+    purchaseItems?: PurchaseItemCreateNestedManyWithoutProductInput
+    quotationItems?: QuotationItemCreateNestedManyWithoutProductInput
+    transfers?: StockTransferItemCreateNestedManyWithoutProductInput
+    warehouseStocks?: WarehouseStockCreateNestedManyWithoutProductInput
+  }
+
+  export type ProductUncheckedCreateWithoutDisposalVouchersInput = {
+    id?: string
+    sku: string
+    name: string
+    nameAr?: string | null
+    description?: string | null
+    category?: string | null
+    classification?: string
+    unit?: string
+    unitId?: string | null
+    costPrice?: number
+    salePrice?: number
+    stockQuantity?: number
+    reorderPoint?: number
+    caloriesPer100g?: number
+    expiryDate?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    unitQuantity?: number
+    subUnitId?: string | null
+    costCenters?: CostCenterUncheckedCreateNestedManyWithoutProductInput
+    costCenterItems?: CostCenterItemUncheckedCreateNestedManyWithoutProductInput
+    inventoryLogs?: InventoryLogUncheckedCreateNestedManyWithoutProductInput
+    items?: InvoiceItemUncheckedCreateNestedManyWithoutProductInput
+    productionOrders?: ProductionOrderUncheckedCreateNestedManyWithoutProductInput
+    usages?: ProductionOrderItemUncheckedCreateNestedManyWithoutProductInput
+    purchaseItems?: PurchaseItemUncheckedCreateNestedManyWithoutProductInput
+    quotationItems?: QuotationItemUncheckedCreateNestedManyWithoutProductInput
+    transfers?: StockTransferItemUncheckedCreateNestedManyWithoutProductInput
+    warehouseStocks?: WarehouseStockUncheckedCreateNestedManyWithoutProductInput
+  }
+
+  export type ProductCreateOrConnectWithoutDisposalVouchersInput = {
+    where: ProductWhereUniqueInput
+    create: XOR<ProductCreateWithoutDisposalVouchersInput, ProductUncheckedCreateWithoutDisposalVouchersInput>
+  }
+
+  export type WarehouseCreateWithoutDisposalVouchersInput = {
+    id?: string
+    code: string
+    name: string
+    nameAr?: string | null
+    location?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    inventoryLogs?: InventoryLogCreateNestedManyWithoutWarehouseInput
+    productionOrders?: ProductionOrderCreateNestedManyWithoutWarehouseInput
+    purchases?: PurchaseInvoiceCreateNestedManyWithoutWarehouseInput
+    invoices?: SalesInvoiceCreateNestedManyWithoutWarehouseInput
+    quotations?: SalesQuotationCreateNestedManyWithoutWarehouseInput
+    transfersTo?: StockTransferCreateNestedManyWithoutToWarehouseInput
+    transfersFrom?: StockTransferCreateNestedManyWithoutFromWarehouseInput
+    stockItems?: WarehouseStockCreateNestedManyWithoutWarehouseInput
+  }
+
+  export type WarehouseUncheckedCreateWithoutDisposalVouchersInput = {
+    id?: string
+    code: string
+    name: string
+    nameAr?: string | null
+    location?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    inventoryLogs?: InventoryLogUncheckedCreateNestedManyWithoutWarehouseInput
+    productionOrders?: ProductionOrderUncheckedCreateNestedManyWithoutWarehouseInput
+    purchases?: PurchaseInvoiceUncheckedCreateNestedManyWithoutWarehouseInput
+    invoices?: SalesInvoiceUncheckedCreateNestedManyWithoutWarehouseInput
+    quotations?: SalesQuotationUncheckedCreateNestedManyWithoutWarehouseInput
+    transfersTo?: StockTransferUncheckedCreateNestedManyWithoutToWarehouseInput
+    transfersFrom?: StockTransferUncheckedCreateNestedManyWithoutFromWarehouseInput
+    stockItems?: WarehouseStockUncheckedCreateNestedManyWithoutWarehouseInput
+  }
+
+  export type WarehouseCreateOrConnectWithoutDisposalVouchersInput = {
+    where: WarehouseWhereUniqueInput
+    create: XOR<WarehouseCreateWithoutDisposalVouchersInput, WarehouseUncheckedCreateWithoutDisposalVouchersInput>
+  }
+
+  export type ProductUpsertWithoutDisposalVouchersInput = {
+    update: XOR<ProductUpdateWithoutDisposalVouchersInput, ProductUncheckedUpdateWithoutDisposalVouchersInput>
+    create: XOR<ProductCreateWithoutDisposalVouchersInput, ProductUncheckedCreateWithoutDisposalVouchersInput>
+    where?: ProductWhereInput
+  }
+
+  export type ProductUpdateToOneWithWhereWithoutDisposalVouchersInput = {
+    where?: ProductWhereInput
+    data: XOR<ProductUpdateWithoutDisposalVouchersInput, ProductUncheckedUpdateWithoutDisposalVouchersInput>
+  }
+
+  export type ProductUpdateWithoutDisposalVouchersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sku?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    nameAr?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    category?: NullableStringFieldUpdateOperationsInput | string | null
+    classification?: StringFieldUpdateOperationsInput | string
+    unit?: StringFieldUpdateOperationsInput | string
+    costPrice?: FloatFieldUpdateOperationsInput | number
+    salePrice?: FloatFieldUpdateOperationsInput | number
+    stockQuantity?: FloatFieldUpdateOperationsInput | number
+    reorderPoint?: FloatFieldUpdateOperationsInput | number
+    caloriesPer100g?: FloatFieldUpdateOperationsInput | number
+    expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    unitQuantity?: FloatFieldUpdateOperationsInput | number
+    costCenters?: CostCenterUpdateManyWithoutProductNestedInput
+    costCenterItems?: CostCenterItemUpdateManyWithoutProductNestedInput
+    inventoryLogs?: InventoryLogUpdateManyWithoutProductNestedInput
+    items?: InvoiceItemUpdateManyWithoutProductNestedInput
+    subUnitRef?: UnitOfMeasureUpdateOneWithoutSubProductsNestedInput
+    unitRef?: UnitOfMeasureUpdateOneWithoutMainProductsNestedInput
+    productionOrders?: ProductionOrderUpdateManyWithoutProductNestedInput
+    usages?: ProductionOrderItemUpdateManyWithoutProductNestedInput
+    purchaseItems?: PurchaseItemUpdateManyWithoutProductNestedInput
+    quotationItems?: QuotationItemUpdateManyWithoutProductNestedInput
+    transfers?: StockTransferItemUpdateManyWithoutProductNestedInput
+    warehouseStocks?: WarehouseStockUpdateManyWithoutProductNestedInput
+  }
+
+  export type ProductUncheckedUpdateWithoutDisposalVouchersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sku?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    nameAr?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    category?: NullableStringFieldUpdateOperationsInput | string | null
+    classification?: StringFieldUpdateOperationsInput | string
+    unit?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
+    costPrice?: FloatFieldUpdateOperationsInput | number
+    salePrice?: FloatFieldUpdateOperationsInput | number
+    stockQuantity?: FloatFieldUpdateOperationsInput | number
+    reorderPoint?: FloatFieldUpdateOperationsInput | number
+    caloriesPer100g?: FloatFieldUpdateOperationsInput | number
+    expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    unitQuantity?: FloatFieldUpdateOperationsInput | number
+    subUnitId?: NullableStringFieldUpdateOperationsInput | string | null
+    costCenters?: CostCenterUncheckedUpdateManyWithoutProductNestedInput
+    costCenterItems?: CostCenterItemUncheckedUpdateManyWithoutProductNestedInput
+    inventoryLogs?: InventoryLogUncheckedUpdateManyWithoutProductNestedInput
+    items?: InvoiceItemUncheckedUpdateManyWithoutProductNestedInput
+    productionOrders?: ProductionOrderUncheckedUpdateManyWithoutProductNestedInput
+    usages?: ProductionOrderItemUncheckedUpdateManyWithoutProductNestedInput
+    purchaseItems?: PurchaseItemUncheckedUpdateManyWithoutProductNestedInput
+    quotationItems?: QuotationItemUncheckedUpdateManyWithoutProductNestedInput
+    transfers?: StockTransferItemUncheckedUpdateManyWithoutProductNestedInput
+    warehouseStocks?: WarehouseStockUncheckedUpdateManyWithoutProductNestedInput
+  }
+
+  export type WarehouseUpsertWithoutDisposalVouchersInput = {
+    update: XOR<WarehouseUpdateWithoutDisposalVouchersInput, WarehouseUncheckedUpdateWithoutDisposalVouchersInput>
+    create: XOR<WarehouseCreateWithoutDisposalVouchersInput, WarehouseUncheckedCreateWithoutDisposalVouchersInput>
+    where?: WarehouseWhereInput
+  }
+
+  export type WarehouseUpdateToOneWithWhereWithoutDisposalVouchersInput = {
+    where?: WarehouseWhereInput
+    data: XOR<WarehouseUpdateWithoutDisposalVouchersInput, WarehouseUncheckedUpdateWithoutDisposalVouchersInput>
+  }
+
+  export type WarehouseUpdateWithoutDisposalVouchersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    nameAr?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    inventoryLogs?: InventoryLogUpdateManyWithoutWarehouseNestedInput
+    productionOrders?: ProductionOrderUpdateManyWithoutWarehouseNestedInput
+    purchases?: PurchaseInvoiceUpdateManyWithoutWarehouseNestedInput
+    invoices?: SalesInvoiceUpdateManyWithoutWarehouseNestedInput
+    quotations?: SalesQuotationUpdateManyWithoutWarehouseNestedInput
+    transfersTo?: StockTransferUpdateManyWithoutToWarehouseNestedInput
+    transfersFrom?: StockTransferUpdateManyWithoutFromWarehouseNestedInput
+    stockItems?: WarehouseStockUpdateManyWithoutWarehouseNestedInput
+  }
+
+  export type WarehouseUncheckedUpdateWithoutDisposalVouchersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    nameAr?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    inventoryLogs?: InventoryLogUncheckedUpdateManyWithoutWarehouseNestedInput
+    productionOrders?: ProductionOrderUncheckedUpdateManyWithoutWarehouseNestedInput
+    purchases?: PurchaseInvoiceUncheckedUpdateManyWithoutWarehouseNestedInput
+    invoices?: SalesInvoiceUncheckedUpdateManyWithoutWarehouseNestedInput
+    quotations?: SalesQuotationUncheckedUpdateManyWithoutWarehouseNestedInput
+    transfersTo?: StockTransferUncheckedUpdateManyWithoutToWarehouseNestedInput
+    transfersFrom?: StockTransferUncheckedUpdateManyWithoutFromWarehouseNestedInput
+    stockItems?: WarehouseStockUncheckedUpdateManyWithoutWarehouseNestedInput
   }
 
   export type SalesInvoiceCreateManyCustomerInput = {
@@ -48839,6 +52727,8 @@ export namespace Prisma {
   export type InventoryLogCreateManyWarehouseInput = {
     id?: string
     productId: string
+    unitId?: string | null
+    unitName?: string | null
     date?: Date | string
     type: string
     quantity: number
@@ -48930,8 +52820,24 @@ export namespace Prisma {
     quantity?: number
   }
 
+  export type DisposalVoucherCreateManyWarehouseInput = {
+    id?: string
+    voucherNumber: string
+    date?: Date | string
+    productId: string
+    unitId?: string | null
+    quantity: number
+    reason: string
+    notes?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type InventoryLogUpdateWithoutWarehouseInput = {
     id?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
+    unitName?: NullableStringFieldUpdateOperationsInput | string | null
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     type?: StringFieldUpdateOperationsInput | string
     quantity?: FloatFieldUpdateOperationsInput | number
@@ -48943,6 +52849,8 @@ export namespace Prisma {
   export type InventoryLogUncheckedUpdateWithoutWarehouseInput = {
     id?: StringFieldUpdateOperationsInput | string
     productId?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
+    unitName?: NullableStringFieldUpdateOperationsInput | string | null
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     type?: StringFieldUpdateOperationsInput | string
     quantity?: FloatFieldUpdateOperationsInput | number
@@ -48953,6 +52861,8 @@ export namespace Prisma {
   export type InventoryLogUncheckedUpdateManyWithoutWarehouseInput = {
     id?: StringFieldUpdateOperationsInput | string
     productId?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
+    unitName?: NullableStringFieldUpdateOperationsInput | string | null
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     type?: StringFieldUpdateOperationsInput | string
     quantity?: FloatFieldUpdateOperationsInput | number
@@ -49226,6 +53136,48 @@ export namespace Prisma {
     quantity?: FloatFieldUpdateOperationsInput | number
   }
 
+  export type DisposalVoucherUpdateWithoutWarehouseInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    voucherNumber?: StringFieldUpdateOperationsInput | string
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: FloatFieldUpdateOperationsInput | number
+    reason?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    product?: ProductUpdateOneRequiredWithoutDisposalVouchersNestedInput
+  }
+
+  export type DisposalVoucherUncheckedUpdateWithoutWarehouseInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    voucherNumber?: StringFieldUpdateOperationsInput | string
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    productId?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: FloatFieldUpdateOperationsInput | number
+    reason?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DisposalVoucherUncheckedUpdateManyWithoutWarehouseInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    voucherNumber?: StringFieldUpdateOperationsInput | string
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    productId?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: FloatFieldUpdateOperationsInput | number
+    reason?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type CostCenterCreateManyProductInput = {
     id?: string
     code: string
@@ -49250,6 +53202,8 @@ export namespace Prisma {
   export type InventoryLogCreateManyProductInput = {
     id?: string
     warehouseId?: string | null
+    unitId?: string | null
+    unitName?: string | null
     date?: Date | string
     type: string
     quantity: number
@@ -49260,6 +53214,7 @@ export namespace Prisma {
   export type InvoiceItemCreateManyProductInput = {
     id?: string
     invoiceId: string
+    unitId?: string | null
     quantity: number
     unitPrice: number
     total: number
@@ -49289,6 +53244,7 @@ export namespace Prisma {
   export type PurchaseItemCreateManyProductInput = {
     id?: string
     invoiceId: string
+    unitId?: string | null
     quantity: number
     unitPrice: number
     total: number
@@ -49312,6 +53268,20 @@ export namespace Prisma {
     id?: string
     warehouseId: string
     quantity?: number
+  }
+
+  export type DisposalVoucherCreateManyProductInput = {
+    id?: string
+    voucherNumber: string
+    date?: Date | string
+    warehouseId: string
+    unitId?: string | null
+    quantity: number
+    reason: string
+    notes?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type CostCenterUpdateWithoutProductInput = {
@@ -49381,6 +53351,8 @@ export namespace Prisma {
 
   export type InventoryLogUpdateWithoutProductInput = {
     id?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
+    unitName?: NullableStringFieldUpdateOperationsInput | string | null
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     type?: StringFieldUpdateOperationsInput | string
     quantity?: FloatFieldUpdateOperationsInput | number
@@ -49392,6 +53364,8 @@ export namespace Prisma {
   export type InventoryLogUncheckedUpdateWithoutProductInput = {
     id?: StringFieldUpdateOperationsInput | string
     warehouseId?: NullableStringFieldUpdateOperationsInput | string | null
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
+    unitName?: NullableStringFieldUpdateOperationsInput | string | null
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     type?: StringFieldUpdateOperationsInput | string
     quantity?: FloatFieldUpdateOperationsInput | number
@@ -49402,6 +53376,8 @@ export namespace Prisma {
   export type InventoryLogUncheckedUpdateManyWithoutProductInput = {
     id?: StringFieldUpdateOperationsInput | string
     warehouseId?: NullableStringFieldUpdateOperationsInput | string | null
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
+    unitName?: NullableStringFieldUpdateOperationsInput | string | null
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     type?: StringFieldUpdateOperationsInput | string
     quantity?: FloatFieldUpdateOperationsInput | number
@@ -49411,6 +53387,7 @@ export namespace Prisma {
 
   export type InvoiceItemUpdateWithoutProductInput = {
     id?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     unitPrice?: FloatFieldUpdateOperationsInput | number
     total?: FloatFieldUpdateOperationsInput | number
@@ -49420,6 +53397,7 @@ export namespace Prisma {
   export type InvoiceItemUncheckedUpdateWithoutProductInput = {
     id?: StringFieldUpdateOperationsInput | string
     invoiceId?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     unitPrice?: FloatFieldUpdateOperationsInput | number
     total?: FloatFieldUpdateOperationsInput | number
@@ -49428,6 +53406,7 @@ export namespace Prisma {
   export type InvoiceItemUncheckedUpdateManyWithoutProductInput = {
     id?: StringFieldUpdateOperationsInput | string
     invoiceId?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     unitPrice?: FloatFieldUpdateOperationsInput | number
     total?: FloatFieldUpdateOperationsInput | number
@@ -49500,6 +53479,7 @@ export namespace Prisma {
 
   export type PurchaseItemUpdateWithoutProductInput = {
     id?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     unitPrice?: FloatFieldUpdateOperationsInput | number
     total?: FloatFieldUpdateOperationsInput | number
@@ -49509,6 +53489,7 @@ export namespace Prisma {
   export type PurchaseItemUncheckedUpdateWithoutProductInput = {
     id?: StringFieldUpdateOperationsInput | string
     invoiceId?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     unitPrice?: FloatFieldUpdateOperationsInput | number
     total?: FloatFieldUpdateOperationsInput | number
@@ -49517,6 +53498,7 @@ export namespace Prisma {
   export type PurchaseItemUncheckedUpdateManyWithoutProductInput = {
     id?: StringFieldUpdateOperationsInput | string
     invoiceId?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     unitPrice?: FloatFieldUpdateOperationsInput | number
     total?: FloatFieldUpdateOperationsInput | number
@@ -49582,9 +53564,52 @@ export namespace Prisma {
     quantity?: FloatFieldUpdateOperationsInput | number
   }
 
+  export type DisposalVoucherUpdateWithoutProductInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    voucherNumber?: StringFieldUpdateOperationsInput | string
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: FloatFieldUpdateOperationsInput | number
+    reason?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    warehouse?: WarehouseUpdateOneRequiredWithoutDisposalVouchersNestedInput
+  }
+
+  export type DisposalVoucherUncheckedUpdateWithoutProductInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    voucherNumber?: StringFieldUpdateOperationsInput | string
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    warehouseId?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: FloatFieldUpdateOperationsInput | number
+    reason?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DisposalVoucherUncheckedUpdateManyWithoutProductInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    voucherNumber?: StringFieldUpdateOperationsInput | string
+    date?: DateTimeFieldUpdateOperationsInput | Date | string
+    warehouseId?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: FloatFieldUpdateOperationsInput | number
+    reason?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type InvoiceItemCreateManyInvoiceInput = {
     id?: string
     productId: string
+    unitId?: string | null
     quantity: number
     unitPrice: number
     total: number
@@ -49592,6 +53617,7 @@ export namespace Prisma {
 
   export type InvoiceItemUpdateWithoutInvoiceInput = {
     id?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     unitPrice?: FloatFieldUpdateOperationsInput | number
     total?: FloatFieldUpdateOperationsInput | number
@@ -49601,6 +53627,7 @@ export namespace Prisma {
   export type InvoiceItemUncheckedUpdateWithoutInvoiceInput = {
     id?: StringFieldUpdateOperationsInput | string
     productId?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     unitPrice?: FloatFieldUpdateOperationsInput | number
     total?: FloatFieldUpdateOperationsInput | number
@@ -49609,6 +53636,7 @@ export namespace Prisma {
   export type InvoiceItemUncheckedUpdateManyWithoutInvoiceInput = {
     id?: StringFieldUpdateOperationsInput | string
     productId?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     unitPrice?: FloatFieldUpdateOperationsInput | number
     total?: FloatFieldUpdateOperationsInput | number
@@ -49617,6 +53645,7 @@ export namespace Prisma {
   export type PurchaseItemCreateManyInvoiceInput = {
     id?: string
     productId: string
+    unitId?: string | null
     quantity: number
     unitPrice: number
     total: number
@@ -49624,6 +53653,7 @@ export namespace Prisma {
 
   export type PurchaseItemUpdateWithoutInvoiceInput = {
     id?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     unitPrice?: FloatFieldUpdateOperationsInput | number
     total?: FloatFieldUpdateOperationsInput | number
@@ -49633,6 +53663,7 @@ export namespace Prisma {
   export type PurchaseItemUncheckedUpdateWithoutInvoiceInput = {
     id?: StringFieldUpdateOperationsInput | string
     productId?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     unitPrice?: FloatFieldUpdateOperationsInput | number
     total?: FloatFieldUpdateOperationsInput | number
@@ -49641,6 +53672,7 @@ export namespace Prisma {
   export type PurchaseItemUncheckedUpdateManyWithoutInvoiceInput = {
     id?: StringFieldUpdateOperationsInput | string
     productId?: StringFieldUpdateOperationsInput | string
+    unitId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     unitPrice?: FloatFieldUpdateOperationsInput | number
     total?: FloatFieldUpdateOperationsInput | number
@@ -50199,6 +54231,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUpdateManyWithoutProductNestedInput
     transfers?: StockTransferItemUpdateManyWithoutProductNestedInput
     warehouseStocks?: WarehouseStockUpdateManyWithoutProductNestedInput
+    disposalVouchers?: DisposalVoucherUpdateManyWithoutProductNestedInput
   }
 
   export type ProductUncheckedUpdateWithoutSubUnitRefInput = {
@@ -50230,6 +54263,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUncheckedUpdateManyWithoutProductNestedInput
     transfers?: StockTransferItemUncheckedUpdateManyWithoutProductNestedInput
     warehouseStocks?: WarehouseStockUncheckedUpdateManyWithoutProductNestedInput
+    disposalVouchers?: DisposalVoucherUncheckedUpdateManyWithoutProductNestedInput
   }
 
   export type ProductUncheckedUpdateManyWithoutSubUnitRefInput = {
@@ -50282,6 +54316,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUpdateManyWithoutProductNestedInput
     transfers?: StockTransferItemUpdateManyWithoutProductNestedInput
     warehouseStocks?: WarehouseStockUpdateManyWithoutProductNestedInput
+    disposalVouchers?: DisposalVoucherUpdateManyWithoutProductNestedInput
   }
 
   export type ProductUncheckedUpdateWithoutUnitRefInput = {
@@ -50313,6 +54348,7 @@ export namespace Prisma {
     quotationItems?: QuotationItemUncheckedUpdateManyWithoutProductNestedInput
     transfers?: StockTransferItemUncheckedUpdateManyWithoutProductNestedInput
     warehouseStocks?: WarehouseStockUncheckedUpdateManyWithoutProductNestedInput
+    disposalVouchers?: DisposalVoucherUncheckedUpdateManyWithoutProductNestedInput
   }
 
   export type ProductUncheckedUpdateManyWithoutUnitRefInput = {

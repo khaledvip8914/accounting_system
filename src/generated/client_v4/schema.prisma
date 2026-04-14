@@ -5,7 +5,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
+  url      = env("DATABASE_URL")
 }
 
 model Customer {
@@ -38,20 +38,22 @@ model Supplier {
 }
 
 model Warehouse {
-  id            String            @id @default(cuid())
-  code          String            @unique
-  name          String
-  nameAr        String?
-  location      String?
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-  inventoryLogs InventoryLog[]
-  purchases     PurchaseInvoice[]
-  invoices      SalesInvoice[]
-  quotations    SalesQuotation[]
-  transfersTo   StockTransfer[]   @relation("ToWarehouse")
-  transfersFrom StockTransfer[]   @relation("FromWarehouse")
-  stockItems    WarehouseStock[]
+  id               String            @id @default(cuid())
+  code             String            @unique
+  name             String
+  nameAr           String?
+  location         String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  inventoryLogs    InventoryLog[]
+  productionOrders ProductionOrder[]
+  purchases        PurchaseInvoice[]
+  invoices         SalesInvoice[]
+  quotations       SalesQuotation[]
+  transfersTo      StockTransfer[]   @relation("ToWarehouse")
+  transfersFrom    StockTransfer[]   @relation("FromWarehouse")
+  stockItems       WarehouseStock[]
+  disposalVouchers DisposalVoucher[]
 }
 
 model WarehouseStock {
@@ -66,25 +68,38 @@ model WarehouseStock {
 }
 
 model Product {
-  id              String              @id @default(cuid())
-  sku             String              @unique
-  name            String
-  nameAr          String?
-  description     String?
-  category        String?
-  unit            String              @default("pc")
-  costPrice       Float               @default(0)
-  salePrice       Float               @default(0)
-  stockQuantity   Float               @default(0)
-  reorderPoint    Float               @default(0)
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
-  inventoryLogs   InventoryLog[]
-  items           InvoiceItem[]
-  purchaseItems   PurchaseItem[]
-  transfers       StockTransferItem[]
-  warehouseStocks WarehouseStock[]
-  quotationItems  QuotationItem[]
+  id               String                @id @default(cuid())
+  sku              String                @unique
+  name             String
+  nameAr           String?
+  description      String?
+  category         String?
+  classification   String                @default("Finished Product")
+  unit             String                @default("pc")
+  unitId           String?
+  costPrice        Float                 @default(0)
+  salePrice        Float                 @default(0)
+  stockQuantity    Float                 @default(0)
+  reorderPoint     Float                 @default(0)
+  caloriesPer100g  Float                 @default(0)
+  expiryDate       DateTime?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  unitQuantity     Float                 @default(1)
+  subUnitId        String?
+  costCenters      CostCenter[]
+  costCenterItems  CostCenterItem[]
+  inventoryLogs    InventoryLog[]
+  items            InvoiceItem[]
+  subUnitRef       UnitOfMeasure?        @relation("SubUnit", fields: [subUnitId], references: [id])
+  unitRef          UnitOfMeasure?        @relation("MainUnit", fields: [unitId], references: [id])
+  productionOrders ProductionOrder[]     @relation("FinishedProduct")
+  usages           ProductionOrderItem[] @relation("RawMaterialUsage")
+  purchaseItems    PurchaseItem[]
+  quotationItems   QuotationItem[]
+  transfers        StockTransferItem[]
+  warehouseStocks  WarehouseStock[]
+  disposalVouchers DisposalVoucher[]
 }
 
 model SalesInvoice {
@@ -132,6 +147,7 @@ model InvoiceItem {
   id        String       @id @default(cuid())
   invoiceId String
   productId String
+  unitId    String?
   quantity  Float
   unitPrice Float
   total     Float
@@ -143,6 +159,7 @@ model PurchaseItem {
   id        String          @id @default(cuid())
   invoiceId String
   productId String
+  unitId    String?
   quantity  Float
   unitPrice Float
   total     Float
@@ -177,6 +194,8 @@ model InventoryLog {
   id          String     @id @default(cuid())
   productId   String
   warehouseId String?
+  unitId      String?
+  unitName    String?
   date        DateTime   @default(now())
   type        String
   quantity    Float
@@ -192,14 +211,16 @@ model Account {
   name            String
   nameAr          String?
   type            String
+  nature          String               @default("Debit")
+  description     String?
   parentId        String?
   createdAt       DateTime             @default(now())
   updatedAt       DateTime             @updatedAt
   parent          Account?             @relation("AccountHierarchy", fields: [parentId], references: [id])
   children        Account[]            @relation("AccountHierarchy")
   entries         JournalEntry[]
-  relatedVouchers TransactionVoucher[] @relation("RelatedAccount")
   primaryVouchers TransactionVoucher[] @relation("PrimaryAccount")
+  relatedVouchers TransactionVoucher[] @relation("RelatedAccount")
 }
 
 model JournalVoucher {
@@ -241,9 +262,9 @@ model TransactionVoucher {
   journalVoucherId String?         @unique
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
-  journalVoucher   JournalVoucher? @relation(fields: [journalVoucherId], references: [id])
-  relatedAccount   Account         @relation("RelatedAccount", fields: [relatedAccountId], references: [id])
   primaryAccount   Account         @relation("PrimaryAccount", fields: [primaryAccountId], references: [id])
+  relatedAccount   Account         @relation("RelatedAccount", fields: [relatedAccountId], references: [id])
+  journalVoucher   JournalVoucher? @relation(fields: [journalVoucherId], references: [id])
 }
 
 model CompanyProfile {
@@ -277,14 +298,14 @@ model SalesQuotation {
   taxAmount            Float           @default(0)
   discount             Float           @default(0)
   netAmount            Float
-  status               String          @default("Draft") // Draft, Sent, Accepted, Rejected, Converted
+  status               String          @default("Draft")
   convertedToInvoiceId String?         @unique
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt
   items                QuotationItem[]
-  warehouse            Warehouse?      @relation(fields: [warehouseId], references: [id])
-  customer             Customer        @relation(fields: [customerId], references: [id])
   convertedTo          SalesInvoice?   @relation("QuotationToInvoice", fields: [convertedToInvoiceId], references: [id])
+  customer             Customer        @relation(fields: [customerId], references: [id])
+  warehouse            Warehouse?      @relation(fields: [warehouseId], references: [id])
 }
 
 model QuotationItem {
@@ -294,17 +315,139 @@ model QuotationItem {
   quantity    Float
   unitPrice   Float
   total       Float
-  product     Product        @relation(fields: [productId], references: [id])
   quotation   SalesQuotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  product     Product        @relation(fields: [productId], references: [id])
+}
+
+model UnitOfMeasure {
+  id               String                @id @default(cuid())
+  name             String                @unique
+  nameAr           String?
+  parentUnitId     String?
+  conversionFactor Float?                @default(1)
+  ccItems          CostCenterItem[]      @relation("CCItemUnit")
+  subProducts      Product[]             @relation("SubUnit")
+  mainProducts     Product[]             @relation("MainUnit")
+  poItems          ProductionOrderItem[] @relation("POItemUnit")
+  parentUnit       UnitOfMeasure?        @relation("UnitConversions", fields: [parentUnitId], references: [id])
+  childUnits       UnitOfMeasure[]       @relation("UnitConversions")
+}
+
+model CostCenter {
+  id           String           @id @default(cuid())
+  code         String           @unique
+  name         String
+  nameAr       String?
+  description  String?
+  productId    String?
+  quantityUsed Float            @default(0)
+  yieldWeight  Float            @default(0)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  product      Product?         @relation(fields: [productId], references: [id])
+  items        CostCenterItem[]
+}
+
+model CostCenterItem {
+  id           String         @id @default(cuid())
+  costCenterId String
+  productId    String
+  unitId       String?
+  quantity     Float          @default(0)
+  costPrice    Float          @default(0)
+  ratio        Float          @default(0)
+  product      Product        @relation(fields: [productId], references: [id])
+  unit         UnitOfMeasure? @relation("CCItemUnit", fields: [unitId], references: [id])
+  costCenter   CostCenter     @relation(fields: [costCenterId], references: [id], onDelete: Cascade)
+}
+
+model ProductionOrder {
+  id          String                @id @default(cuid())
+  orderNumber String                @unique
+  date        DateTime              @default(now())
+  productId   String
+  quantity    Float                 @default(0)
+  warehouseId String
+  status      String                @default("Draft")
+  notes       String?
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  warehouse   Warehouse             @relation(fields: [warehouseId], references: [id])
+  product     Product               @relation("FinishedProduct", fields: [productId], references: [id])
+  items       ProductionOrderItem[]
+}
+
+model ProductionOrderItem {
+  id                String          @id @default(cuid())
+  productionOrderId String
+  productId         String
+  unitId            String?
+  quantity          Float
+  ratio             Float           @default(0)
+  costPrice         Float           @default(0)
+  product           Product         @relation("RawMaterialUsage", fields: [productId], references: [id])
+  unit              UnitOfMeasure?  @relation("POItemUnit", fields: [unitId], references: [id])
+  productionOrder   ProductionOrder @relation(fields: [productionOrderId], references: [id], onDelete: Cascade)
 }
 
 model User {
-  id        String   @id @default(cuid())
-  username  String   @unique
-  email     String?  @unique
-  password  String
-  name      String?
-  role      String   @default("Accountant") // Admin, Accountant, Viewer
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  username    String   @unique
+  email       String?  @unique
+  password    String
+  name        String?
+  role        String   @default("Employee")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  permissions String?
+}
+
+model Employee {
+  id             String                  @id @default(cuid())
+  code           String                  @unique
+  name           String
+  nameAr         String?
+  jobTitle       String?
+  jobTitleAr     String?
+  department     String?
+  basicSalary    Float                   @default(0)
+  idNumber       String?
+  idExpiry       DateTime?
+  joinDate       DateTime                @default(now())
+  status         String                  @default("Active")
+  phone          String?
+  email          String?
+  address        String?
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  financialMoves EmployeeFinancialMove[]
+}
+
+model EmployeeFinancialMove {
+  id         String   @id @default(cuid())
+  employeeId String
+  type       String // Advance, Penalty
+  amount     Float
+  date       DateTime @default(now())
+  reason     String?
+  status     String   @default("Confirmed")
+  createdAt  DateTime @default(now())
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+}
+
+model DisposalVoucher {
+  id            String    @id @default(cuid())
+  voucherNumber String    @unique
+  date          DateTime  @default(now())
+  productId     String
+  warehouseId   String
+  unitId        String?
+  quantity      Float
+  reason        String
+  notes         String?
+  status        String    @default("Confirmed")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  product       Product   @relation(fields: [productId], references: [id])
+  warehouse     Warehouse @relation(fields: [warehouseId], references: [id])
 }

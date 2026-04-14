@@ -5,7 +5,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
+  url      = env("DATABASE_URL")
 }
 
 model Customer {
@@ -53,6 +53,7 @@ model Warehouse {
   transfersTo      StockTransfer[]   @relation("ToWarehouse")
   transfersFrom    StockTransfer[]   @relation("FromWarehouse")
   stockItems       WarehouseStock[]
+  disposalVouchers DisposalVoucher[]
 }
 
 model WarehouseStock {
@@ -98,6 +99,7 @@ model Product {
   quotationItems   QuotationItem[]
   transfers        StockTransferItem[]
   warehouseStocks  WarehouseStock[]
+  disposalVouchers DisposalVoucher[]
 }
 
 model SalesInvoice {
@@ -145,6 +147,7 @@ model InvoiceItem {
   id        String       @id @default(cuid())
   invoiceId String
   productId String
+  unitId    String?
   quantity  Float
   unitPrice Float
   total     Float
@@ -156,6 +159,7 @@ model PurchaseItem {
   id        String          @id @default(cuid())
   invoiceId String
   productId String
+  unitId    String?
   quantity  Float
   unitPrice Float
   total     Float
@@ -190,6 +194,8 @@ model InventoryLog {
   id          String     @id @default(cuid())
   productId   String
   warehouseId String?
+  unitId      String?
+  unitName    String?
   date        DateTime   @default(now())
   type        String
   quantity    Float
@@ -394,4 +400,21 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   permissions String?
+}
+
+model DisposalVoucher {
+  id            String    @id @default(cuid())
+  voucherNumber String    @unique
+  date          DateTime  @default(now())
+  productId     String
+  warehouseId   String
+  unitId        String?
+  quantity      Float
+  reason        String
+  notes         String?
+  status        String    @default("Confirmed")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  product       Product   @relation(fields: [productId], references: [id])
+  warehouse     Warehouse @relation(fields: [warehouseId], references: [id])
 }

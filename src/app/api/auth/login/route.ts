@@ -5,7 +5,9 @@ import { login } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
-    const { username, password } = await request.json();
+    let { username, password } = await request.json();
+    username = username?.trim();
+    password = password?.trim();
     console.log(`Login attempt for: [${username}]`);
 
     if (!username || !password) {
@@ -40,30 +42,26 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
-      console.warn(`User not found: ${username}`);
+      console.warn(`[AUTH] User not found: ${username}`);
       return NextResponse.json(
-        { errorAr: 'اسم المستخدم أو كلمة المرور غير صحيحة', errorEn: 'Invalid username or password' },
+        { errorAr: 'اسم المستخدم غير موجود في قاعدة البيانات', errorEn: 'Username not found in database' },
         { status: 401 }
       );
     }
 
-    console.log(`User found: ${user.username}. Comparing passwords...`);
+    console.log(`[AUTH] User found: ${user.username}. Password hashing check...`);
     const passwordMatch = await bcrypt.compare(password, user.password).catch(err => {
-      console.error('Bcrypt compare failed:', err);
+      console.error('[AUTH] Bcrypt compare failed:', err);
       return false;
     });
 
     if (!passwordMatch) {
-      console.warn(`Password mismatch for: ${username}`);
-      // Check if password stored is somehow not hashed
-      if (user.password === password) {
-        console.error('CRITICAL: User password is stored in PLAIN TEXT but bcrypt.compare was used.');
-      } else if (user.password.length < 20) {
-        console.error('CRITICAL: Stored password looks too short to be a bcrypt hash:', user.password);
-      }
+      console.warn(`[AUTH] Password mismatch for: ${username}`);
+      console.log(`[AUTH] Input password length: ${password.length}`);
+      console.log(`[AUTH] Stored hash starts with: ${user.password.substring(0, 10)}`);
       
       return NextResponse.json(
-        { errorAr: 'اسم المستخدم أو كلمة المرور غير صحيحة', errorEn: 'Invalid username or password' },
+        { errorAr: 'كلمة المرور غير صحيحة لهذا المستخدم', errorEn: 'Incorrect password for this user' },
         { status: 401 }
       );
     }

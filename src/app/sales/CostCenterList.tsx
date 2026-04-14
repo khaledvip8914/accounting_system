@@ -4,58 +4,8 @@ import { useState } from 'react';
 import { createCostCenter, updateCostCenter, deleteCostCenter, bulkCreateCostCenters } from './actions';
 import * as XLSX from 'xlsx';
 import { useRouter } from 'next/navigation';
+import SearchableSelect from '@/components/SearchableSelect';
 
-function SearchableProductSelect({ products, value, onChange, lang }: { products: any[], value: string, onChange: (val: string) => void, lang: string }) {
-    const [search, setSearch] = useState('');
-    const [isOpen, setIsOpen] = useState(false);
-    
-    const selectedProduct = products.find(p => p.id === value);
-    const displayName = selectedProduct ? (lang === 'ar' && selectedProduct.nameAr ? selectedProduct.nameAr : selectedProduct.name) : '';
-
-    const filtered = products.filter(p => {
-        const name = (p.name || '').toLowerCase();
-        const nameAr = (p.nameAr || '').toLowerCase();
-        const sku = (p.sku || '').toLowerCase();
-        const q = search.toLowerCase();
-        return name.includes(q) || nameAr.includes(q) || sku.includes(q);
-    });
-
-    return (
-        <div className="searchable-select-container">
-            <input 
-                type="text" 
-                className="search-select-input"
-                placeholder={displayName || (lang === 'ar' ? 'ابحث عن صنف...' : 'Search product...')}
-                value={isOpen ? search : displayName}
-                onChange={e => setSearch(e.target.value)}
-                onFocus={() => { setIsOpen(true); setSearch(''); }}
-                onBlur={() => setTimeout(() => setIsOpen(false), 200)}
-            />
-            {isOpen && (
-                <div className="search-results-dropdown no-print">
-                    {filtered.slice(0, 50).map(p => (
-                        <div 
-                            key={p.id} 
-                            className="search-result-item" 
-                            onClick={() => {
-                                onChange(p.id);
-                                setIsOpen(false);
-                            }}
-                        >
-                            <span style={{ fontWeight: 'bold', marginRight: '5px' }}>{p.sku}</span>
-                            {lang === 'ar' && p.nameAr ? p.nameAr : p.name}
-                        </div>
-                    ))}
-                    {filtered.length === 0 && (
-                        <div className="search-result-item" style={{ color: '#94a3b8', textAlign: 'center' }}>
-                            {lang === 'ar' ? 'لا توجد نتائج' : 'No results'}
-                        </div>
-                    )}
-                </div>
-            )}
-        </div>
-    );
-}
 
 export default function CostCenterList({ costCenters, products, units, lang }: { costCenters: any[], products: any[], units: any[], lang: string }) {
   const router = useRouter();
@@ -151,18 +101,7 @@ export default function CostCenterList({ costCenters, products, units, lang }: {
     if (!qty) return 0;
     const u = units.find(unit => unit.id === unitId);
     
-    const name = (u?.name || '').toLowerCase().trim();
-    const nameAr = (u?.nameAr || '').trim();
-    
-    if (name === 'kilogram' || name === 'kg' || nameAr === 'كيلو' || nameAr === 'كجم') return qty * 1000;
-    if (name === 'gram' || name === 'g' || name === 'gm' || nameAr === 'جرام' || nameAr === 'جم') return qty;
-    if (name === 'liter' || name === 'ltr' || name === 'l' || nameAr === 'لتر') return qty * 1000;
-    if (name === 'milliliter' || name === 'ml' || nameAr === 'ملي') return qty;
-    
-    if (name.includes('kilogram') || name.includes('كيلو')) return qty * 1000;
-    if (name.includes('liter') || name.includes('لتر')) return qty * 1000;
-
-    // Resolve product-specific unit quantities
+    // 1. Resolve product-specific unit quantities (High Priority)
     if (productId) {
         const prod = products.find(p => p.id === productId);
         if (prod && unitId === prod.unitId && prod.subUnitId) {
@@ -171,6 +110,19 @@ export default function CostCenterList({ costCenters, products, units, lang }: {
             return qty * (prod.unitQuantity || 1) * subWeight;
         }
     }
+
+    const name = (u?.name || '').toLowerCase().trim();
+    const nameAr = (u?.nameAr || '').trim();
+    
+    // 2. Exact matches
+    if (name === 'kilogram' || name === 'kg' || nameAr === 'كيلو' || nameAr === 'كجم' || nameAr === 'كيلوجرام') return qty * 1000;
+    if (name === 'gram' || name === 'g' || name === 'gm' || nameAr === 'جرام' || nameAr === 'جم') return qty;
+    if (name === 'liter' || name === 'ltr' || name === 'l' || nameAr === 'لتر') return qty * 1000;
+    if (name === 'milliliter' || name === 'ml' || nameAr === 'ملي' || nameAr === 'مليلتر') return qty;
+    
+    // 3. Broad matches
+    if (name.includes('kilogram') || name.includes('kg') || nameAr.includes('كيلو')) return qty * 1000;
+    if (name.includes('liter') || name.includes('ltr') || nameAr.includes('لتر')) return qty * 1000;
 
     if (u?.conversionFactor && u.conversionFactor > 1 && !name.includes('gram') && !name.includes('ml')) {
         return qty * u.conversionFactor;
@@ -293,15 +245,15 @@ export default function CostCenterList({ costCenters, products, units, lang }: {
   return (
     <div className="cost-centers-module">
       <div className="card">
-        <div className="card-header">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <h2 className="card-title">{lang === 'ar' ? 'نظام تكاليف الإنتاج (Recipe BOM)' : 'Production Costing (Recipe BOM)'}</h2>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                    {lang === 'ar' ? 'تحديد مكونات المنتج وحساب تكلفة الإنتاج الكلية' : 'Define product ingredients and calculate total production costs'}
-                </p>
-            </div>
-            <button className="btn-secondary no-print" onClick={() => {
+        <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <h2 className="card-title">{lang === 'ar' ? 'نظام تكاليف الإنتاج (Recipe BOM)' : 'Production Costing (Recipe BOM)'}</h2>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  {lang === 'ar' ? 'تحديد مكونات المنتج وحساب تكلفة الإنتاج الكلية' : 'Define product ingredients and calculate total production costs'}
+              </p>
+          </div>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }} className="no-print">
+            <button className="btn-secondary" onClick={() => {
                 const data = costCenters.map(cc => ({
                     'Code': cc.code,
                     'Recipe Name': cc.name,
@@ -408,17 +360,13 @@ export default function CostCenterList({ costCenters, products, units, lang }: {
                                     {finishedProduct?.sku} - {lang === 'ar' && finishedProduct?.nameAr ? finishedProduct?.nameAr : finishedProduct?.name}
                                 </div>
                             ) : (
-                                <select 
-                                    required 
-                                    value={formData.productId} 
-                                    onChange={e => handleFinishedProductChange(e.target.value)}
-                                    style={{ width: '100%', padding: '0.6rem', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '1rem' }}
-                                >
-                                    <option value="">{lang === 'ar' ? '-- اختر المنتج النهائي --' : '-- Select Finished Product --'}</option>
-                                    {products.filter(p => p.classification === 'Finished Product' || p.classification === 'Semi-finished').map(p => (
-                                        <option key={p.id} value={p.id}>{p.sku} - {lang === 'ar' && p.nameAr ? p.nameAr : p.name}</option>
-                                    ))}
-                                </select>
+                                <SearchableSelect 
+                                    options={products.filter(p => p.classification === 'Finished Product' || p.classification === 'Semi-finished')}
+                                    value={formData.productId}
+                                    onChange={handleFinishedProductChange}
+                                    lang={lang}
+                                    placeholder={lang === 'ar' ? '-- اختر المنتج النهائي --' : '-- Select Finished Product --'}
+                                />
                             )}
                         </div>
                         <div style={{ gridColumn: 'span 2' }}>
@@ -575,7 +523,14 @@ export default function CostCenterList({ costCenters, products, units, lang }: {
                                                 const rawPct = totalWeightG > 0 ? (weightG / totalWeightG) * 100 : 0;
                                                 return (
                                                     <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                                        <td style={{ padding: '6px 8px' }}><SearchableProductSelect products={products} value={item.productId} onChange={val => updateRow(idx, 'productId', val)} lang={lang} /></td>
+                                                        <td style={{ padding: '6px 8px' }}>
+                                                            <SearchableSelect 
+                                                                options={products} 
+                                                                value={item.productId} 
+                                                                onChange={val => updateRow(idx, 'productId', val)} 
+                                                                lang={lang} 
+                                                            />
+                                                        </td>
                                                         <td style={{ textAlign: 'center' }}><input type="number" step="0.001" value={item.quantity} onChange={e => updateRow(idx, 'quantity', parseFloat(e.target.value) || 0)} style={{ width: '100%', textAlign: 'center', padding: '0.4rem', border: '1px solid #e2e8f0' }} /></td>
                                                         <td style={{ textAlign: 'center' }}>
                                                             <select value={item.unitId || ''} onChange={e => updateRow(idx, 'unitId', e.target.value)} style={{ width: '100%', padding: '0.3rem', fontSize: '0.8rem' }}>
@@ -640,13 +595,7 @@ export default function CostCenterList({ costCenters, products, units, lang }: {
          </div>
       )}
       <style jsx>{`
-        .searchable-select-container { position: relative; width: 100%; }
-        .search-select-input { width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.9rem; }
-        .search-results-dropdown { position: absolute; top: 100%; left: 0; right: 0; z-index: 50; background: white; border: 1px solid #e2e8f0; border-radius: 8px; max-height: 200px; overflow-y: auto; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        .search-result-item { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
-        .search-result-item:hover { background: #f8fafc; color: #3b82f6; }
-        
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(8px); }
+         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(8px); }
         .modal-content { background: white; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); overflow: hidden; }
         .modal-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
         .close-btn { background: none; border: none; font-size: 1.8rem; cursor: pointer; color: #94a3b8; }

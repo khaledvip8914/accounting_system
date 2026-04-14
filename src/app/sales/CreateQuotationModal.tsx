@@ -58,6 +58,7 @@ export default function CreateQuotationModal({
   const [validUntil, setValidUntil] = useState(
     quotationToEdit?.validUntil ? new Date(quotationToEdit.validUntil).toISOString().split('T')[0] : ''
   );
+  const [isTaxInclusive, setIsTaxInclusive] = useState(quotationToEdit?.isTaxInclusive || false);
   
   const [items, setItems] = useState<QuotationItem[]>(
     quotationToEdit && quotationToEdit.items ? quotationToEdit.items.map((i: any) => ({
@@ -98,12 +99,21 @@ export default function CreateQuotationModal({
   };
 
   const totals = useMemo(() => {
-    const subtotal = items.reduce((sum, item) => sum + item.total, 0);
-    const taxRate = 0.15; // 15% VAT
-    const taxAmount = (subtotal - discount) * taxRate;
-    const netAmount = (subtotal - discount) + taxAmount;
-    return { subtotal, taxAmount, netAmount };
-  }, [items, discount]);
+    const rawSubtotal = items.reduce((sum, item) => sum + item.total, 0);
+    const taxRate = 0.15;
+    
+    if (isTaxInclusive) {
+      const netAmount = rawSubtotal - discount;
+      const subtotal = netAmount / (1 + taxRate);
+      const taxAmount = netAmount - subtotal;
+      return { subtotal, taxAmount, netAmount };
+    } else {
+      const subtotal = rawSubtotal;
+      const taxAmount = (subtotal - discount) * taxRate;
+      const netAmount = (subtotal - discount) + taxAmount;
+      return { subtotal, taxAmount, netAmount };
+    }
+  }, [items, discount, isTaxInclusive]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,6 +129,7 @@ export default function CreateQuotationModal({
             warehouseId: selectedWarehouseId || null,
             date: quotationDate,
             validUntil: validUntil || null,
+            isTaxInclusive,
             items,
             discount,
             ...totals,
@@ -196,6 +207,19 @@ export default function CreateQuotationModal({
             <div className="form-group">
                 <label>{lang === 'ar' ? 'صلاحية العرض حتى' : 'Valid Until'}</label>
                 <input type="date" value={validUntil} onChange={e => setValidUntil(e.target.value)} />
+            </div>
+
+            <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '1.8rem' }}>
+              <input 
+                type="checkbox" 
+                id="isTaxIncv" 
+                checked={isTaxInclusive} 
+                onChange={e => setIsTaxInclusive(e.target.checked)}
+                style={{ width: 'auto', cursor: 'pointer' }}
+              />
+              <label htmlFor="isTaxIncv" style={{ margin: 0, cursor: 'pointer', fontWeight: 700, color: '#ca8a04' }}>
+                {lang === 'ar' ? 'الأسعار تشمل الضريبة (15%)' : 'Prices include 15% VAT'}
+              </label>
             </div>
           </div>
 

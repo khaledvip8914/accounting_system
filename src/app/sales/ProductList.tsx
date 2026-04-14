@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { createProduct, updateProduct, deleteProduct, translateText, createUnit, bulkCreateProducts, deleteAllProducts } from './actions';
+import { createProduct, updateProduct, deleteProduct, translateText, createUnit, bulkCreateProducts, deleteAllProducts, deleteProducts } from './actions';
 import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 
-export default function ProductList({ products, units, lang, dict }: { products: any[], units: any[], lang: string, dict: any }) {
+export default function ProductList({ products, units, warehouses, lang, dict, onViewItemCard }: { products: any[], units: any[], warehouses: any[], lang: string, dict: any, onViewItemCard?: (id: string) => void }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<any | null>(null);
@@ -15,6 +17,9 @@ export default function ProductList({ products, units, lang, dict }: { products:
   const [newUnit, setNewUnit] = useState({ name: '', nameAr: '' });
   const [showImportModal, setShowImportModal] = useState(false);
   const [importLoading, setImportLoading] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [showDeleteMenu, setShowDeleteMenu] = useState(false);
 
   const [formData, setFormData] = useState({
     sku: '',
@@ -119,6 +124,46 @@ export default function ProductList({ products, units, lang, dict }: { products:
     }
   };
 
+  const handleSelectOne = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const handleSelectAll = (filteredItems: any[]) => {
+    if (selectedIds.length === filteredItems.length && filteredItems.length > 0) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredItems.map(p => p.id));
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedIds.length === 0) return;
+    
+    setIsSubmitting(true);
+    try {
+      const res = await deleteProducts(selectedIds, lang) as any;
+      if (res.success) {
+        if (res.failCount > 0) {
+          if (res.successCount === 0) {
+            alert((lang === 'ar' ? 'لم يتم حذف أي صنف لارتباطهم ببيانات أخرى:\n' : 'No items deleted due to existing dependencies:\n') + res.errors.join('\n'));
+          } else {
+            alert((lang === 'ar' ? `تم حذف ${res.successCount} أصناف، ولكن تعذر حذف ${res.failCount} أصناف أخرى:\n` : `Deleted ${res.successCount} items, but could not delete ${res.failCount} others:\n`) + res.errors.join('\n'));
+          }
+        } else {
+          alert(lang === 'ar' ? 'تم حذف كافة الأصناف المحددة بنجاح' : 'All selected items deleted successfully');
+        }
+        setSelectedIds([]);
+        setSelectionMode(false);
+      } else {
+        alert((lang === 'ar' ? 'خطأ في العملية: ' : 'Error: ') + res.error);
+      }
+    } catch (err: any) {
+      alert((lang === 'ar' ? 'حدث خطأ غير متوقع: ' : 'Unexpected error: ') + err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const getClassificationLabel = (val: string) => {
     if (lang === 'ar') {
       if (val === 'Raw Material') return 'مادة خام';
@@ -145,6 +190,79 @@ export default function ProductList({ products, units, lang, dict }: { products:
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Products");
     XLSX.writeFile(wb, "Accounting_Products.xlsx");
+  };
+
+  const handleDownloadTemplate = async () => {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Products');
+    const unitSheet = workbook.addWorksheet('Units (Helper)', { state: 'hidden' });
+
+    // 1. Setup Headers
+    sheet.columns = [
+      { header: 'SKU', key: 'sku', width: 15 },
+      { header: 'Name (AR)', key: 'nameAr', width: 25 },
+      { header: 'Name (EN)', key: 'nameEn', width: 25 },
+      { header: 'Classification', key: 'classification', width: 20 },
+      { header: 'Category', key: 'category', width: 15 },
+      { header: 'Cost', key: 'cost', width: 10 },
+      { header: 'Price', key: 'price', width: 10 },
+      { header: 'Stock', key: 'stock', width: 10 },
+      { header: 'Unit', key: 'unit', width: 15 },
+      { header: 'Sub-Units in Main', key: 'unitQty', width: 18 },
+      { header: 'SubUnit', key: 'subUnit', width: 15 }
+    ];
+
+    // 2. Add Reference Units to the hidden sheet
+    const unitList = units.map(u => lang === 'ar' ? (u.nameAr || u.name) : u.name);
+    unitList.forEach((u, i) => {
+        unitSheet.getCell(i + 1, 1).value = u;
+    });
+
+    // 3. Add Sample Data
+    const sampleRow = {
+      sku: 'FIN-0001',
+      nameAr: 'صنف تجريبي',
+      nameEn: 'Sample Item',
+      classification: 'Finished Product',
+      category: 'General',
+      cost: 10,
+      price: 20,
+      stock: 100,
+      unit: unitList[0] || 'Piece',
+      unitQty: 1,
+      subUnit: unitList[0] || 'Piece'
+    };
+    sheet.addRow(sampleRow);
+
+    // 4. Add Data Validations
+    const classificationList = ['"Raw Material,Semi-finished,Finished Product"'];
+    const unitRange = `'Units (Helper)'!$A$1:$A$${unitList.length || 1}`;
+
+    for (let i = 2; i <= 100; i++) {
+       // Classification Dropdown
+       sheet.getCell(`D${i}`).dataValidation = {
+         type: 'list',
+         allowBlank: true,
+         formulae: classificationList
+       };
+       // Unit Dropdown
+       sheet.getCell(`I${i}`).dataValidation = {
+         type: 'list',
+         allowBlank: true,
+         formulae: [unitRange]
+       };
+       // SubUnit Dropdown
+       sheet.getCell(`K${i}`).dataValidation = {
+         type: 'list',
+         allowBlank: true,
+         formulae: [unitRange]
+       };
+    }
+
+    // 5. Generate and Save
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    saveAs(blob, "Products_Import_Template_v2.xlsx");
   };
 
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -207,9 +325,53 @@ export default function ProductList({ products, units, lang, dict }: { products:
               <button className="btn-primary no-print" onClick={openAdd}>
                 {lang === 'ar' ? '+ صنف جديد' : '+ New Item'}
               </button>
-              <button className="btn-secondary no-print" style={{ color: '#ef4444' }} onClick={handleDeleteAll}>
-                {lang === 'ar' ? '🗑️ حذف الكل' : 'Delete All'}
-              </button>
+              
+              <div style={{ position: 'relative' }}>
+                <button 
+                  className="btn-secondary no-print" 
+                  style={{ color: '#ef4444', borderColor: '#ef4444' }} 
+                  onClick={() => setShowDeleteMenu(!showDeleteMenu)}
+                >
+                  {lang === 'ar' ? '🗑️ حذف' : '🗑️ Delete'}
+                </button>
+                {showDeleteMenu && (
+                  <>
+                    <div 
+                      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 90 }} 
+                      onClick={() => setShowDeleteMenu(false)} 
+                    />
+                    <div style={{ 
+                      position: 'absolute', top: '100%', right: lang === 'ar' ? 'auto' : 0, left: lang === 'ar' ? 0 : 'auto',
+                      background: '#1e293b', border: '1px solid #334155', borderRadius: '8px', zIndex: 100, 
+                      minWidth: '200px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.5)', overflow: 'hidden', marginTop: '8px'
+                    }}>
+                      <button 
+                        style={{ width: '100%', padding: '0.8rem 1rem', textAlign: lang === 'ar' ? 'right' : 'left', border: 'none', background: 'none', cursor: 'pointer', fontSize: '0.85rem', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }} 
+                        onClick={() => { setSelectionMode(true); setShowDeleteMenu(false); }}
+                      >
+                        <span>📋</span> {lang === 'ar' ? 'تحديد أصناف للحذف' : 'Select items to delete'}
+                      </button>
+                      <button 
+                        style={{ width: '100%', padding: '0.8rem 1rem', textAlign: lang === 'ar' ? 'right' : 'left', border: 'none', background: 'none', cursor: 'pointer', fontSize: '0.85rem', color: '#ef4444', borderTop: '1px solid #334155', display: 'flex', alignItems: 'center', gap: '8px' }} 
+                        onClick={() => { handleDeleteAll(); setShowDeleteMenu(false); }}
+                      >
+                        <span>🔥</span> {lang === 'ar' ? 'حذف كافة الأصناف' : 'Delete All Products'}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {selectionMode && (
+                <div style={{ display: 'flex', gap: '0.5rem', animation: 'fadeIn 0.2s' }}>
+                   <button className="btn-primary no-print" onClick={handleDeleteSelected} style={{ background: '#ef4444' }} disabled={selectedIds.length === 0}>
+                     {lang === 'ar' ? `تأكيد الحذف (${selectedIds.length})` : `Confirm Delete (${selectedIds.length})`}
+                   </button>
+                   <button className="btn-secondary no-print" onClick={() => { setSelectionMode(false); setSelectedIds([]); }}>
+                     {lang === 'ar' ? 'إلغاء' : 'Cancel'}
+                   </button>
+                </div>
+              )}
           </div>
         </div>
 
@@ -228,6 +390,15 @@ export default function ProductList({ products, units, lang, dict }: { products:
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
+                {selectionMode && (
+                  <th style={{ width: '40px', textAlign: 'center' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={filtered.length > 0 && selectedIds.length === filtered.length}
+                      onChange={() => handleSelectAll(filtered)}
+                    />
+                  </th>
+                )}
                 <th style={{ textAlign: lang === 'ar' ? 'right' : 'left' }}>{lang === 'ar' ? 'رقم الصنف' : 'SKU / Code'}</th>
                 <th style={{ textAlign: lang === 'ar' ? 'right' : 'left' }}>{lang === 'ar' ? 'اسم الصنف' : 'Name'}</th>
                 <th style={{ textAlign: 'center' }}>{lang === 'ar' ? 'التصنيف' : 'Classification'}</th>
@@ -241,10 +412,32 @@ export default function ProductList({ products, units, lang, dict }: { products:
             </thead>
             <tbody>
               {(filtered || []).map(p => (
-                <tr key={p.id}>
-                  <td><code>{p.sku}</code></td>
+                <tr key={p.id} style={{ background: selectedIds.includes(p.id) ? 'rgba(59, 130, 246, 0.05)' : 'transparent' }}>
+                  {selectionMode && (
+                    <td style={{ textAlign: 'center' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedIds.includes(p.id)} 
+                        onChange={() => handleSelectOne(p.id)}
+                      />
+                    </td>
+                  )}
                   <td>
-                    <div style={{ fontWeight: '600' }}>{lang === 'ar' && p.nameAr ? p.nameAr : p.name}</div>
+                    <button 
+                      onClick={() => onViewItemCard && onViewItemCard(p.id)}
+                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'monospace', color: '#3b82f6', fontWeight: 'bold', textDecoration: 'underline' }}
+                    >
+                      {p.sku}
+                    </button>
+                  </td>
+                  <td>
+                    <div 
+                      onClick={() => onViewItemCard && onViewItemCard(p.id)}
+                      style={{ fontWeight: '600', cursor: 'pointer', color: '#3b82f6' }}
+                      title={lang === 'ar' ? 'عرض بطاقة الصنف' : 'View Item Card'}
+                    >
+                      {lang === 'ar' && p.nameAr ? p.nameAr : p.name}
+                    </div>
                     <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{p.category}</div>
                   </td>
                   <td style={{ textAlign: 'center' }}>
@@ -407,6 +600,11 @@ export default function ProductList({ products, units, lang, dict }: { products:
                <p style={{ marginBottom: '1rem', color: '#64748b' }}>
                  {lang === 'ar' ? 'اختر ملف إكسل يحتوي على أعمدة: SKU, Name, Cost, Price...' : 'Upload Excel file with columns: SKU, Name, Cost, Price...'}
                </p>
+               <div style={{ marginBottom: '1.5rem' }}>
+                  <button type="button" className="btn-secondary" onClick={handleDownloadTemplate} style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}>
+                    📥 {lang === 'ar' ? 'تحميل نموذج جاهز لتعبئته' : 'Download Sample Template'}
+                  </button>
+               </div>
                <input type="file" accept=".xlsx, .xls" onChange={handleImportFile} disabled={importLoading} />
                {importLoading && <div style={{ marginTop: '1rem' }}>{lang === 'ar' ? 'جاري المعالجة...' : 'Processing...'}</div>}
             </div>

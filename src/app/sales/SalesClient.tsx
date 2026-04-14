@@ -44,23 +44,35 @@ export default function SalesClient({
   const dict = getDictionary(lang);
 
   const handleInvoiceSave = async (data: any) => {
+    let res;
     if (editingInvoice) {
-      await updateSalesInvoice(editingInvoice.id, data);
+      res = await updateSalesInvoice(editingInvoice.id, data);
     } else {
-      await createSalesInvoice(data);
+      res = await createSalesInvoice(data);
     }
-    setShowNewInvoice(false);
-    setEditingInvoice(null);
+    
+    if (res?.success) {
+      setShowNewInvoice(false);
+      setEditingInvoice(null);
+    } else {
+      alert(res?.error || (lang === 'ar' ? 'حدث خطأ أثناء حفظ الفاتورة' : 'Error saving invoice'));
+    }
   };
 
   const handleQuotationSave = async (data: any) => {
+    let res;
     if (editingQuotation) {
-      await updateSalesQuotation(editingQuotation.id, data);
+      res = await updateSalesQuotation(editingQuotation.id, data);
     } else {
-      await createSalesQuotation(data);
+      res = await createSalesQuotation(data);
     }
-    setShowNewQuotation(false);
-    setEditingQuotation(null);
+    
+    if (res?.success) {
+      setShowNewQuotation(false);
+      setEditingQuotation(null);
+    } else {
+      alert(res?.error || (lang === 'ar' ? 'حدث خطأ أثناء حفظ العرض' : 'Error saving quotation'));
+    }
   };
 
   const openEditInvoice = (invoice: any) => {

@@ -219,6 +219,7 @@ exports.Prisma.InvoiceItemScalarFieldEnum = {
   id: 'id',
   invoiceId: 'invoiceId',
   productId: 'productId',
+  unitId: 'unitId',
   quantity: 'quantity',
   unitPrice: 'unitPrice',
   total: 'total'
@@ -228,6 +229,7 @@ exports.Prisma.PurchaseItemScalarFieldEnum = {
   id: 'id',
   invoiceId: 'invoiceId',
   productId: 'productId',
+  unitId: 'unitId',
   quantity: 'quantity',
   unitPrice: 'unitPrice',
   total: 'total'
@@ -255,6 +257,8 @@ exports.Prisma.InventoryLogScalarFieldEnum = {
   id: 'id',
   productId: 'productId',
   warehouseId: 'warehouseId',
+  unitId: 'unitId',
+  unitName: 'unitName',
   date: 'date',
   type: 'type',
   quantity: 'quantity',
@@ -422,6 +426,39 @@ exports.Prisma.UserScalarFieldEnum = {
   permissions: 'permissions'
 };
 
+exports.Prisma.EmployeeScalarFieldEnum = {
+  id: 'id',
+  code: 'code',
+  name: 'name',
+  nameAr: 'nameAr',
+  jobTitle: 'jobTitle',
+  jobTitleAr: 'jobTitleAr',
+  department: 'department',
+  basicSalary: 'basicSalary',
+  joinDate: 'joinDate',
+  status: 'status',
+  phone: 'phone',
+  email: 'email',
+  address: 'address',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.DisposalVoucherScalarFieldEnum = {
+  id: 'id',
+  voucherNumber: 'voucherNumber',
+  date: 'date',
+  productId: 'productId',
+  warehouseId: 'warehouseId',
+  unitId: 'unitId',
+  quantity: 'quantity',
+  reason: 'reason',
+  notes: 'notes',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -458,7 +495,9 @@ exports.Prisma.ModelName = {
   CostCenterItem: 'CostCenterItem',
   ProductionOrder: 'ProductionOrder',
   ProductionOrderItem: 'ProductionOrderItem',
-  User: 'User'
+  User: 'User',
+  Employee: 'Employee',
+  DisposalVoucher: 'DisposalVoucher'
 };
 
 /**

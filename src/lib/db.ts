@@ -1,19 +1,21 @@
-import { PrismaClient } from '../generated/client';
+import { PrismaClient } from '../generated/client_v7';
 
 // Force re-instantiation after schema update by using a new global key
 const globalForPrisma = globalThis as unknown as {
-  prisma_v8: PrismaClient | undefined;
+  prisma_v15: PrismaClient | undefined;
 };
 
 export const prisma =
-  globalForPrisma.prisma_v8 ??
+  globalForPrisma.prisma_v15 ??
   new PrismaClient({
     log: ['query', 'error', 'warn'],
   });
 
 if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma_v8 = prisma;
+  globalForPrisma.prisma_v15 = prisma;
 }
+
+export const prisma_latest = prisma;
 
 // Verification log for new modules
 if (prisma) {

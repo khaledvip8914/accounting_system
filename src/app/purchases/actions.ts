@@ -4,7 +4,8 @@ import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/auth';
 import { hasPermission } from '@/lib/permissions';
-
+import { syncProductCostCascading } from '../sales/actions';
+import { getUnitWeightInGramsServer } from '@/lib/inventory-helpers';
 export async function createPurchaseInvoice(data: {
   supplierId: string;
   date: string;
@@ -17,6 +18,9 @@ export async function createPurchaseInvoice(data: {
   paymentType: 'paid' | 'credit';
   paymentAccountId: string | null;
   notes?: string;
+  lang?: string;
+  warehouseId?: string;
+  isTaxInclusive?: boolean;
 }) {
   try {
     const session = await getSession();
@@ -25,7 +29,7 @@ export async function createPurchaseInvoice(data: {
     }
 
     const result = await prisma.$transaction(async (tx: any) => {
-    // 1. Generate Purchase Invoice Number (e.g. PUR-2026-001)
+      // 1. Generate Purchase Invoice Number (e.g. PUR-2026-001)
     const count = await tx.purchaseInvoice.count();
     const invoiceNumber = `PUR-${new Date().getFullYear()}-${(count + 1).toString().padStart(3, '0')}`;
 
@@ -40,9 +44,11 @@ export async function createPurchaseInvoice(data: {
         discount: data.discount,
         netAmount: data.netAmount,
         status: data.status,
+        warehouseId: data.warehouseId, isTaxInclusive: data.isTaxInclusive,
         items: {
           create: data.items.map((i: any) => ({
             productId: i.productId,
+            unitId: i.unitId,
             quantity: i.quantity,
             unitPrice: i.unitPrice,
             total: i.total
@@ -54,21 +60,63 @@ export async function createPurchaseInvoice(data: {
 
     // 3. Increase Stock & Log Inventory
     for (const item of data.items) {
-      await tx.product.update({
-        where: { id: item.productId },
-        data: {
-          stockQuantity: { increment: item.quantity },
-          costPrice: item.unitPrice // Update cost price to latest
+      const prod = await tx.product.findUnique({ where: { id: item.productId } });
+      if (prod) {
+        const currentStock = prod.stockQuantity || 0;
+        const currentCost = prod.costPrice || 0;
+        
+        // Normalize unit prices to main unit
+        const mainUnitWeight = await getUnitWeightInGramsServer(1, prod.unitId, prod.id);
+        const purchaseUnitWeight = await getUnitWeightInGramsServer(1, item.unitId || prod.unitId, prod.id);
+        
+        const purchasePriceInMainUnit = mainUnitWeight > 0 
+          ? (item.unitPrice / purchaseUnitWeight) * mainUnitWeight 
+          : item.unitPrice;
+
+        const normalizedQty = mainUnitWeight > 0 ? (item.quantity * purchaseUnitWeight) / mainUnitWeight : item.quantity;
+
+        await tx.product.update({
+          where: { id: item.productId },
+          data: {
+            stockQuantity: { increment: normalizedQty },
+            costPrice: purchasePriceInMainUnit
+          }
+        });
+
+        // Trigger cascading update for recipes
+        await syncProductCostCascading(item.productId, tx);
+      }
+
+      // Update specific warehouse stock
+      if (data.warehouseId) {
+        const ws = await tx.warehouseStock.findUnique({
+          where: { warehouseId_productId: { warehouseId: data.warehouseId, productId: item.productId } }
+        });
+        if (ws) {
+          await tx.warehouseStock.update({
+            where: { id: ws.id },
+            data: { quantity: { increment: item.quantity } }
+          });
+        } else {
+          await tx.warehouseStock.create({
+            data: { warehouseId: data.warehouseId, productId: item.productId, quantity: item.quantity }
+          });
         }
-      });
+      }
+
+      const unit = await tx.unitOfMeasure.findUnique({ where: { id: item.unitId || '' } });
+      const product = await tx.product.findUnique({ where: { id: item.productId }, include: { unitRef: true } });
 
       await tx.inventoryLog.create({
         data: {
           productId: item.productId,
+          warehouseId: data.warehouseId,
           type: 'Purchase',
-          quantity: item.quantity, // Positive for In
+          quantity: item.quantity,
           referenceId: invoice.id,
-          description: `Purchase Invoice No: ${invoiceNumber}`
+          description: data.lang === 'ar' 
+            ? `فاتورة مشتريات رقم: ${invoiceNumber}` 
+            : `Purchase Invoice No: ${invoiceNumber}`
         }
       });
     }
@@ -80,7 +128,7 @@ export async function createPurchaseInvoice(data: {
     //   CR  [Selected Account]          = netAmount            (total paid)
     // Total DR = Total CR  ✓
     
-    const inventoryAccount = await tx.account.findUnique({ where: { code: '1301' } });
+    const inventoryAccount = await tx.account.findUnique({ where: { code: '1140' } });
 
     // Determine the credit account:
     // - If 'Immediate Payment': use the account the user selected in the modal
@@ -89,13 +137,14 @@ export async function createPurchaseInvoice(data: {
     if (data.paymentType === 'paid' && data.paymentAccountId) {
       creditAccountId = data.paymentAccountId;
     } else {
-      const supplierSubAccountCode = `2001-${invoice.supplier.code}`;
-      let payablesAccount = await tx.account.findUnique({ where: { code: supplierSubAccountCode } });
+      const supplierCode = invoice.supplier.code;
+      let qry = { where: { code: { in: [`2000-${supplierCode}`, `2001-${supplierCode}`] } } };
+      let payablesAccount = await tx.account.findFirst(qry);
       if (!payablesAccount) {
-        payablesAccount = await tx.account.findUnique({ where: { code: '2001' } });
+        payablesAccount = await tx.account.findUnique({ where: { code: '2000' } }) ?? await tx.account.findUnique({ where: { code: '2001' } });
         if (!payablesAccount) {
           payablesAccount = await tx.account.create({
-            data: { code: '2001', name: 'Accounts Payable', nameAr: 'ذمم دائنة - موردين', type: 'Liability' }
+            data: { code: '2000', name: 'Accounts Payable', nameAr: 'ذمم دائنة - موردين', type: 'Liability' }
           });
         }
       }
@@ -103,10 +152,10 @@ export async function createPurchaseInvoice(data: {
     }
 
     // Ensure VAT Receivable (Input Tax) account exists
-    let vatInputAccount = await tx.account.findUnique({ where: { code: '1401' } });
+    let vatInputAccount = await tx.account.findUnique({ where: { code: '1150' } });
     if (!vatInputAccount) {
       vatInputAccount = await tx.account.create({
-        data: { code: '1401', name: 'VAT Receivable (Input Tax)', nameAr: 'ضريبة القيمة المضافة المدفوعة', type: 'Asset' }
+        data: { code: '1150', name: 'VAT Receivable (Input Tax)', nameAr: 'ضريبة القيمة المضافة المدفوعة', type: 'Asset' }
       });
     }
 
@@ -193,17 +242,24 @@ export async function updatePurchaseInvoice(invoiceId: string, data: any) {
     if (!oldInvoice) throw new Error('Invoice not found');
     const invoiceNumber = oldInvoice.invoiceNumber;
 
-    // 2. Reverse stock additions
+    // 2. Reverse stock additions with unit awareness
     for (const item of oldInvoice.items) {
-      await tx.product.update({
-        where: { id: item.productId },
-        data: { stockQuantity: { decrement: item.quantity } }
-      });
-      if (oldInvoice.warehouseId) {
-        await tx.warehouseStock.updateMany({
-          where: { warehouseId: oldInvoice.warehouseId, productId: item.productId },
-          data: { quantity: { decrement: item.quantity } }
-        });
+      const prod = await tx.product.findUnique({ where: { id: item.productId } });
+      if (prod) {
+          const mainUnitWeight = await getUnitWeightInGramsServer(1, prod.unitId, prod.id);
+          const purchaseUnitWeight = await getUnitWeightInGramsServer(1, item.unitId || prod.unitId, prod.id);
+          const normalizedQty = mainUnitWeight > 0 ? (item.quantity * purchaseUnitWeight) / mainUnitWeight : item.quantity;
+
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { stockQuantity: { decrement: normalizedQty } }
+          });
+          if (oldInvoice.warehouseId) {
+            await tx.warehouseStock.updateMany({
+              where: { warehouseId: oldInvoice.warehouseId, productId: item.productId },
+              data: { quantity: { decrement: normalizedQty } }
+            });
+          }
       }
     }
 
@@ -228,10 +284,12 @@ export async function updatePurchaseInvoice(invoiceId: string, data: any) {
         discount: data.discount,
         netAmount: data.netAmount,
         status: data.status,
+        warehouseId: data.warehouseId,
         journalVoucherId: null,
         items: {
           create: data.items.map((i: any) => ({
             productId: i.productId,
+            unitId: i.unitId,
             quantity: i.quantity,
             unitPrice: i.unitPrice,
             total: i.total
@@ -243,21 +301,58 @@ export async function updatePurchaseInvoice(invoiceId: string, data: any) {
 
     // 6. Increase Stock & Log Inventory
     for (const item of data.items) {
-      await tx.product.update({
-        where: { id: item.productId },
-        data: {
-          stockQuantity: { increment: item.quantity },
-          costPrice: item.unitPrice
+      const prod = await tx.product.findUnique({ where: { id: item.productId } });
+      if (prod) {
+        const currentStock = prod.stockQuantity || 0;
+        const currentCost = prod.costPrice || 0;
+        
+        const mainUnitWeight = await getUnitWeightInGramsServer(1, prod.unitId, prod.id);
+        const purchaseUnitWeight = await getUnitWeightInGramsServer(1, item.unitId || prod.unitId, prod.id);
+        
+        const purchasePriceInMainUnit = mainUnitWeight > 0 
+          ? (item.unitPrice / purchaseUnitWeight) * mainUnitWeight 
+          : item.unitPrice;
+
+        const normalizedQty = mainUnitWeight > 0 ? (item.quantity * purchaseUnitWeight) / mainUnitWeight : item.quantity;
+
+        await tx.product.update({
+          where: { id: item.productId },
+          data: {
+            stockQuantity: { increment: normalizedQty },
+            costPrice: purchasePriceInMainUnit
+          }
+        });
+
+        await syncProductCostCascading(item.productId, tx);
+      }
+
+      if (data.warehouseId) {
+        const ws = await tx.warehouseStock.findUnique({
+          where: { warehouseId_productId: { warehouseId: data.warehouseId, productId: item.productId } }
+        });
+        if (ws) {
+          await tx.warehouseStock.update({
+            where: { id: ws.id },
+            data: { quantity: { increment: item.quantity } }
+          });
+        } else {
+          await tx.warehouseStock.create({
+            data: { warehouseId: data.warehouseId, productId: item.productId, quantity: item.quantity }
+          });
         }
-      });
+      }
 
       await tx.inventoryLog.create({
         data: {
           productId: item.productId,
+          warehouseId: data.warehouseId,
+          unitId: item.unitId,
           type: 'Purchase',
           quantity: item.quantity,
           referenceId: invoice.id,
-          description: `Purchase Invoice No: ${invoiceNumber} (Updated)`
+          description: data.lang === 'ar'
+            ? `تعديل فاتورة مشتريات رقم: ${invoiceNumber}`
+            : `Purchase Invoice No: ${invoiceNumber} (Updated)`
         }
       });
     }
@@ -269,13 +364,13 @@ export async function updatePurchaseInvoice(invoiceId: string, data: any) {
     if (data.paymentType === 'paid' && data.paymentAccountId) {
       creditAccountId = data.paymentAccountId;
     } else {
-      const supplierSubAccountCode = `2001-${invoice.supplier.code}`;
+      const supplierSubAccountCode = `2000-${invoice.supplier.code}`;
       let payablesAccount = await tx.account.findUnique({ where: { code: supplierSubAccountCode } });
       if (!payablesAccount) {
-        payablesAccount = await tx.account.findUnique({ where: { code: '2001' } });
+        payablesAccount = await tx.account.findUnique({ where: { code: '2000' } }) ?? await tx.account.findUnique({ where: { code: '2001' } });
         if (!payablesAccount) {
           payablesAccount = await tx.account.create({
-            data: { code: '2001', name: 'Accounts Payable', nameAr: 'ذمم دائنة - موردين', type: 'Liability' }
+            data: { code: '2000', name: 'Accounts Payable', nameAr: 'ذمم دائنة - موردين', type: 'Liability' }
           });
         }
       }
@@ -377,15 +472,22 @@ export async function deletePurchaseInvoice(invoiceId: string) {
 
       // 1. Reverse stock additions
       for (const item of invoice.items) {
-        await tx.product.update({
-          where: { id: item.productId },
-          data: { stockQuantity: { decrement: item.quantity } }
-        });
-        if (invoice.warehouseId) {
-          await tx.warehouseStock.updateMany({
-            where: { warehouseId: invoice.warehouseId, productId: item.productId },
-            data: { quantity: { decrement: item.quantity } }
-          });
+        const prod = await tx.product.findUnique({ where: { id: item.productId } });
+        if (prod) {
+            const mainUnitWeight = await getUnitWeightInGramsServer(1, prod.unitId, prod.id);
+            const purchaseUnitWeight = await getUnitWeightInGramsServer(1, item.unitId || prod.unitId, prod.id);
+            const normalizedQty = mainUnitWeight > 0 ? (item.quantity * purchaseUnitWeight) / mainUnitWeight : item.quantity;
+
+            await tx.product.update({
+              where: { id: item.productId },
+              data: { stockQuantity: { decrement: normalizedQty } }
+            });
+            if (invoice.warehouseId) {
+              await tx.warehouseStock.updateMany({
+                where: { warehouseId: invoice.warehouseId, productId: item.productId },
+                data: { quantity: { decrement: normalizedQty } }
+              });
+            }
         }
       }
 
@@ -433,7 +535,7 @@ export async function updatePurchaseInvoiceStatus(invoiceId: string, status: str
   }
 }
 
-export async function createSupplier(data: { name: string, nameAr?: string, code: string, phone?: string, email?: string }) {
+export async function createSupplier(data: { address?: string, taxNumber?: string, commercialRegistry?: string, name: string, nameAr?: string, code: string, phone?: string, email?: string }) {
   try {
     const session = await getSession();
     if (!hasPermission(session?.user?.role, 'MANAGE_CONTACTS')) {
@@ -452,18 +554,18 @@ export async function createSupplier(data: { name: string, nameAr?: string, code
         });
       }
 
-      // 3. Ensure 'Suppliers' (2001) exists as child of AP
-      let suppliersGroup = await tx.account.findUnique({ where: { code: '2001' } });
+      // 3. Ensure 'Suppliers' (2000) exists as child of AP
+      let suppliersGroup = await tx.account.findUnique({ where: { code: '2000' } });
       if (!suppliersGroup) {
         suppliersGroup = await tx.account.create({
-          data: { code: '2001', name: 'Suppliers', nameAr: 'الموردون', type: 'Liability', parentId: apAccount.id }
+          data: { code: '2000', name: 'Suppliers', nameAr: 'الموردون', type: 'Liability', parentId: apAccount.id }
         });
       }
 
       // 4. Create local account for this specific supplier
       await tx.account.create({
         data: {
-          code: `2001-${data.code}`,
+          code: `2000-${data.code}`,
           name: data.name,
           nameAr: data.nameAr || undefined,
           type: 'Liability',
@@ -483,7 +585,7 @@ export async function createSupplier(data: { name: string, nameAr?: string, code
   }
 }
 
-export async function updateSupplier(id: string, data: { name: string, nameAr?: string, code: string, phone?: string, email?: string }) {
+export async function updateSupplier(id: string, data: { address?: string, taxNumber?: string, commercialRegistry?: string, name: string, nameAr?: string, code: string, phone?: string, email?: string }) {
   try {
     const session = await getSession();
     if (!hasPermission(session?.user?.role, 'MANAGE_CONTACTS')) {
@@ -500,13 +602,13 @@ export async function updateSupplier(id: string, data: { name: string, nameAr?: 
       });
 
       // Update linked account if exists
-      const accountCode = `2001-${original.code}`;
+      const accountCode = `2000-${original.code}`;
       const account = await tx.account.findUnique({ where: { code: accountCode } });
       if (account) {
         await tx.account.update({
           where: { id: account.id },
           data: {
-            code: `2001-${data.code}`,
+            code: `2000-${data.code}`,
             name: data.name,
             nameAr: data.nameAr || undefined
           }
@@ -538,7 +640,7 @@ export async function deleteSupplier(id: string) {
       await tx.supplier.delete({ where: { id } });
 
       // 2. Delete linked account (only if no entries exist)
-      const accountCode = `2001-${original.code}`;
+      const accountCode = `2000-${original.code}`;
       const account = await tx.account.findUnique({ 
         where: { code: accountCode },
         include: { entries: true }

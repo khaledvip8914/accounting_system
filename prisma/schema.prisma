@@ -1,10 +1,10 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/client"
+  output   = "../src/generated/client_v7"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -16,6 +16,8 @@ model Customer {
   email      String?
   phone      String?
   address    String?
+  taxNumber  String?
+  commercialRegistry String?
   balance    Float            @default(0)
   createdAt  DateTime         @default(now())
   updatedAt  DateTime         @updatedAt
@@ -31,6 +33,8 @@ model Supplier {
   email     String?
   phone     String?
   address   String?
+  taxNumber  String?
+  commercialRegistry String?
   balance   Float             @default(0)
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
@@ -53,6 +57,7 @@ model Warehouse {
   transfersTo      StockTransfer[]   @relation("ToWarehouse")
   transfersFrom    StockTransfer[]   @relation("FromWarehouse")
   stockItems       WarehouseStock[]
+  disposalVouchers DisposalVoucher[]
 }
 
 model WarehouseStock {
@@ -98,6 +103,7 @@ model Product {
   quotationItems   QuotationItem[]
   transfers        StockTransferItem[]
   warehouseStocks  WarehouseStock[]
+  disposalVouchers DisposalVoucher[]
 }
 
 model SalesInvoice {
@@ -111,6 +117,7 @@ model SalesInvoice {
   discount         Float           @default(0)
   netAmount        Float
   status           String
+  isTaxInclusive   Boolean         @default(false)
   journalVoucherId String?
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
@@ -132,6 +139,7 @@ model PurchaseInvoice {
   discount         Float           @default(0)
   netAmount        Float
   status           String
+  isTaxInclusive   Boolean         @default(false)
   journalVoucherId String?
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
@@ -145,6 +153,7 @@ model InvoiceItem {
   id        String       @id @default(cuid())
   invoiceId String
   productId String
+  unitId    String?
   quantity  Float
   unitPrice Float
   total     Float
@@ -156,6 +165,7 @@ model PurchaseItem {
   id        String          @id @default(cuid())
   invoiceId String
   productId String
+  unitId    String?
   quantity  Float
   unitPrice Float
   total     Float
@@ -190,6 +200,8 @@ model InventoryLog {
   id          String     @id @default(cuid())
   productId   String
   warehouseId String?
+  unitId      String?
+  unitName    String?
   date        DateTime   @default(now())
   type        String
   quantity    Float
@@ -228,6 +240,7 @@ model JournalVoucher {
   purchaseInvoices   PurchaseInvoice[]
   invoices           SalesInvoice[]
   transactionVoucher TransactionVoucher?
+  salaryPayments     SalaryPayment[]
 }
 
 model JournalEntry {
@@ -293,6 +306,7 @@ model SalesQuotation {
   discount             Float           @default(0)
   netAmount            Float
   status               String          @default("Draft")
+  isTaxInclusive       Boolean         @default(false)
   convertedToInvoiceId String?         @unique
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt
@@ -394,4 +408,76 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   permissions String?
+}
+
+model Employee {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  name        String
+  nameAr      String?
+  jobTitle    String?
+  jobTitleAr  String?
+  department  String?
+  basicSalary Float     @default(0)
+  idNumber    String?
+  idExpiry    DateTime?
+  joinDate    DateTime  @default(now())
+  status      String    @default("Active")
+  phone       String?
+  email       String?
+  address     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  financialMoves EmployeeFinancialMove[]
+  salaryPayments SalaryPayment[]
+}
+
+model EmployeeFinancialMove {
+  id          String   @id @default(cuid())
+  employeeId  String
+  type        String   // Advance, Penalty, Reward, Allowance
+  amount      Float
+  date        DateTime @default(now())
+  reason      String?
+  status      String   @default("Confirmed")
+  createdAt   DateTime @default(now())
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+}
+
+model SalaryPayment {
+  id               String          @id @default(cuid())
+  employeeId       String
+  month            Int
+  year             Int
+  basicSalary      Float
+  allowances       Float           @default(0)
+  rewards          Float           @default(0)
+  advances         Float           @default(0)
+  penalties        Float           @default(0)
+  netSalary        Float
+  status           String          @default("Pending") // Pending, Approved
+  journalVoucherId String?         @unique
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  employee         Employee        @relation(fields: [employeeId], references: [id])
+  journalVoucher   JournalVoucher? @relation(fields: [journalVoucherId], references: [id])
+
+  @@unique([employeeId, month, year])
+}
+
+model DisposalVoucher {
+  id            String    @id @default(cuid())
+  voucherNumber String    @unique
+  date          DateTime  @default(now())
+  productId     String
+  warehouseId   String
+  unitId        String?
+  quantity      Float
+  reason        String
+  notes         String?
+  status        String    @default("Confirmed")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  product       Product   @relation(fields: [productId], references: [id])
+  warehouse     Warehouse @relation(fields: [warehouseId], references: [id])
 }

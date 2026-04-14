@@ -23,9 +23,9 @@ export default async function Home() {
   let totalRevenue = 0;
   let totalExpenses = 0;
 
-  accounts.forEach(acc => {
-    const totalDebit = acc.entries.reduce((sum, e) => sum + e.debit, 0);
-    const totalCredit = acc.entries.reduce((sum, e) => sum + e.credit, 0);
+  accounts.forEach((acc: any) => {
+    const totalDebit = acc.entries.reduce((sum: number, e: any) => sum + e.debit, 0);
+    const totalCredit = acc.entries.reduce((sum: number, e: any) => sum + e.credit, 0);
 
     if (acc.type === 'Revenue') {
       totalRevenue += (totalCredit - totalDebit);
@@ -35,10 +35,10 @@ export default async function Home() {
   });
 
   const pendingAmount = invoices
-    .filter(inv => inv.status === 'Pending' || inv.status === 'معلق')
-    .reduce((sum, inv) => sum + inv.netAmount, 0);
+    .filter((inv: any) => inv.status === 'Pending' || inv.status === 'معلق')
+    .reduce((sum: number, inv: any) => sum + inv.netAmount, 0);
 
-  const pendingCount = invoices.filter(inv => inv.status === 'Pending' || inv.status === 'معلق').length;
+  const pendingCount = invoices.filter((inv: any) => inv.status === 'Pending' || inv.status === 'معلق').length;
 
   const netProfit = totalRevenue - totalExpenses;
 
@@ -181,8 +181,8 @@ export default async function Home() {
                     </td>
                   </tr>
                 )}
-                {recentJV.map(jv => {
-                  const total = jv.entries.reduce((s, e) => s + e.debit, 0);
+                {recentJV.map((jv: any) => {
+                  const total = jv.entries.reduce((s: number, e: any) => s + e.debit, 0);
                   return (
                     <tr key={jv.id}>
                       <td>

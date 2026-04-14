@@ -13,6 +13,8 @@ export default function PurchasesClient({
   initialSuppliers,
   initialProducts,
   initialAccounts,
+  initialWarehouses,
+  initialUnits,
   companyProfile
 }: {
   lang: string,
@@ -20,6 +22,8 @@ export default function PurchasesClient({
   initialSuppliers: any[],
   initialProducts: any[],
   initialAccounts: any[],
+  initialWarehouses: any[],
+  initialUnits: any[],
   companyProfile: any
 }) {
   const [activeTab, setActiveTab] = useState('invoices');
@@ -34,13 +38,19 @@ export default function PurchasesClient({
   ];
 
   const handlePurchaseSave = async (data: any) => {
+    let res;
     if (editingInvoice) {
-      await updatePurchaseInvoice(editingInvoice.id, data);
+      res = await updatePurchaseInvoice(editingInvoice.id, { ...data, lang });
     } else {
-      await createPurchaseInvoice(data);
+      res = await createPurchaseInvoice({ ...data, lang });
     }
-    setShowNewPurchase(false);
-    setEditingInvoice(null);
+    
+    if (res?.success) {
+      setShowNewPurchase(false);
+      setEditingInvoice(null);
+    } else {
+      alert(res?.error || (lang === 'ar' ? 'حدث خطأ أثناء الحفظ' : 'Error saving purchase'));
+    }
   };
 
   const openEdit = (invoice: any) => {
@@ -92,9 +102,7 @@ export default function PurchasesClient({
           </div>
         </div>
         <div className="header-right">
-           <button className="btn-primary no-print" style={{ background: '#059669' }} onClick={() => { setShowNewPurchase(true); setEditingInvoice(null); }}>
-              {lang === 'ar' ? '+ فاتورة شراء جديدة' : '+ New Purchase'} 📦
-           </button>
+           {/* Global action buttons can go here */}
         </div>
       </div>
 
@@ -134,6 +142,8 @@ export default function PurchasesClient({
           suppliers={initialSuppliers}
           products={initialProducts}
           accounts={initialAccounts}
+          warehouses={initialWarehouses}
+          inventoryUnits={initialUnits}
           lang={lang}
           onClose={() => { setShowNewPurchase(false); setEditingInvoice(null); }}
           onSave={handlePurchaseSave}

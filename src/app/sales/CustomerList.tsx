@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { createCustomer, updateCustomer, deleteCustomer } from './actions';
+import CreateCustomerModal from '@/components/CreateCustomerModal';
 
 export default function CustomerList({ customers, lang, dict }: { customers: any[], lang: string, dict: any }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -43,7 +44,6 @@ export default function CustomerList({ customers, lang, dict }: { customers: any
 
   const openNew = () => {
     setEditingCustomer(null);
-    setFormData({ code: `CUST-${Date.now()}`, name: '', nameAr: '', phone: '', email: '' });
     setShowModal(true);
   };
 
@@ -135,49 +135,19 @@ export default function CustomerList({ customers, lang, dict }: { customers: any
       </div>
 
       {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '500px' }}>
-            <div className="modal-header">
-              <h2 className="modal-title">
-                {editingCustomer 
-                  ? (lang === 'ar' ? 'تعديل بيانات العميل' : 'Edit Customer')
-                  : (lang === 'ar' ? 'عميل جديد' : 'New Customer')
-                }
-              </h2>
-              <button className="close-btn" onClick={() => setShowModal(false)} type="button">×</button>
-            </div>
-            <form onSubmit={handleSubmit}>
-              <div className="modal-body">
-                <div className="form-group">
-                  <label className="form-label">{lang === 'ar' ? 'الكود' : 'Code'}</label>
-                  <input required type="text" className="form-input" value={formData.code} onChange={e => setFormData({...formData, code: e.target.value})} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">{lang === 'ar' ? 'الاسم (عربي)' : 'Name (Arabic)'}</label>
-                  <input required type="text" className="form-input" value={formData.nameAr} onChange={e => setFormData({...formData, nameAr: e.target.value})} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">{lang === 'ar' ? 'الاسم (انجليزي)' : 'Name (English)'}</label>
-                  <input required type="text" className="form-input" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">{lang === 'ar' ? 'رقم الهاتف' : 'Phone'}</label>
-                  <input type="text" className="form-input" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">{lang === 'ar' ? 'البريد الإلكتروني' : 'Email'}</label>
-                  <input type="email" className="form-input" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn-secondary" onClick={() => setShowModal(false)} disabled={isPending}>{lang === 'ar' ? 'إلغاء' : 'Cancel'}</button>
-                <button type="submit" className="btn-primary" disabled={isPending}>
-                  {isPending ? '⏳...' : (lang === 'ar' ? 'حفظ' : 'Save')}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <CreateCustomerModal
+          lang={lang}
+          isEdit={!!editingCustomer}
+          initialData={editingCustomer}
+          onClose={() => setShowModal(false)}
+          onSave={async (data) => {
+            if (editingCustomer) {
+              return updateCustomer(editingCustomer.id, data);
+            } else {
+              return createCustomer(data);
+            }
+          }}
+        />
       )}
       <style jsx>{`
         .customers-module { color: inherit; }

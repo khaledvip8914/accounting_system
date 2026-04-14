@@ -173,73 +173,62 @@ export async function seedProfessionalAccounts() {
     if (currentCount > 0) {
       return { success: false, error: 'Accounts already exist. Cannot auto-generate over existing accounts.' };
     }
-    // Top-Level
-    const assetParent = await prisma.account.create({ data: { code: '1', name: 'Assets', nameAr: 'الأصول', type: 'Asset' } });
-    const liabilityParent = await prisma.account.create({ data: { code: '2', name: 'Liabilities', nameAr: 'الخصوم', type: 'Liability' } });
-    const equityParent = await prisma.account.create({ data: { code: '3', name: 'Equity', nameAr: 'حقوق الملكية', type: 'Equity' } });
-    const revenueParent = await prisma.account.create({ data: { code: '4', name: 'Revenue', nameAr: 'الإيرادات', type: 'Revenue' } });
-    const expenseParent = await prisma.account.create({ data: { code: '5', name: 'Expenses', nameAr: 'المصروفات', type: 'Expense' } });
 
-    const p = {
-      ast: assetParent.id,
-      lib: liabilityParent.id,
-      eqt: equityParent.id,
-      rev: revenueParent.id,
-      exp: expenseParent.id,
-    };
+    // 1. Top-Level Roots
+    const assetRoot = await prisma.account.create({ data: { code: '1', name: 'Assets', nameAr: 'الأصول', type: 'Asset', nature: 'Debit' } });
+    const liabilityRoot = await prisma.account.create({ data: { code: '2', name: 'Liabilities', nameAr: 'الخصوم', type: 'Liability', nature: 'Credit' } });
+    const equityRoot = await prisma.account.create({ data: { code: '3', name: 'Equity', nameAr: 'حقوق الملكية', type: 'Equity', nature: 'Credit' } });
+    const revenueRoot = await prisma.account.create({ data: { code: '4', name: 'Revenue', nameAr: 'الإيرادات', type: 'Revenue', nature: 'Credit' } });
+    const expenseRoot = await prisma.account.create({ data: { code: '5', name: 'Expenses', nameAr: 'المصروفات', type: 'Expense', nature: 'Debit' } });
 
-    // Intermediate Parents for Equity
-    const capParent = await prisma.account.create({ data: { code: '31', name: 'Capital', nameAr: 'رأس المال', type: 'Equity', parentId: p.eqt } });
-    const otherEquityParent = await prisma.account.create({ data: { code: '32', name: 'Other Equity', nameAr: 'حقوق ملكية أخرى', type: 'Equity', parentId: p.eqt } });
-    const reserveParent = await prisma.account.create({ data: { code: '33', name: 'Reserves', nameAr: 'احتياطيات', type: 'Equity', parentId: p.eqt } });
-    const reParent = await prisma.account.create({ data: { code: '34', name: 'Retained Earnings (or Losses)', nameAr: 'الأرباح المبقاة (أو الخسائر)', type: 'Equity', parentId: p.eqt } });
+    // 2. Asset Sub-Categories
+    const currentAssets = await prisma.account.create({ 
+      data: { code: '11', name: 'Current Assets', nameAr: 'الأصول المتداولة', type: 'Asset', parentId: assetRoot.id, nature: 'Debit', description: 'الأصول التي يمكن تحويلها إلى نقد خلال سنة مالية واحدة' } 
+    });
+    const fixedAssets = await prisma.account.create({ 
+      data: { code: '12', name: 'Fixed Assets', nameAr: 'الأصول الثابتة', type: 'Asset', parentId: assetRoot.id, nature: 'Debit', description: 'الأصول طويلة الأجل المستخدمة في تشغيل النشاط وغير معدة للبيع' } 
+    });
+
+    // 3. Equity Sub-Categories
+    const capParent = await prisma.account.create({ data: { code: '31', name: 'Capital', nameAr: 'رأس المال', type: 'Equity', parentId: equityRoot.id, nature: 'Credit' } });
+    const reParent = await prisma.account.create({ data: { code: '34', name: 'Retained Earnings (or Losses)', nameAr: 'الأرباح المبقاة (أو الخسائر)', type: 'Equity', parentId: equityRoot.id, nature: 'Credit' } });
 
     const professionalCOA = [
-      // Assets
-      { code: '1000', name: 'Cash on Hand', nameAr: 'النقدية بالصندوق', type: 'Asset', parentId: p.ast, nature: 'Debit', description: 'النقد الموجود فعلياً في خزينة الشركة' },
-      { code: '1010', name: 'Petty Cash', nameAr: 'العهد النقدية', type: 'Asset', parentId: p.ast, nature: 'Debit', description: 'المبالغ النقدية لدى الموظفين للمصروفات الصغيرة' },
-      { code: '1020', name: 'Main Bank Account', nameAr: 'حساب البنك الرئيسي', type: 'Asset', parentId: p.ast, nature: 'Debit', description: 'الرصيد النقدي في الحساب البنكي الأساسي' },
-      { code: '1200', name: 'Accounts Receivable', nameAr: 'حسابات العملاء (ذمم)', type: 'Asset', parentId: p.ast, nature: 'Debit', description: 'المبالغ المستحقة للشركة لدى العملاء' },
-      { code: '1300', name: 'Inventory Asset', nameAr: 'المخزون', type: 'Asset', parentId: p.ast, nature: 'Debit', description: 'قيمة بضاعة المستودع المتاحة للبيع' },
-      { code: '1400', name: 'Prepaid Expenses', nameAr: 'مصروفات مدفوعة مقدماً', type: 'Asset', parentId: p.ast, nature: 'Debit', description: 'المبالغ المدفوعة مقدماً لمصروفات تخص فترات مستقبلية' },
-      { code: '1500', name: 'Machinery & Equipment', nameAr: 'آلات ومعدات', type: 'Asset', parentId: p.ast, nature: 'Debit', description: 'الأصول الثابتة المستخدمة في عمليات الشركة' },
-      { code: '1510', name: 'Accumulated Depreciation', nameAr: 'مجمع الإهلاك', type: 'Asset', parentId: p.ast, nature: 'Credit', description: 'إجمالي قيمة استهلاك الأصول الثابتة عبر الزمن' },
+      // Current Assets (11xx)
+      { code: '1100', name: 'Cash on Hand', nameAr: 'النقدية بالصندوق', type: 'Asset', parentId: currentAssets.id, nature: 'Debit', description: 'النقد الموجود فعلياً في خزينة الشركة' },
+      { code: '1110', name: 'Petty Cash', nameAr: 'العهد النقدية', type: 'Asset', parentId: currentAssets.id, nature: 'Debit', description: 'المبالغ النقدية لدى الموظفين للمصروفات الصغيرة' },
+      { code: '1120', name: 'Main Bank Account', nameAr: 'حساب البنك الرئيسي', type: 'Asset', parentId: currentAssets.id, nature: 'Debit', description: 'الرصيد النقدي في الحساب الجاري الأساسي لدى البنك' },
+      { code: '1130', name: 'Accounts Receivable', nameAr: 'حسابات العملاء (ذمم)', type: 'Asset', parentId: currentAssets.id, nature: 'Debit', description: 'الأرصدة المدينة المستحقة على العملاء مقابل مبيعات آجلة' },
+      { code: '1135', name: 'Advances to Employees', nameAr: 'سلف الموظفين', type: 'Asset', parentId: currentAssets.id, nature: 'Debit', description: 'قيمة السلف والعهد الشخصية الممنوحة للموظفين' },
+      { code: '1140', name: 'Inventory Asset', nameAr: 'المخزون', type: 'Asset', parentId: currentAssets.id, nature: 'Debit', description: 'قيمة البضائع والمواد المخزنة القابلة للبيع' },
+      { code: '1150', name: 'VAT Receivable (Input Tax)', nameAr: 'ضريبة القيمة المضافة المدفوعة', type: 'Asset', parentId: currentAssets.id, nature: 'Debit', description: 'ضريبة القيمة المضافة التي تم دفعها للموردين والقابلة للاسترداد' },
       
-      // Liabilities
-      { code: '2000', name: 'Accounts Payable', nameAr: 'حسابات الموردين (ذمم)', type: 'Liability', parentId: p.lib, nature: 'Credit' },
-      { code: '2100', name: 'Accrued Salaries', nameAr: 'رواتب مستحقة', type: 'Liability', parentId: p.lib, nature: 'Credit' },
-      { code: '2200', name: 'Sales Tax Payable', nameAr: 'ضريبة المبيعات المستحقة', type: 'Liability', parentId: p.lib, nature: 'Credit' },
-      { code: '2300', name: 'Income Tax Payable', nameAr: 'ضريبة الدخل المستحقة', type: 'Liability', parentId: p.lib, nature: 'Credit' },
-      { code: '2500', name: 'Long-Term Bank Loan', nameAr: 'قرض بنكي طويل الأجل', type: 'Liability', parentId: p.lib, nature: 'Credit' },
+      // Fixed Assets (12xx)
+      { code: '1200', name: 'Machinery & Equipment', nameAr: 'آلات ومعدات', type: 'Asset', parentId: fixedAssets.id, nature: 'Debit', description: 'قيمة الأصول الثابتة من آلات ومعدات ووسائل إنتاج' },
+      { code: '1210', name: 'Office Furniture', nameAr: 'أثاث ومعدات مكاتب', type: 'Asset', parentId: fixedAssets.id, nature: 'Debit', description: 'الأصول الثابتة المستخدمة في المكاتب الإدارية' },
+      { code: '1220', name: 'Vehicles', nameAr: 'سيارات ووسائل نقل', type: 'Asset', parentId: fixedAssets.id, nature: 'Debit', description: 'السيارات والشاحنات المملوكة للشركة' },
+      { code: '1299', name: 'Accumulated Depreciation', nameAr: 'مجمع الإهلاك', type: 'Asset', parentId: fixedAssets.id, nature: 'Credit', description: 'مجمع استهلاك الأصول الذي يقلل من القيمة الدفترية للأصل الثابت' },
+
+      // Liabilities (2xxx)
+      { code: '2000', name: 'Accounts Payable', nameAr: 'حسابات الموردين (ذمم)', type: 'Liability', parentId: liabilityRoot.id, nature: 'Credit', description: 'الالتزامات المالية للموردين مقابل مشتريات بضائع أو خدمات آجلة' },
+      { code: '2100', name: 'Accrued Salaries', nameAr: 'رواتب مستحقة', type: 'Liability', parentId: liabilityRoot.id, nature: 'Credit', description: 'إجمالي الرواتب والأجور التي استحقت للموظفين ولم تُصرف بعد' },
+      { code: '2120', name: 'VAT Payable (Output Tax)', nameAr: 'ضريبة القيمة المضافة المحصلة', type: 'Liability', parentId: liabilityRoot.id, nature: 'Credit', description: 'ضريبة القيمة المضافة التي تم تحصيلها من العملاء ولَم تُورد للدولة بعد' },
+      { code: '2300', name: 'Income Tax Payable', nameAr: 'ضريبة الدخل المستحقة', type: 'Liability', parentId: liabilityRoot.id, nature: 'Credit', description: 'المبالغ المخصصة لتغطية مستحقات ضريبة الدخل والزكاة' },
       
       // Equity Sub-accounts
-      { code: '3101', name: 'Registered Capital', nameAr: 'رأس المال المسجل', type: 'Equity', parentId: capParent.id, nature: 'Credit' },
-      { code: '3102', name: 'Additional Paid-in Capital', nameAr: 'رأس المال الإضافي المدفوع', type: 'Equity', parentId: capParent.id, nature: 'Credit' },
-      { code: '3201', name: 'Opening Balances', nameAr: 'أرصدة افتتاحية', type: 'Equity', parentId: otherEquityParent.id, nature: 'Credit' },
-      { code: '3301', name: 'Statutory Reserve', nameAr: 'احتياطي نظامي', type: 'Equity', parentId: reserveParent.id, nature: 'Credit' },
-      { code: '3302', name: 'Foreign Currency Translation Reserve', nameAr: 'احتياطي ترجمة عملات أجنبية', type: 'Equity', parentId: reserveParent.id, nature: 'Credit' },
-      { code: '3401', name: 'Operating Profit and Loss', nameAr: 'الأرباح والخسائر العاملة', type: 'Equity', parentId: reParent.id, nature: 'Credit' },
-      { code: '3402', name: 'Retained Earnings (or Losses)', nameAr: 'الأرباح المبقاة (أو الخسائر)', type: 'Equity', parentId: reParent.id, nature: 'Credit' },
+      { code: '3101', name: 'Registered Capital', nameAr: 'رأس المال المسجل', type: 'Equity', parentId: capParent.id, nature: 'Credit', description: 'القيمة الاسمية لرأس مال الشركة المساهم به من الملاك' },
+      { code: '3402', name: 'Retained Earnings', nameAr: 'أرباح محتجزة', type: 'Equity', parentId: reParent.id, nature: 'Credit', description: 'تراكم الأرباح التي لم يتم توزيعها على الملاك من سنوات سابقة' },
       
       // Revenue
-      { code: '4000', name: 'Sales Revenue', nameAr: 'إيرادات المبيعات', type: 'Revenue', parentId: p.rev, nature: 'Credit' },
-      { code: '4100', name: 'Service Revenue', nameAr: 'إيرادات الخدمات', type: 'Revenue', parentId: p.rev, nature: 'Credit' },
-      { code: '4200', name: 'Sales Returns and Allowances', nameAr: 'مردودات ومسموحات المبيعات', type: 'Revenue', parentId: p.rev, nature: 'Debit' },
-      { code: '4300', name: 'Interest Income', nameAr: 'إيرادات فوائد', type: 'Revenue', parentId: p.rev, nature: 'Credit' },
+      { code: '4000', name: 'Sales Revenue', nameAr: 'إيرادات المبيعات', type: 'Revenue', parentId: revenueRoot.id, nature: 'Credit', description: 'الدخل المحقق من النشاط التجاري الرئيسي لبيع البضائع' },
+      { code: '4100', name: 'Service Revenue', nameAr: 'إيرادات الخدمات', type: 'Revenue', parentId: revenueRoot.id, nature: 'Credit', description: 'الدخل المحقق من تقديم الخدمات والاستشارات للغير' },
+      { code: '4400', name: 'Penalties Income', nameAr: 'إيرادات الجزاءات', type: 'Revenue', parentId: revenueRoot.id, nature: 'Credit', description: 'الإيرادات المحصلة من جزاءات الموظفين أو غرامات التأخير من الغير' },
       
       // Expenses
-      { code: '5000', name: 'Cost of Goods Sold (COGS)', nameAr: 'تكلفة البضاعة المباعة', type: 'Expense', parentId: p.exp, nature: 'Debit' },
-      { code: '5100', name: 'Direct Labor', nameAr: 'أجور عمالة مباشرة', type: 'Expense', parentId: p.exp, nature: 'Debit' },
-      { code: '5200', name: 'Shipping and Delivery', nameAr: 'مصروفات شحن وتوصيل', type: 'Expense', parentId: p.exp, nature: 'Debit' },
-      { code: '6000', name: 'Salaries and Wages', nameAr: 'رواتب وأجور', type: 'Expense', parentId: p.exp, nature: 'Debit' },
-      { code: '6100', name: 'Rent Expense', nameAr: 'مصروف إيجار', type: 'Expense', parentId: p.exp, nature: 'Debit' },
-      { code: '6200', name: 'Utilities Expense', nameAr: 'مصروف منافع (ماء وكهرباء)', type: 'Expense', parentId: p.exp, nature: 'Debit' },
-      { code: '6300', name: 'Office Supplies', nameAr: 'قرطاسية وأدوات مكتبية', type: 'Expense', parentId: p.exp, nature: 'Debit' },
-      { code: '6400', name: 'Marketing and Advertising', nameAr: 'دعاية وإعلان', type: 'Expense', parentId: p.exp, nature: 'Debit' },
-      { code: '6500', name: 'Insurance Expense', nameAr: 'مصروف تأمين', type: 'Expense', parentId: p.exp, nature: 'Debit' },
-      { code: '6600', name: 'Depreciation Expense', nameAr: 'مصروف الإهلاك', type: 'Expense', parentId: p.exp, nature: 'Debit' },
-      { code: '6700', name: 'Bank Fees', nameAr: 'عمولات بنكية', type: 'Expense', parentId: p.exp, nature: 'Debit' },
-      { code: '6800', name: 'Legal and Professional Fees', nameAr: 'أتعاب مهنية وقانونية', type: 'Expense', parentId: p.exp, nature: 'Debit' }
+      { code: '5000', name: 'Cost of Goods Sold (COGS)', nameAr: 'تكلفة البضاعة المباعة', type: 'Expense', parentId: expenseRoot.id, nature: 'Debit', description: 'التكلفة المباشرة للبضائع التي تم بيعها خلال الفترة' },
+      { code: '6000', name: 'Salaries and Wages', nameAr: 'رواتب وأجور', type: 'Expense', parentId: expenseRoot.id, nature: 'Debit', description: 'إجمالي الرواتب الشهرية والبدلات والمكافآت لموظفي الشركة' },
+      { code: '6100', name: 'Rent Expense', nameAr: 'مصروف إيجار', type: 'Expense', parentId: expenseRoot.id, nature: 'Debit', description: 'تكلفة استئجار المقرات والمخازن والمكاتب الإدارية' },
+      { code: '6200', name: 'Utilities Expense', nameAr: 'مصروف منافع (ماء وكهرباء)', type: 'Expense', parentId: expenseRoot.id, nature: 'Debit', description: 'تكاليف الكهرباء والماء والاتصالات والإنترنت الدورية' }
     ];
 
     await prisma.account.createMany({

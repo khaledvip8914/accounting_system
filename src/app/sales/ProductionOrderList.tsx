@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { createProductionOrder, updateProductionOrder, deleteProductionOrder, finalizeProductionOrder } from './actions';
 import { useRouter } from 'next/navigation';
+import SearchableSelect from '@/components/SearchableSelect';
 
 export default function ProductionOrderList({ orders, products, warehouses, units, costCenters, lang }: { orders: any[], products: any[], warehouses: any[], units: any[], costCenters: any[], lang: string }) {
   const router = useRouter();
@@ -159,33 +160,64 @@ export default function ProductionOrderList({ orders, products, warehouses, unit
     }
   };
 
+  const getRoundedIngredients = (items: any[], targetWeightG: number) => {
+      if (!items || items.length === 0) return [];
+      
+      // 1. Calculate rounded grams for each item
+      let currentRoundedSumG = 0;
+      const processed = items.map(it => {
+          const preciseG = getWeightInGrams(it.quantity, it.unitId || it.product?.unitId);
+          const roundedG = Math.round(preciseG);
+          currentRoundedSumG += roundedG;
+          return { ...it, preciseG, roundedG };
+      });
+
+      // 2. Distribute the difference to the largest ingredient to maintain exact total weight
+      const diffG = targetWeightG - currentRoundedSumG;
+      if (processed.length > 0) {
+          // Find the ingredient with the largest quantity to absorb the rounding error
+          const largestIdx = processed.reduce((bestIdx, curr, idx, arr) => 
+              curr.roundedG > arr[bestIdx].roundedG ? idx : bestIdx, 0);
+          processed[largestIdx].roundedG += diffG;
+      }
+
+      // 3. Map back to original unit quantities
+      return processed.map(it => {
+          const ratio = it.quantity / it.preciseG;
+          return {
+              ...it,
+              quantity: it.preciseG > 0 ? it.roundedG * ratio : it.roundedG
+          };
+      });
+  };
+
   const handleShowPrint = (o: any) => {
-      // Logic for printing: use items if they exist, otherwise use recipe lookup
-      let printItems = [];
+      const prod = products.find(p => p.id === o.productId);
+      const targetTotalG = getUnitWeightInGrams(o.quantity, prod?.unitId || '', o.productId);
+      
+      let rawItems = [];
       if (o.items && o.items.length > 0) {
-          printItems = o.items;
+          rawItems = o.items;
       } else {
           const recipe = (costCenters || []).find(cc => cc.productId === o.productId);
           if (recipe) {
               const factor = getScalingFactor(o.quantity, o.productId, recipe);
-              printItems = recipe.items.map((ri: any) => ({
+              rawItems = recipe.items.map((ri: any) => ({
                   ...ri,
                   quantity: ri.quantity * factor
               }));
           }
       }
 
-      setPrintOrder({ ...o, items: printItems });
+      setPrintOrder({ ...o, items: getRoundedIngredients(rawItems, targetTotalG) });
   };
 
   return (
     <div className="production-orders-module">
       <div className="card">
         <div className="card-header">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 className="card-title">{lang === 'ar' ? 'أوامر الإنتاج' : 'Production Orders'}</h2>
-            <button className="btn-primary" onClick={openAdd}>{lang === 'ar' ? '+ أمر جديد' : '+ New Order'}</button>
-          </div>
+           <h2 className="card-title">{lang === 'ar' ? 'أوامر الإنتاج' : 'Production Orders'}</h2>
+           <button className="btn-primary" onClick={openAdd}>{lang === 'ar' ? '+ أمر جديد' : '+ New Order'}</button>
         </div>
 
         <div className="table-container">
@@ -245,11 +277,11 @@ export default function ProductionOrderList({ orders, products, warehouses, unit
                                 <button className="btn-icon" onClick={() => openEdit(o)} title={lang === 'ar' ? 'تعديل' : 'Edit'}>
                                     ✏️
                                 </button>
-                                <button className="btn-icon delete" onClick={() => handleDelete(o.id)} title={lang === 'ar' ? 'حذف' : 'Delete'} style={{ color: '#dc2626' }}>
-                                    🗑️
-                                </button>
                             </>
                         )}
+                        <button className="btn-icon delete" onClick={() => handleDelete(o.id)} title={lang === 'ar' ? 'حذف' : 'Delete'} style={{ color: '#dc2626' }}>
+                            🗑️
+                        </button>
                     </div>
                   </td>
                 </tr>
@@ -272,12 +304,13 @@ export default function ProductionOrderList({ orders, products, warehouses, unit
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                         <div className="form-group">
                           <label>{lang === 'ar' ? 'المنتج النهائي' : 'Finished Product'}</label>
-                          <select required value={formData.productId} onChange={e => handleProductChange(e.target.value)}>
-                              <option value="">-- {lang === 'ar' ? 'اختر المنتج' : 'Select Product'} --</option>
-                              {products.filter(p => p.classification === 'Finished Product' || p.classification === 'Semi-finished').map(p => (
-                                  <option key={p.id} value={p.id}>{p.sku} - {lang === 'ar' && p.nameAr ? p.nameAr : p.name}</option>
-                              ))}
-                          </select>
+                          <SearchableSelect 
+                            options={products.filter(p => p.classification === 'Finished Product' || p.classification === 'Semi-finished')}
+                            value={formData.productId}
+                            onChange={handleProductChange}
+                            lang={lang}
+                            placeholder={lang === 'ar' ? '-- اختر المنتج --' : '-- Select Product --'}
+                          />
                         </div>
                         <div className="form-group">
                           <label>{lang === 'ar' ? 'الكمية المطلوب إنتاجها' : 'Quantity to Produce'}</label>
@@ -302,31 +335,44 @@ export default function ProductionOrderList({ orders, products, warehouses, unit
                         {selectedRecipe ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1, overflow: 'hidden' }}>
                                 <div style={{ overflowY: 'auto', flex: 1, paddingRight: '0.5rem' }}>
-                                    {(selectedRecipe.items || []).map((it: any, i: number) => {
+                                    {(() => {
+                                        const prod = products.find(p => p.id === formData.productId);
+                                        const targetWeightG = getUnitWeightInGrams(formData.quantity, prod?.unitId || '');
                                         const factor = getScalingFactor();
-                                        const recipeTotal = calculateRecipeTotalWeight(selectedRecipe);
-                                        const itWeightG = getWeightInGrams(it.quantity, it.unitId || it.product?.unitId);
-                                        const percentage = recipeTotal > 0 ? (itWeightG / recipeTotal) * 100 : 0;
+                                        const rawItems = selectedRecipe.items.map((it: any) => ({ ...it, quantity: it.quantity * factor }));
+                                        const roundedItems = getRoundedIngredients(rawItems, targetWeightG);
                                         
-                                        return (
-                                          <div key={i} style={{ padding: '8px 0', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
-                                              <div style={{ flex: 1 }}>
-                                                  <div style={{ fontWeight: '600' }}>{lang === 'ar' && (it.product?.nameAr || it.nameAr) ? (it.product?.nameAr || it.nameAr) : (it.product?.name || it.name)}</div>
-                                                  <div style={{ fontSize: '0.7rem', color: '#64748b' }}>
-                                                      {it.product?.sku || it.sku} • <span style={{ color: '#8b5cf6', fontWeight: 'bold' }}>{percentage.toFixed(1)}%</span>
+                                        return roundedItems.map((it: any, i: number) => {
+                                            const recipeTotal = calculateRecipeTotalWeight(selectedRecipe);
+                                            const itWeightG = getWeightInGrams(it.quantity, it.unitId || it.product?.unitId);
+                                            const percentage = recipeTotal > 0 ? (itWeightG / recipeTotal) * 100 : 0;
+                                            
+                                            // Special formatting for display: if it's a whole number (like 7g), show no decimals.
+                                            let formattedQty = it.quantity.toLocaleString(undefined, { 
+                                                minimumFractionDigits: 0, 
+                                                maximumFractionDigits: 2 
+                                            });
+
+                                            return (
+                                              <div key={i} style={{ padding: '8px 0', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
+                                                  <div style={{ flex: 1 }}>
+                                                      <div style={{ fontWeight: '600' }}>{lang === 'ar' && (it.product?.nameAr || it.nameAr) ? (it.product?.nameAr || it.nameAr) : (it.product?.name || it.name)}</div>
+                                                      <div style={{ fontSize: '0.7rem', color: '#64748b' }}>
+                                                          {it.product?.sku || it.sku} • <span style={{ color: '#8b5cf6', fontWeight: 'bold' }}>{percentage.toFixed(1)}%</span>
+                                                      </div>
+                                                  </div>
+                                                  <div style={{ textAlign: 'right' }}>
+                                                      <div style={{ fontWeight: '800', color: '#2563eb' }}>
+                                                           {formattedQty} <small>
+                                                             {lang === 'ar' ? (it.unit?.nameAr || it.unit?.name || it.product?.unit || it.unit) : (it.unit?.name || it.product?.unit || it.unit)}
+                                                           </small>
+                                                      </div>
+                                                      <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{lang === 'ar' ? 'سعر الوحدة:' : 'Unit Cost:'} {(it.costPrice || 0).toFixed(4)}</div>
                                                   </div>
                                               </div>
-                                              <div style={{ textAlign: 'right' }}>
-                                                  <div style={{ fontWeight: '800', color: '#2563eb' }}>
-                                                       {(it.quantity * factor).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 3 })} <small>
-                                                         {lang === 'ar' ? (it.unit?.nameAr || it.unit?.name || it.product?.unit || it.unit) : (it.unit?.name || it.product?.unit || it.unit)}
-                                                       </small>
-                                                  </div>
-                                                  <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{lang === 'ar' ? 'سعر الوحدة:' : 'Unit Cost:'} {(it.costPrice || 0).toFixed(4)}</div>
-                                              </div>
-                                          </div>
-                                        );
-                                    })}
+                                            );
+                                        });
+                                    })()}
                                 </div>
                                 <div className="total-weight-box">
                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

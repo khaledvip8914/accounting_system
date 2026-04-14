@@ -11,7 +11,7 @@ export default async function PurchasesPage(props: {
   const lang = (searchParams.lang as Lang) || 'ar';
   
   try {
-    const [invoices, suppliers, products, accounts, companyProfile] = await Promise.all([
+    const [invoices, suppliers, products, accounts, companyProfile, warehouses, units] = await Promise.all([
       prisma.purchaseInvoice.findMany({
         include: { supplier: true, items: { include: { product: true } } },
         orderBy: { createdAt: 'desc' }
@@ -27,7 +27,9 @@ export default async function PurchasesPage(props: {
         where: { type: { in: ['Asset', 'Liability'] } },
         orderBy: { code: 'asc' }
       }),
-      getCompanyProfile()
+      getCompanyProfile(),
+      prisma.warehouse.findMany({ orderBy: { code: 'asc' } }),
+      prisma.unitOfMeasure.findMany({ orderBy: { name: 'asc' } })
     ]);
 
     return (
@@ -37,7 +39,9 @@ export default async function PurchasesPage(props: {
         initialSuppliers={suppliers}
         initialProducts={products}
         initialAccounts={accounts}
+        initialWarehouses={warehouses}
         companyProfile={companyProfile}
+        initialUnits={units}
       />
     );
   } catch (err: any) {

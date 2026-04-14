@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import { createCustomer, updateCustomer } from './actions';
+import CreateCustomerModal from '@/components/CreateCustomerModal';
 
 type Product = {
   id: string;
@@ -59,6 +61,7 @@ export default function CreateInvoiceModal({
   const [invoiceDate, setInvoiceDate] = useState(
     invoiceToEdit ? new Date(invoiceToEdit.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
   );
+  const [isTaxInclusive, setIsTaxInclusive] = useState(invoiceToEdit?.isTaxInclusive || false);
   
   const [items, setItems] = useState<InvoiceItem[]>(
     invoiceToEdit && invoiceToEdit.items ? invoiceToEdit.items.map((i: any) => ({
@@ -75,6 +78,8 @@ export default function CreateInvoiceModal({
   const [receiptAccountId, setReceiptAccountId] = useState('');
   const [accountSearch, setAccountSearch] = useState('');
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
+  
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
 
   const filteredAccounts = useMemo(() => {
     const q = accountSearch.toLowerCase();
@@ -122,12 +127,25 @@ export default function CreateInvoiceModal({
   };
 
   const totals = useMemo(() => {
-    const subtotal = items.reduce((sum, item) => sum + item.total, 0);
-    const taxRate = 0.15; // 15% VAT
-    const taxAmount = (subtotal - discount) * taxRate;
-    const netAmount = (subtotal - discount) + taxAmount;
-    return { subtotal, taxAmount, netAmount };
-  }, [items, discount]);
+    const rawSubtotal = items.reduce((sum, item) => sum + item.total, 0);
+    const taxRate = 0.15;
+    
+    if (isTaxInclusive) {
+      const netAmount = rawSubtotal - discount;
+      const subtotal = netAmount / (1 + taxRate);
+      const taxAmount = netAmount - subtotal;
+      return { subtotal, taxAmount, netAmount };
+    } else {
+      const subtotal = rawSubtotal;
+      const taxAmount = (subtotal - discount) * taxRate;
+      const netAmount = (subtotal - discount) + taxAmount;
+      return { subtotal, taxAmount, netAmount };
+    }
+  }, [items, discount, isTaxInclusive]);
+
+  const handleQuickAdd = async (data: any) => {
+    return createCustomer(data);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,6 +164,7 @@ export default function CreateInvoiceModal({
             customerId: selectedCustomerId,
             warehouseId: selectedWarehouseId,
             date: invoiceDate,
+            isTaxInclusive,
             items,
             discount,
             ...totals,
@@ -188,18 +207,29 @@ export default function CreateInvoiceModal({
           <div className="invoice-form-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
             <div className="form-group">
               <label>{lang === 'ar' ? 'العميل' : 'Customer'}</label>
-              <select 
-                value={selectedCustomerId} 
-                onChange={e => setSelectedCustomerId(e.target.value)}
-                required
-              >
-                <option value="">{lang === 'ar' ? '--- اختر عميلاً ---' : '--- Select Customer ---'}</option>
-                {customers.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.code} - {lang === 'ar' && c.nameAr ? c.nameAr : c.name}
-                  </option>
-                ))}
-              </select>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <select 
+                  value={selectedCustomerId} 
+                  onChange={e => setSelectedCustomerId(e.target.value)}
+                  required
+                  style={{ flex: 1 }}
+                >
+                  <option value="">{lang === 'ar' ? '--- اختر عميلاً ---' : '--- Select Customer ---'}</option>
+                  {customers.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.code} - {lang === 'ar' && c.nameAr ? c.nameAr : c.name}
+                    </option>
+                  ))}
+                </select>
+                <button 
+                  type="button" 
+                  className="btn-quick-add" 
+                  onClick={() => setShowQuickAdd(true)}
+                  title={lang === 'ar' ? 'إضافة عميل سريع' : 'Quick Add Customer'}
+                >
+                  +
+                </button>
+              </div>
               {selectedCustomer && (
                 <div style={{ fontSize: '0.8rem', marginTop: '0.25rem', color: '#2563eb', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
@@ -235,6 +265,19 @@ export default function CreateInvoiceModal({
                 onChange={e => setInvoiceDate(e.target.value)} 
                 required
               />
+            </div>
+
+            <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '1.8rem' }}>
+              <input 
+                type="checkbox" 
+                id="isTaxInclusive" 
+                checked={isTaxInclusive} 
+                onChange={e => setIsTaxInclusive(e.target.checked)}
+                style={{ width: 'auto', cursor: 'pointer' }}
+              />
+              <label htmlFor="isTaxInclusive" style={{ margin: 0, cursor: 'pointer', fontWeight: 700, color: '#2563eb' }}>
+                {lang === 'ar' ? 'الأسعار شاملة ضريبة القيمة المضافة (15%)' : 'Prices include 15% VAT'}
+              </label>
             </div>
           </div>
 
@@ -468,6 +511,14 @@ export default function CreateInvoiceModal({
               </button>
           </div>
         </form>
+
+        {showQuickAdd && (
+          <CreateCustomerModal
+            lang={lang}
+            onClose={() => setShowQuickAdd(false)}
+            onSave={handleQuickAdd}
+          />
+        )}
       </div>
 
       <style jsx>{`
@@ -633,6 +684,54 @@ export default function CreateInvoiceModal({
         .payment-summary { display: flex; justify-content: space-between; align-items: center; margin-top: 0.75rem; padding: 0.6rem 0.875rem; border-radius: 8px; font-size: 0.8rem; }
         .payment-summary.credit { background: #eff6ff; color: #4338ca; }
         .payment-summary.paid { background: #eff6ff; color: #1d4ed8; }
+
+        .btn-quick-add {
+          background: #2563eb;
+          color: white;
+          border: none;
+          width: 38px;
+          height: 38px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-weight: 700;
+          font-size: 1.25rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.2s;
+        }
+        .btn-quick-add:hover { background: #1d4ed8; }
+
+        .sub-modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1100;
+        }
+        .sub-modal-content {
+          background: white;
+          padding: 2rem;
+          border-radius: 12px;
+          width: 100%;
+          max-width: 400px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .sub-modal-content h3 { margin-bottom: 1.5rem; color: #1e293b; }
+        .sub-modal-actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 1rem;
+          margin-top: 1.5rem;
+        }
+        .sub-modal-actions button {
+          padding: 0.5rem 1.25rem;
+          border-radius: 6px;
+          cursor: pointer;
+          font-weight: 600;
+        }
       `}</style>
     </div>
   );

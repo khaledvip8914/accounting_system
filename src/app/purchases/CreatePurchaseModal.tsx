@@ -1,6 +1,9 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { createSupplier } from './actions';
+import CreateSupplierModal from '@/components/CreateSupplierModal';
+import SearchableSelect from '@/components/SearchableSelect';
 
 type Account = { id: string; code: string; name: string; nameAr: string | null; type: string };
 
@@ -9,6 +12,8 @@ export default function CreatePurchaseModal({
   suppliers,
   products,
   accounts,
+  warehouses,
+  inventoryUnits,
   onClose,
   lang,
   onSave
@@ -17,26 +22,33 @@ export default function CreatePurchaseModal({
   suppliers: any[],
   products: any[],
   accounts: Account[],
+  warehouses: any[],
+  inventoryUnits: any[],
   onClose: () => void,
   lang: string,
   onSave: (data: any) => Promise<void>
 }) {
   const [selectedSupplierId, setSelectedSupplierId] = useState(invoiceToEdit?.supplierId || '');
+  const [selectedWarehouseId, setSelectedWarehouseId] = useState(invoiceToEdit?.warehouseId || '');
   const [invoiceDate, setInvoiceDate] = useState(
     invoiceToEdit ? new Date(invoiceToEdit.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
   );
+  const [isTaxInclusive, setIsTaxInclusive] = useState(false);
   const [paymentType, setPaymentType] = useState<'paid' | 'credit'>(invoiceToEdit?.status === 'Paid' ? 'paid' : 'credit');
   const [paymentAccountId, setPaymentAccountId] = useState('');
   const [accountSearch, setAccountSearch] = useState('');
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
   
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
+  
   const [items, setItems] = useState<any[]>(
     invoiceToEdit && invoiceToEdit.items ? invoiceToEdit.items.map((i: any) => ({
       productId: i.productId,
+      unitId: i.unitId,
       quantity: i.quantity,
       unitPrice: i.unitPrice,
       total: i.total
-    })) : [{ productId: '', quantity: 1, unitPrice: 0, total: 0 }]
+    })) : [{ productId: '', unitId: '', quantity: 1, unitPrice: 0, total: 0 }]
   );
   
   const [discount, setDiscount] = useState(invoiceToEdit?.discount || 0);
@@ -57,7 +69,7 @@ export default function CreatePurchaseModal({
   const selectedSupplier = suppliers.find(s => s.id === selectedSupplierId);
 
   const addItem = () => {
-    setItems([...items, { productId: '', quantity: 1, unitPrice: 0, total: 0 }]);
+    setItems([...items, { productId: '', unitId: '', quantity: 1, unitPrice: 0, total: 0 }]);
   };
 
   const removeItem = (index: number) => {
@@ -69,7 +81,10 @@ export default function CreatePurchaseModal({
     const item = { ...newItems[index], [field]: value };
     if (field === 'productId') {
       const product = products.find(p => p.id === value);
-      if (product) item.unitPrice = product.costPrice;
+      if (product) {
+        item.unitPrice = product.costPrice;
+        item.unitId = product.unitId;
+      }
     }
     item.total = item.quantity * item.unitPrice;
     newItems[index] = item;
@@ -77,16 +92,29 @@ export default function CreatePurchaseModal({
   };
 
   const totals = useMemo(() => {
-    const subtotal = items.reduce((sum, item) => sum + item.total, 0);
-    const taxAmount = (subtotal - discount) * 0.15;
-    const netAmount = (subtotal - discount) + taxAmount;
-    return { subtotal, taxAmount, netAmount };
-  }, [items, discount]);
+    const rawSubtotal = items.reduce((sum, item) => sum + item.total, 0);
+    
+    if (isTaxInclusive) {
+      const netAmount = rawSubtotal - discount;
+      const subtotal = netAmount / 1.15;
+      const taxAmount = netAmount - subtotal;
+      return { subtotal, taxAmount, netAmount };
+    } else {
+      const subtotal = rawSubtotal;
+      const taxAmount = (subtotal - discount) * 0.15;
+      const netAmount = (subtotal - discount) + taxAmount;
+      return { subtotal, taxAmount, netAmount };
+    }
+  }, [items, discount, isTaxInclusive]);
+
+  const handleQuickAdd = async (data: any) => {
+    return createSupplier(data);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedSupplierId || items.some(i => !i.productId)) {
-      alert(lang === 'ar' ? 'يرجى اختيار المورد وإضافة الأصناف' : 'Please select a supplier and add items');
+    if (!selectedSupplierId || !selectedWarehouseId || items.some(i => !i.productId)) {
+      alert(lang === 'ar' ? 'يرجى اختيار المورد والمستودع وإضافة الأصناف' : 'Please select supplier, warehouse and add items');
       return;
     }
     if (paymentType === 'paid' && !paymentAccountId) {
@@ -98,6 +126,8 @@ export default function CreatePurchaseModal({
     try {
       await onSave({
         supplierId: selectedSupplierId,
+        warehouseId: selectedWarehouseId,
+        isTaxInclusive,
         date: invoiceDate,
         items,
         discount,
@@ -148,16 +178,26 @@ export default function CreatePurchaseModal({
         </div>
 
         <form onSubmit={handleSubmit}>
-          {/* Row 1: Supplier + Date */}
+          {/* Row 1: Supplier + Warehouse */}
           <div className="form-grid-2">
             <div className="form-group">
               <label>{lang === 'ar' ? 'المورد' : 'Supplier'} <span className="required">*</span></label>
-              <select value={selectedSupplierId} onChange={e => setSelectedSupplierId(e.target.value)} required>
-                <option value="">{lang === 'ar' ? '--- اختر مورداً ---' : '--- Select Supplier ---'}</option>
-                {suppliers.map(s => (
-                  <option key={s.id} value={s.id}>{s.code} — {lang === 'ar' && s.nameAr ? s.nameAr : s.name}</option>
-                ))}
-              </select>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <select value={selectedSupplierId} onChange={e => setSelectedSupplierId(e.target.value)} required style={{ flex: 1 }}>
+                  <option value="">{lang === 'ar' ? '--- اختر مورداً ---' : '--- Select Supplier ---'}</option>
+                  {suppliers.map(s => (
+                    <option key={s.id} value={s.id}>{s.code} — {lang === 'ar' && s.nameAr ? s.nameAr : s.name}</option>
+                  ))}
+                </select>
+                <button 
+                  type="button" 
+                  className="btn-quick-add" 
+                  onClick={() => setShowQuickAdd(true)}
+                  title={lang === 'ar' ? 'إضافة مورد سريع' : 'Quick Add Supplier'}
+                >
+                  +
+                </button>
+              </div>
               {selectedSupplier && (
                 <div style={{ fontSize: '0.8rem', marginTop: '0.25rem', color: '#059669', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
@@ -168,9 +208,35 @@ export default function CreatePurchaseModal({
                 </div>
               )}
             </div>
+
+            <div className="form-group">
+              <label>{lang === 'ar' ? 'المستودع (وجهة التوريد)' : 'Warehouse (Destination)'} <span className="required">*</span></label>
+              <select value={selectedWarehouseId} onChange={e => setSelectedWarehouseId(e.target.value)} required>
+                <option value="">{lang === 'ar' ? '--- اختر المستودع ---' : '--- Select Warehouse ---'}</option>
+                {warehouses.map(w => (
+                  <option key={w.id} value={w.id}>{w.code} — {lang === 'ar' && w.nameAr ? w.nameAr : w.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="form-grid-2" style={{ marginTop: '1rem' }}>
             <div className="form-group">
               <label>{lang === 'ar' ? 'تاريخ الفاتورة' : 'Purchase Date'} <span className="required">*</span></label>
               <input type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} required />
+            </div>
+
+            <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '1.8rem' }}>
+              <input 
+                type="checkbox" 
+                id="isTaxInclusive" 
+                checked={isTaxInclusive} 
+                onChange={e => setIsTaxInclusive(e.target.checked)}
+                style={{ width: 'auto', cursor: 'pointer' }}
+              />
+              <label htmlFor="isTaxInclusive" style={{ margin: 0, cursor: 'pointer', fontWeight: 700, color: '#059669' }}>
+                {lang === 'ar' ? 'الأسعار شاملة ضريبة القيمة المضافة (15%)' : 'Prices include 15% VAT'}
+              </label>
             </div>
           </div>
 
@@ -293,9 +359,10 @@ export default function CreatePurchaseModal({
               <table className="form-table">
                 <thead>
                   <tr>
-                    <th style={{ width: '42%' }}>{lang === 'ar' ? 'الصنف' : 'Product'}</th>
+                    <th style={{ width: '38%' }}>{lang === 'ar' ? 'الصنف' : 'Product'}</th>
+                    <th style={{ width: '18%' }}>{lang === 'ar' ? 'الوحدة' : 'Unit'}</th>
                     <th>{lang === 'ar' ? 'الكمية' : 'Qty'}</th>
-                    <th>{lang === 'ar' ? 'سعر التكلفة' : 'Cost Price'}</th>
+                    <th>{lang === 'ar' ? 'التكلفة' : 'Cost'}</th>
                     <th style={{ textAlign: 'right' }}>{lang === 'ar' ? 'الإجمالي' : 'Total'}</th>
                     <th></th>
                   </tr>
@@ -304,10 +371,19 @@ export default function CreatePurchaseModal({
                   {items.map((item, index) => (
                     <tr key={index}>
                       <td>
-                        <select value={item.productId} onChange={e => updateItem(index, 'productId', e.target.value)} required>
-                          <option value="">{lang === 'ar' ? 'اختر صنفاً...' : 'Select item...'}</option>
-                          {products.map(p => (
-                            <option key={p.id} value={p.id}>{p.sku} — {lang === 'ar' && p.nameAr ? p.nameAr : p.name}</option>
+                        <SearchableSelect
+                          options={products}
+                          value={item.productId}
+                          onChange={(value) => updateItem(index, 'productId', value)}
+                          lang={lang}
+                          placeholder={lang === 'ar' ? 'اختر صنفاً...' : 'Select item...'}
+                        />
+                      </td>
+                      <td>
+                        <select value={item.unitId || ''} onChange={e => updateItem(index, 'unitId', e.target.value)} required>
+                          <option value="">—</option>
+                          {(inventoryUnits || []).map((u: any) => (
+                            <option key={u.id} value={u.id}>{lang === 'ar' ? u.nameAr : u.name}</option>
                           ))}
                         </select>
                       </td>
@@ -390,6 +466,14 @@ export default function CreatePurchaseModal({
             </button>
           </div>
         </form>
+
+        {showQuickAdd && (
+          <CreateSupplierModal
+            lang={lang}
+            onClose={() => setShowQuickAdd(false)}
+            onSave={handleQuickAdd}
+          />
+        )}
       </div>
 
       {/* Click-outside backdrop for dropdown */}
@@ -435,6 +519,54 @@ export default function CreatePurchaseModal({
         .account-option.selected { background: #ecfdf5; }
         .no-accounts { padding: 1.5rem; text-align: center; color: #94a3b8; font-size: 0.875rem; }
         .dropdown-backdrop { position: fixed; inset: 0; z-index: 99; }
+
+        .btn-quick-add {
+          background: #059669;
+          color: white;
+          border: none;
+          width: 38px;
+          height: 38px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-weight: 700;
+          font-size: 1.25rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.2s;
+        }
+        .btn-quick-add:hover { background: #047857; }
+
+        .sub-modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1100;
+        }
+        .sub-modal-content {
+          background: white;
+          padding: 2rem;
+          border-radius: 12px;
+          width: 100%;
+          max-width: 400px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .sub-modal-content h3 { margin-bottom: 1.5rem; color: #1e293b; }
+        .sub-modal-actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 1rem;
+          margin-top: 1.5rem;
+        }
+        .sub-modal-actions button {
+          padding: 0.5rem 1.25rem;
+          border-radius: 6px;
+          cursor: pointer;
+          font-weight: 600;
+        }
 
         /* Items */
         .items-section { padding: 1.5rem; border-radius: 12px; margin-bottom: 1.75rem; border: 1.5px solid #a7f3d0; background: #f0fdf4; }

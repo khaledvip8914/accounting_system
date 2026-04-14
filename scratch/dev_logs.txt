@@ -1,0 +1,26 @@
+
+> accounting_software@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.1 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.100.11:3000
+- Environments: .env
+✓ Ready in 1507ms
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+
+Prisma Client: SalesQuotation model detected.
+Prisma Client: User model detected.
+Login attempt for: [master]
+prisma:error 
+Invalid `prisma.user.findMany()` invocation:
+
+
+Error querying the database: Error code 14: Unable to open the database file
+DB Access Error: 
+Invalid `prisma.user.findMany()` invocation:
+
+
+Error querying the database: Error code 14: Unable to open the database file
+ POST /api/auth/login 500 in 991ms (next.js: 785ms, application-code: 206ms)
+  Reload env: .env

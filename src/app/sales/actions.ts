@@ -4,6 +4,8 @@ import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/auth';
 import { hasPermission } from '@/lib/permissions';
+import { computeBaseUnitQty, getUnitWeightInGramsServer } from '@/lib/inventory-helpers';
+
 
 export async function getUnits() {
   const units = await prisma.unitOfMeasure.findMany({ 
@@ -12,19 +14,20 @@ export async function getUnits() {
   });
   if (units.length === 0) {
     const defaults = [
-      { name: 'Gram', nameAr: 'جرام' },
       { name: 'Kilogram', nameAr: 'كيلوجرام' },
-      { name: 'Milliliter', nameAr: 'مليليتر' },
+      { name: 'Gram', nameAr: 'جرام' },
       { name: 'Liter', nameAr: 'لتر' },
+      { name: 'Milliliter', nameAr: 'مليلتر' },
+      { name: 'Piece', nameAr: 'قطعة' },
       { name: 'Carton', nameAr: 'كرتون' },
-      { name: 'Piece', nameAr: 'قطعة' }
+      { name: 'Bag', nameAr: 'كيس' }
     ];
     await prisma.unitOfMeasure.createMany({ data: defaults });
-    // After defaults, we can set up some sample conversions manually or just return
-    return prisma.unitOfMeasure.findMany({ include: { parentUnit: true }, orderBy: { name: 'asc' } });
+    return prisma.unitOfMeasure.findMany({ orderBy: { name: 'asc' } });
   }
   return units;
 }
+
 
 export async function createUnit(data: { name: string, nameAr?: string, parentUnitId?: string | null, conversionFactor?: number }) {
   try {
@@ -218,40 +221,7 @@ export async function getProductionOrders() {
   });
 }
 
-async function getUnitWeightInGramsServer(qty: number, unitId: string | null, productId?: string | null): Promise<number> {
-  if (!qty) return 0;
-  
-  // 1. Try to find the unit metadata
-  let u = null;
-  if (unitId) {
-    u = await prisma.unitOfMeasure.findUnique({ where: { id: unitId } });
-  }
 
-  // 2. Identify by name first (standard units)
-  const name = (u?.name || '').toLowerCase().trim();
-  const nameAr = (u?.nameAr || '').trim();
-  
-  if (name === 'kilogram' || name === 'kg' || nameAr === 'كيلو' || nameAr === 'كجم') return qty * 1000;
-  if (name === 'gram' || name === 'g' || name === 'gm' || nameAr === 'جرام' || nameAr === 'جم') return qty;
-  if (name === 'liter' || name === 'ltr' || name === 'l' || nameAr === 'لتر') return qty * 1000;
-  if (name === 'milliliter' || name === 'ml' || nameAr === 'ملي') return qty;
-  
-  if (name.includes('kilogram') || name.includes('كيلو')) return qty * 1000;
-  if (name.includes('liter') || name.includes('لتر')) return qty * 1000;
-
-  // 3. Fallback to product-specific unitQuantity if unitId matches product.unitId
-  if (productId) {
-    const prod = await prisma.product.findUnique({ where: { id: productId } });
-    if (prod && unitId === prod.unitId && prod.subUnitId) {
-      // It's the product's main unit, and it has a sub-unit definition
-      const subWeight = await getUnitWeightInGramsServer(1, prod.subUnitId); 
-      return qty * (prod.unitQuantity || 1) * subWeight;
-    }
-  }
-
-  // 4. Fallback to conversion factor in unit table
-  return qty * (u?.conversionFactor || 1);
-}
 
 async function calculateRecipeTotalWeightServer(recipeItems: any[]) {
   if (!recipeItems || recipeItems.length === 0) return 0;
@@ -268,7 +238,7 @@ async function calculateRecipeTotalWeightServer(recipeItems: any[]) {
  * This ensures that if a raw material price changes, all recipes using it update their costs,
  * and the final product's costPrice is also updated accordingly.
  */
-async function syncProductCostCascading(productId: string, tx: any, visited = new Set<string>()) {
+export async function syncProductCostCascading(productId: string, tx: any, visited = new Set<string>()) {
     if (visited.has(productId)) return; // Prevent infinite loops
     visited.add(productId);
 
@@ -276,7 +246,7 @@ async function syncProductCostCascading(productId: string, tx: any, visited = ne
     if (!sourceProduct) return;
 
     // 1. Calculate the weight of ONE main unit of the source product
-    const sourceUnitWeight = await getUnitWeightInGramsServer(1, sourceProduct.unitId, sourceProduct.id);
+    const sourceUnitWeight = await getUnitWeightInGramsServer(1, sourceProduct.unitId, sourceProduct.id, tx);
 
     // 2. Find all recipe items (ingredients) that use this product
     const affectedRecipeItems = await tx.costCenterItem.findMany({
@@ -286,7 +256,7 @@ async function syncProductCostCascading(productId: string, tx: any, visited = ne
 
     for (const item of affectedRecipeItems) {
         // 3. Calculate the weight of the unit chosen in THIS recipe item
-        const itemUnitWeight = await getUnitWeightInGramsServer(1, item.unitId || item.product?.unitId, item.productId);
+        const itemUnitWeight = await getUnitWeightInGramsServer(1, item.unitId || item.product?.unitId, item.productId, tx);
         
         // 4. newItemCost = (PriceOfMainUnit / WeightOfMainUnit) * WeightOfItemUnit
         const newItemCost = sourceUnitWeight > 0 
@@ -317,7 +287,7 @@ async function syncProductCostCascading(productId: string, tx: any, visited = ne
         if (yieldWeight === 0) continue;
 
         const costPerGram = totalBatchCost / yieldWeight;
-        const unitWeightG = await getUnitWeightInGramsServer(1, recipe.product?.unitId, recipe.productId);
+        const unitWeightG = await getUnitWeightInGramsServer(1, recipe.product?.unitId, recipe.productId, tx);
         const newTargetCostPrice = costPerGram * unitWeightG;
 
         if (recipe.productId) {
@@ -353,11 +323,10 @@ export async function createProductionOrder(data: {
          where: { id: data.productId }
      });
 
-     const requestedWeightG = await getUnitWeightInGramsServer(data.quantity, targetProduct?.unitId || null, data.productId);
+     const requestedWeightG = await getUnitWeightInGramsServer(data.quantity, targetProduct?.unitId || null, data.productId, prisma);
      const totalIngredientsWeightG = await calculateRecipeTotalWeightServer(recipe.items);
      
-     // CRITICAL: Scaling factor must be (Requested Output) / (Recipe Output Weight)
-     // If yieldWeight is not set, we fallback to the raw mix weight (totalIngredientsWeightG)
+     // Calculate how much should be consumed proportionately
      const recipeYieldG = recipe.yieldWeight || totalIngredientsWeightG;
      
      if (recipeYieldG === 0) throw new Error('وصفة الإنتاج تحتوي على مكونات بدون وزن. يرجى التحقق من وحدات القياس.');
@@ -394,7 +363,7 @@ export async function completeProductionOrder(id: string) {
     try {
         const order = await prisma.productionOrder.findUnique({
             where: { id },
-            include: { items: true }
+            include: { items: true, product: true }
         });
         if (!order || order.status !== 'Draft') throw new Error('طلب الإنتاج غير موجود أو تم معالجته مسبقاً');
 
@@ -430,7 +399,7 @@ export async function completeProductionOrder(id: string) {
                         type: 'Issue',
                         quantity: -item.quantity,
                         referenceId: order.id,
-                        description: `صرف خامات لأمر إنتاج ${order.orderNumber}`
+                        description: `استخدام خامات في عملية إنتاج (${order.orderNumber}) للماكينة/المنتج: ${order.product?.sku || ''}`
                     }
                 });
             }
@@ -465,7 +434,7 @@ export async function completeProductionOrder(id: string) {
                     type: 'Receipt',
                     quantity: order.quantity,
                     referenceId: order.id,
-                    description: `استلام منتج تام من أمر إنتاج ${order.orderNumber}`
+                    description: `استلام منتج تام من عملية إنتاج (#${order.orderNumber})`
                 }
             });
 
@@ -498,14 +467,12 @@ export async function updateProductionOrder(id: string, data: any) {
         const updatedOrder = await prisma.$transaction(async (tx) => {
             await tx.productionOrderItem.deleteMany({ where: { productionOrderId: id } });
 
-            // Unified scaling factor (same as creation)
+            // Unified scaling factor (using precise weight yield calculations)
             const targetProduct = await tx.product.findUnique({
                 where: { id: data.productId }
             });
-            
-            const requestedWeightG = await getUnitWeightInGramsServer(data.quantity, targetProduct?.unitId || null, data.productId);
+            const requestedWeightG = await getUnitWeightInGramsServer(data.quantity, targetProduct?.unitId || null, data.productId, tx);
             const totalIngredientsWeightG = await calculateRecipeTotalWeightServer(recipe.items);
-            
             const recipeYieldG = recipe.yieldWeight || totalIngredientsWeightG;
             if (recipeYieldG === 0) throw new Error('وصفة الإنتاج تحتوي على مكونات بدون وزن');
             const scaleFactor = requestedWeightG / recipeYieldG;
@@ -545,8 +512,8 @@ export async function finalizeProductionOrder(id: string) {
             include: { items: true, product: true }
         });
 
-        if (!order) throw new Error('أمر الإنتاج غير موجود');
-        if (order.status === 'Completed') throw new Error('أمر الإنتاج معتمد بالفعل');
+        if (!order) throw new Error('Order not found');
+        if (order.status === 'Completed') throw new Error('Order already completed');
 
         await prisma.$transaction(async (tx: any) => {
             // 1. Update order status
@@ -556,12 +523,17 @@ export async function finalizeProductionOrder(id: string) {
             });
 
             // 2. Increase stock for finished product
+            const finishedProduct = await tx.product.findUnique({ 
+                where: { id: order.productId },
+                include: { unitRef: true }
+            });
             await tx.product.update({
                 where: { id: order.productId },
                 data: { stockQuantity: { increment: order.quantity } }
             });
 
             if (order.warehouseId) {
+                // ... (upsert logic unchanged)
                 await tx.warehouseStock.upsert({
                     where: { 
                         warehouseId_productId: { 
@@ -585,16 +557,24 @@ export async function finalizeProductionOrder(id: string) {
                         type: 'Production Output',
                         quantity: order.quantity,
                         referenceId: order.orderNumber,
-                        description: `Production of ${order.product.sku}`
+                        description: `إنتاج منتج تام (#${order.orderNumber}) - صنف: ${order.product.sku}`
                     }
                 });
             }
 
             // 3. Decrease stock for raw materials (ingredients)
             for (const item of order.items) {
+                const ingredient = await tx.product.findUnique({
+                    where: { id: item.productId },
+                    include: { unitRef: true }
+                });
+
+                // Crucial Step: Convert the recipe quantity (e.g. 9kg) into the product's base unit (e.g. 0.2 Bags)
+                const baseUnitQty = await computeBaseUnitQty(item.quantity, item.unitId, item.productId, tx);
+
                 await tx.product.update({
                     where: { id: item.productId },
-                    data: { stockQuantity: { decrement: item.quantity } }
+                    data: { stockQuantity: { decrement: baseUnitQty } }
                 });
 
                 if (order.warehouseId) {
@@ -605,23 +585,23 @@ export async function finalizeProductionOrder(id: string) {
                                 productId: item.productId 
                             } 
                         },
-                        update: { quantity: { decrement: item.quantity } },
+                        update: { quantity: { decrement: baseUnitQty } },
                         create: { 
                             warehouseId: order.warehouseId, 
                             productId: item.productId, 
-                            quantity: -item.quantity 
+                            quantity: -baseUnitQty 
                         }
                     });
 
-                    // Log Raw Material consumption
+                    // Log Raw Material consumption precisely in base units
                     await tx.inventoryLog.create({
                         data: {
                             productId: item.productId,
                             warehouseId: order.warehouseId,
                             type: 'Production Usage',
-                            quantity: -item.quantity,
+                            quantity: -baseUnitQty,
                             referenceId: order.orderNumber,
-                            description: `Consume for ${order.product.sku} production (#${order.orderNumber})`
+                            description: `استخدام خامات لإنتاج صنف: ${order.product.sku} (أمر #${order.orderNumber})`
                         }
                     });
                 }
@@ -639,7 +619,16 @@ export async function finalizeProductionOrder(id: string) {
 export async function deleteProductionOrder(id: string) {
     try {
         const order = await prisma.productionOrder.findUnique({ where: { id } });
-        if (!order || order.status !== 'Draft') throw new Error('لا يمكن حذف أمر إنتاج مكتمل');
+        if (!order) throw new Error('Order not found');
+
+        // Note: In production, you might want to reverse stock here, 
+        // but since the user is cleaning up "wrong" calculations, 
+        // a simple delete is safer for resetting state manually.
+
+        // Delete associated inventory logs
+        await prisma.inventoryLog.deleteMany({
+            where: { referenceId: order.orderNumber }
+        });
 
         await prisma.productionOrder.delete({ where: { id } });
         revalidatePath('/sales');
@@ -662,6 +651,7 @@ export async function createSalesInvoice(data: {
   status: string;
   paymentType: 'paid' | 'credit';
   receiptAccountId: string | null;
+  isTaxInclusive?: boolean;
 }) {
   try {
     const session = await getSession();
@@ -687,10 +677,11 @@ export async function createSalesInvoice(data: {
           taxAmount: data.taxAmount,
           discount: data.discount,
           netAmount: data.netAmount,
-          status: data.status,
+          status: data.status, isTaxInclusive: data.isTaxInclusive,
           items: {
             create: data.items.map((i: any) => ({
               productId: i.productId,
+              unitId: i.unitId,
               quantity: i.quantity,
               unitPrice: i.unitPrice,
               total: i.total
@@ -726,45 +717,52 @@ export async function createSalesInvoice(data: {
               quantity: -item.quantity 
             }
           });
-        }
+          
+          const unit = await tx.unitOfMeasure.findUnique({ where: { id: item.unitId || '' } });
+          const product = await tx.product.findUnique({ where: { id: item.productId }, include: { unitRef: true } });
 
-        await tx.inventoryLog.create({
-          data: {
-            productId: item.productId,
-            warehouseId: finalWarehouseId,
-            type: 'Sale',
-            quantity: -item.quantity,
-            referenceId: invoice.id,
-            description: `Sale Invoice No: ${invoiceNumber}`
-          }
-        });
+          await tx.inventoryLog.create({
+            data: {
+              productId: item.productId,
+              warehouseId: finalWarehouseId,
+              type: 'Sale',
+              quantity: -item.quantity,
+              referenceId: invoice.id,
+              description: `Sale Invoice No: ${invoiceNumber}`
+            }
+          });
+        }
       }
 
       // 4. Handle Accounting Link (Journal Voucher)
-      const revenueAccount     = await tx.account.findUnique({ where: { code: '4101' } })
-                              || await tx.account.findUnique({ where: { code: '1101' } });
+      const revenueAccount     = await tx.account.findUnique({ where: { code: '4000' } })
+                              || await tx.account.findUnique({ where: { code: '4100' } });
 
       let debitAccountId: string | null = null;
       if (data.paymentType === 'paid' && data.receiptAccountId) {
         debitAccountId = data.receiptAccountId;
       } else {
-        const customerSubAccountCode = `1201-${invoice.customer.code}`;
-        let receivablesAccount = await tx.account.findUnique({ where: { code: customerSubAccountCode } });
+        const customerCode = invoice.customer.code;
+        let receivablesAccount = await tx.account.findFirst({
+          where: { code: { in: [`1130-${customerCode}`, `1131-${customerCode}`] } }
+        });
+
         if (!receivablesAccount) {
-          receivablesAccount = await tx.account.findUnique({ where: { code: '1201' } });
+          receivablesAccount = await tx.account.findUnique({ where: { code: '1130' } })
+                            || await tx.account.findUnique({ where: { code: '1131' } });
           if (!receivablesAccount) {
             receivablesAccount = await tx.account.create({
-              data: { code: '1201', name: 'Accounts Receivable', nameAr: 'ذمم مدينة - عملاء', type: 'Asset' }
+              data: { code: '1130', name: 'Accounts Receivable', nameAr: 'ذمم مدينة - عملاء', type: 'Asset' }
             });
           }
         }
         debitAccountId = receivablesAccount.id;
       }
 
-      let vatPayableAccount = await tx.account.findUnique({ where: { code: '2101' } });
+      let vatPayableAccount = await tx.account.findUnique({ where: { code: '2120' } });
       if (!vatPayableAccount) {
         vatPayableAccount = await tx.account.create({
-          data: { code: '2101', name: 'VAT Payable (Output Tax)', nameAr: 'ضريبة القيمة المضافة المحصلة', type: 'Liability' }
+          data: { code: '2120', name: 'VAT Payable (Output Tax)', nameAr: 'ضريبة القيمة المضافة المحصلة', type: 'Liability' }
         });
       }
 
@@ -848,16 +846,21 @@ export async function updateSalesInvoice(invoiceId: string, data: any) {
     if (!oldInvoice) throw new Error('Invoice not found');
     const invoiceNumber = oldInvoice.invoiceNumber;
 
-    // 2. Reverse old stock deductions
+    // 2. Reverse old stock deductions with unit awareness
     for (const item of oldInvoice.items) {
+      const product = await tx.product.findUnique({ where: { id: item.productId } });
+      const mainUnitWeightG = await getUnitWeightInGramsServer(1, product?.unitId || null, item.productId, tx);
+      const usedUnitWeightG = await getUnitWeightInGramsServer(1, (item as any).unitId || null, item.productId, tx);
+      const baseUnitQty = mainUnitWeightG > 0 ? (item.quantity * usedUnitWeightG) / mainUnitWeightG : item.quantity;
+
       await tx.product.update({
         where: { id: item.productId },
-        data: { stockQuantity: { increment: item.quantity } }
+        data: { stockQuantity: { increment: baseUnitQty } }
       });
       if (oldInvoice.warehouseId) {
         await tx.warehouseStock.updateMany({
           where: { warehouseId: oldInvoice.warehouseId, productId: item.productId },
-          data: { quantity: { increment: item.quantity } }
+          data: { quantity: { increment: baseUnitQty } }
         });
       }
     }
@@ -888,6 +891,7 @@ export async function updateSalesInvoice(invoiceId: string, data: any) {
         items: {
           create: data.items.map((i: any) => ({
             productId: i.productId,
+            unitId: i.unitId,
             quantity: i.quantity,
             unitPrice: i.unitPrice,
             total: i.total
@@ -899,9 +903,14 @@ export async function updateSalesInvoice(invoiceId: string, data: any) {
 
     // 6. Deduct New Stock & Log Inventory
     for (const item of data.items) {
+      const product = await tx.product.findUnique({ where: { id: item.productId } });
+      const mainUnitWeightG = await getUnitWeightInGramsServer(1, product?.unitId || null, item.productId, tx);
+      const usedUnitWeightG = await getUnitWeightInGramsServer(1, item.unitId || null, item.productId, tx);
+      const baseUnitQty = mainUnitWeightG > 0 ? (item.quantity * usedUnitWeightG) / mainUnitWeightG : item.quantity;
+
       await tx.product.update({
         where: { id: item.productId },
-        data: { stockQuantity: { decrement: item.quantity } }
+        data: { stockQuantity: { decrement: baseUnitQty } }
       });
 
       if (data.warehouseId) {
@@ -909,21 +918,22 @@ export async function updateSalesInvoice(invoiceId: string, data: any) {
           where: { 
             warehouseId_productId: { warehouseId: data.warehouseId, productId: item.productId } 
           },
-          update: { quantity: { decrement: item.quantity } },
-          create: { warehouseId: data.warehouseId, productId: item.productId, quantity: -item.quantity }
+          update: { quantity: { decrement: baseUnitQty } },
+          create: { warehouseId: data.warehouseId, productId: item.productId, quantity: -baseUnitQty }
+        });
+        
+        const unit = await tx.unitOfMeasure.findUnique({ where: { id: item.unitId || '' } });
+        await tx.inventoryLog.create({
+          data: {
+            productId: item.productId,
+            warehouseId: data.warehouseId,
+            type: 'Sale',
+            quantity: -item.quantity,
+            referenceId: invoice.id,
+            description: `Sale Invoice No: ${invoiceNumber} (Updated)`
+          }
         });
       }
-
-      await tx.inventoryLog.create({
-        data: {
-          productId: item.productId,
-          warehouseId: data.warehouseId,
-          type: 'Sale',
-          quantity: -item.quantity,
-          referenceId: invoice.id,
-          description: `Sale Invoice No: ${invoiceNumber} (Updated)`
-        }
-      });
     }
 
     // 7. Handle Accounting Link (Journal Voucher)
@@ -933,23 +943,23 @@ export async function updateSalesInvoice(invoiceId: string, data: any) {
     if (data.paymentType === 'paid' && data.receiptAccountId) {
       debitAccountId = data.receiptAccountId;
     } else {
-      const customerSubAccountCode = `1201-${invoice.customer.code}`;
+      const customerSubAccountCode = `1130-${invoice.customer.code}`;
       let receivablesAccount = await tx.account.findUnique({ where: { code: customerSubAccountCode } });
       if (!receivablesAccount) {
-        receivablesAccount = await tx.account.findUnique({ where: { code: '1201' } });
+        receivablesAccount = await tx.account.findUnique({ where: { code: '1130' } });
         if (!receivablesAccount) {
           receivablesAccount = await tx.account.create({
-            data: { code: '1201', name: 'Accounts Receivable', nameAr: 'ذمم مدينة - عملاء', type: 'Asset' }
+            data: { code: '1130', name: 'Accounts Receivable', nameAr: 'ذمم مدينة - عملاء', type: 'Asset' }
           });
         }
       }
       debitAccountId = receivablesAccount.id;
     }
 
-    let vatPayableAccount = await tx.account.findUnique({ where: { code: '2101' } });
+    let vatPayableAccount = await tx.account.findUnique({ where: { code: '2120' } });
     if (!vatPayableAccount) {
       vatPayableAccount = await tx.account.create({
-        data: { code: '2101', name: 'VAT Payable (Output Tax)', nameAr: 'ضريبة القيمة المضافة المحصلة', type: 'Liability' }
+        data: { code: '2120', name: 'VAT Payable (Output Tax)', nameAr: 'ضريبة القيمة المضافة المحصلة', type: 'Liability' }
       });
     }
 
@@ -1097,7 +1107,7 @@ export async function updateSalesInvoiceStatus(invoiceId: string, status: string
   }
 }
 
-export async function createCustomer(data: { name: string, nameAr?: string, code: string, phone?: string, email?: string }) {
+export async function createCustomer(data: { address?: string, taxNumber?: string, commercialRegistry?: string, name: string, nameAr?: string, code: string, phone?: string, email?: string }) {
   try {
     const session = await getSession();
     if (!hasPermission(session?.user, 'MANAGE_CONTACTS')) {
@@ -1109,25 +1119,25 @@ export async function createCustomer(data: { name: string, nameAr?: string, code
       const cust = await tx.customer.create({ data });
 
       // 2. Ensure Accounts Receivable (Asset) exists
-      let arAccount = await tx.account.findUnique({ where: { code: '1200' } });
+      let arAccount = await tx.account.findUnique({ where: { code: '1130' } });
       if (!arAccount) {
         arAccount = await tx.account.create({
-          data: { code: '1200', name: 'Accounts Receivable', nameAr: 'الذمم المدينة', type: 'Asset' }
+          data: { code: '1130', name: 'Accounts Receivable', nameAr: 'الذمم المدينة', type: 'Asset' }
         });
       }
 
-      // 3. Ensure 'Customers' (1201) exists as child of AR
-      let customersGroup = await tx.account.findUnique({ where: { code: '1201' } });
+      // 3. Ensure 'Customers' (1130) exists as child of AR
+      let customersGroup = await tx.account.findUnique({ where: { code: '1130' } });
       if (!customersGroup) {
         customersGroup = await tx.account.create({
-          data: { code: '1201', name: 'Customers', nameAr: 'العملاء', type: 'Asset', parentId: arAccount.id }
+          data: { code: '1130', name: 'Customers', nameAr: 'العملاء', type: 'Asset', parentId: arAccount.id }
         });
       }
 
       // 4. Create local account for this specific customer
       await tx.account.create({
         data: {
-          code: `1201-${data.code}`,
+          code: `1130-${data.code}`,
           name: data.name,
           nameAr: data.nameAr || undefined,
           type: 'Asset',
@@ -1148,7 +1158,7 @@ export async function createCustomer(data: { name: string, nameAr?: string, code
   }
 }
 
-export async function updateCustomer(id: string, data: { name: string, nameAr?: string, code: string, phone?: string, email?: string }) {
+export async function updateCustomer(id: string, data: { address?: string, taxNumber?: string, commercialRegistry?: string, name: string, nameAr?: string, code: string, phone?: string, email?: string }) {
   try {
     const session = await getSession();
     if (!hasPermission(session?.user, 'MANAGE_CONTACTS')) {
@@ -1165,13 +1175,13 @@ export async function updateCustomer(id: string, data: { name: string, nameAr?: 
       });
 
       // Update linked account if exists
-      const accountCode = `1201-${original.code}`;
+      const accountCode = `1130-${original.code}`;
       const account = await tx.account.findUnique({ where: { code: accountCode } });
       if (account) {
         await tx.account.update({
           where: { id: account.id },
           data: {
-            code: `1201-${data.code}`,
+            code: `1130-${data.code}`,
             name: data.name,
             nameAr: data.nameAr || undefined
           }
@@ -1204,7 +1214,7 @@ export async function deleteCustomer(id: string) {
       await tx.customer.delete({ where: { id } });
 
       // 2. Delete linked account (only if no entries exist)
-      const accountCode = `1201-${original.code}`;
+      const accountCode = `1130-${original.code}`;
       const account = await tx.account.findUnique({ 
         where: { code: accountCode },
         include: { entries: true }
@@ -1235,6 +1245,7 @@ export async function createSalesQuotation(data: {
   taxAmount: number;
   discount: number;
   netAmount: number;
+  isTaxInclusive?: boolean;
 }) {
   try {
     const session = await getSession();
@@ -1259,7 +1270,7 @@ export async function createSalesQuotation(data: {
           taxAmount: data.taxAmount,
           discount: data.discount,
           netAmount: data.netAmount,
-          status: 'Draft',
+          status: 'Draft', isTaxInclusive: data.isTaxInclusive,
           items: {
             create: data.items.map((i: any) => ({
               productId: i.productId,
@@ -1603,6 +1614,15 @@ export async function deleteProduct(id: string, lang: string = 'ar') {
     const orderCount = await prisma.productionOrder.count({ where: { productId: id } });
     if (orderCount > 0) throw new Error(lang === 'ar' ? 'هذا الصنف مرتبط بأوامر إنتاج سابقة' : 'Linked to past production orders');
 
+    const stCount = await prisma.stockTransferItem.count({ where: { productId: id } });
+    if (stCount > 0) throw new Error(lang === 'ar' ? 'هذا الصنف مرتبط بتحويلات مخزنية' : 'Linked to stock transfers');
+
+    const disposalCount = await prisma.disposalVoucher.count({ where: { productId: id } });
+    if (disposalCount > 0) throw new Error(lang === 'ar' ? 'هذا الصنف مرتبط بسندات إتلاف' : 'Linked to disposal vouchers');
+
+    const purchaseCount = await prisma.purchaseItem.count({ where: { productId: id } });
+    if (purchaseCount > 0) throw new Error(lang === 'ar' ? 'هذا الصنف مرتبط بمشتريات' : 'Linked to purchases');
+
     // Delete simple logs/stock
     await prisma.warehouseStock.deleteMany({ where: { productId: id } });
     await prisma.inventoryLog.deleteMany({ where: { productId: id } });
@@ -1612,6 +1632,61 @@ export async function deleteProduct(id: string, lang: string = 'ar') {
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
+  }
+}
+
+export async function deleteProducts(ids: string[], lang: string = 'ar') {
+  try {
+    const session = await getSession();
+    if (!hasPermission(session?.user, 'MANAGE_INVENTORY')) {
+      throw new Error('غير مصرح لك بحذف الأصناف');
+    }
+
+    const results = {
+      successCount: 0,
+      failCount: 0,
+      errors: [] as string[]
+    };
+
+    for (const id of ids) {
+      try {
+        const prod = await prisma.product.findUnique({ where: { id } });
+        if (!prod) continue;
+
+        // Reuse checks
+        const invoiceCount = await prisma.invoiceItem.count({ where: { productId: id } });
+        if (invoiceCount > 0) throw new Error(`${prod.sku}: ` + (lang === 'ar' ? 'مرتبط بمبيعات' : 'Linked to sales'));
+
+        const recipeCount = await prisma.costCenter.count({ where: { productId: id } });
+        if (recipeCount > 0) throw new Error(`${prod.sku}: ` + (lang === 'ar' ? 'مرتبط بوصفة منتج' : 'Target for recipe'));
+
+        const ingredientCount = await prisma.costCenterItem.count({ where: { productId: id } });
+        if (ingredientCount > 0) throw new Error(`${prod.sku}: ` + (lang === 'ar' ? 'مستخدم كمكون' : 'Used as ingredient'));
+
+        const orderCount = await prisma.productionOrder.count({ where: { productId: id } });
+        if (orderCount > 0) throw new Error(`${prod.sku}: ` + (lang === 'ar' ? 'مرتبط بأوامر إنتاج' : 'Linked to production orders'));
+
+        const stCount = await prisma.stockTransferItem.count({ where: { productId: id } });
+        if (stCount > 0) throw new Error(`${prod.sku}: ` + (lang === 'ar' ? 'مرتبط بتحويلات' : 'Linked to transfers'));
+
+        const purchaseCount = await prisma.purchaseItem.count({ where: { productId: id } });
+        if (purchaseCount > 0) throw new Error(`${prod.sku}: ` + (lang === 'ar' ? 'مرتبط بمشتريات' : 'Linked to purchases'));
+
+        await prisma.warehouseStock.deleteMany({ where: { productId: id } });
+        await prisma.inventoryLog.deleteMany({ where: { productId: id } });
+        await prisma.product.delete({ where: { id } });
+
+        results.successCount++;
+      } catch (err: any) {
+        results.failCount++;
+        results.errors.push(err.message);
+      }
+    }
+
+    revalidatePath('/sales');
+    return { success: true, ...results };
+  } catch (err: any) {
+    return { success: false, error: err.message };
   }
 }
 

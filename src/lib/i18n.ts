@@ -10,6 +10,7 @@ export const dictionaries = {
       warehouses: 'Warehouses',
       customers: 'Customers',
       reports: 'Reports',
+      employees: 'Employee Affairs',
       settings: 'Settings'
     },
     header: {
@@ -173,6 +174,7 @@ export const dictionaries = {
       warehouses: 'المستودعات',
       customers: 'العملاء',
       reports: 'التقارير',
+      employees: 'شؤون الموظفين',
       settings: 'الإعدادات'
     },
     header: {

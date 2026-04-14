@@ -164,8 +164,8 @@ export default function PurchaseInvoiceList({
                       </td>
                       <td className="text-sub" onClick={() => setExpandedId(expandedId === inv.id ? null : inv.id)}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                          <span>{mounted ? dateObj.toLocaleDateString() : '...'}</span>
-                          <span style={{ fontSize: '0.7rem', color: '#94a3af' }}>{mounted ? timeStr : '...'}</span>
+                           <span>{mounted ? dateObj.toLocaleDateString() : '...'}</span>
+                           <span style={{ fontSize: '0.7rem', color: '#94a3af' }}>{mounted ? timeStr : '...'}</span>
                         </div>
                       </td>
                       <td onClick={() => setExpandedId(expandedId === inv.id ? null : inv.id)}>
@@ -230,77 +230,83 @@ export default function PurchaseInvoiceList({
                   {expandedId === inv.id && (
                     <tr key={`${inv.id}-details`} className="invoice-details-tr">
                       <td colSpan={6} style={{ padding: 0, background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
-                        <div style={{ padding: '1.25rem 2rem' }}>
-                          {/* Print Header for single invoice */}
-                          <div className="print-report-header invoice-specific-header" style={{ display: 'none' }}>
-                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2rem', borderBottom: '2px solid #333', paddingBottom: '1.5rem' }}>
-                                {companyProfile?.logo && (
-                                   <img src={companyProfile.logo} alt="Logo" style={{ height: '100px', objectFit: 'contain', marginBottom: '1.5rem' }} />
-                                )}
-                                <div style={{ textAlign: 'center' }}>
-                                   <h2 style={{ fontSize: '24px', margin: 0, fontWeight: '800' }}>{lang === 'ar' ? companyProfile?.nameAr : companyProfile?.name}</h2>
-                                   <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '6px', fontSize: '12px', color: '#444' }}>
-                                      {companyProfile?.taxNumber && <span>{lang === 'ar' ? 'الرقم الضريبي:' : 'Tax No:'} {companyProfile.taxNumber}</span>}
-                                      {companyProfile?.email && <span>{companyProfile.email}</span>}
-                                      {companyProfile?.phone && <span>{companyProfile.phone}</span>}
-                                   </div>
-                                </div>
-
-                                <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
-                                   <h1 style={{ fontSize: '26px', color: '#1e293b', margin: 0, letterSpacing: '1px' }}>{lang === 'ar' ? 'فاتورة شراء' : 'Purchase Invoice'}</h1>
-                                   <p style={{ fontSize: '16px', fontWeight: 'bold', margin: '4px 0' }}>#{inv.invoiceNumber}</p>
-                                   <div style={{ fontSize: '13px', color: '#64748b' }}>
-                                      {lang === 'ar' ? 'التاريخ:' : 'Date:'} {new Date(inv.date).toLocaleDateString()}
-                                   </div>
-                                </div>
-                             </div>
-                             
-                             <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: lang === 'ar' ? 'flex-end' : 'flex-start' }}>
-                                <div style={{ width: '40%', textAlign: lang === 'ar' ? 'right' : 'left' }}>
-                                   <strong style={{ fontSize: '13px', borderBottom: '2px solid #059669', paddingBottom: '2px', display: 'inline-block', marginBottom: '8px', color: '#059669' }}>
-                                      {lang === 'ar' ? 'المورد:' : 'Supplier:'}
-                                   </strong>
-                                   <div style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b' }}>{lang === 'ar' && inv.supplier.nameAr ? inv.supplier.nameAr : inv.supplier.name}</div>
-                                   <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>{inv.supplier.taxNumber ? `${lang === 'ar' ? 'الرقم الضريبي للمورد:' : 'Supplier Tax No:'} ${inv.supplier.taxNumber}` : ''}</div>
-                                </div>
-                             </div>
+                        <div style={{ padding: '2.5rem' }}>
+                          <div className="invoice-detail-header no-print">
+                            <div className="detail-header-main">
+                              <div className="inv-badge">
+                                <span className="label">{lang === 'ar' ? 'رقم الفاتورة' : 'Invoice #'}</span>
+                                <span className="value">{inv.invoiceNumber}</span>
+                              </div>
+                              <div className="inv-badge">
+                                <span className="label">{lang === 'ar' ? 'التارِيخ' : 'Date'}</span>
+                                <span className="value">{new Date(inv.date).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                            <div className="detail-header-supplier">
+                              <div className="supplier-icon">🚛</div>
+                              <div>
+                                <div className="supp-label">{lang === 'ar' ? 'المورد' : 'Supplier'}</div>
+                                <div className="supp-name">{lang === 'ar' && inv.supplier.nameAr ? inv.supplier.nameAr : inv.supplier.name}</div>
+                              </div>
+                            </div>
                           </div>
 
-                          <h4 className="no-print" style={{ margin: '0 0 1rem', color: '#065f46', fontSize: '0.875rem', fontWeight: 700 }}>
-                            {lang === 'ar' ? `تفاصيل فاتورة الشراء: ${inv.invoiceNumber}` : `Purchase Details: ${inv.invoiceNumber}`}
-                          </h4>
-                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                            <thead>
-                              <tr style={{ background: '#d1fae5' }}>
-                                <th style={{ padding: '0.5rem', textAlign: 'left' }}>{lang === 'ar' ? 'الصنف' : 'Product'}</th>
-                                <th style={{ padding: '0.5rem', textAlign: 'right' }}>{lang === 'ar' ? 'الكمية' : 'Qty'}</th>
-                                <th style={{ padding: '0.5rem', textAlign: 'right' }}>{lang === 'ar' ? 'سعر التكلفة' : 'Cost Price'}</th>
-                                <th style={{ padding: '0.5rem', textAlign: 'right' }}>{lang === 'ar' ? 'الإجمالي' : 'Total'}</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {inv.items.map((item: any, idx: number) => (
-                                <tr key={idx} style={{ borderBottom: '1px solid #ecfdf5' }}>
-                                  <td style={{ padding: '0.5rem' }}>
-                                    {lang === 'ar' && item.product.nameAr ? item.product.nameAr : item.product.name}
-                                  </td>
-                                  <td style={{ padding: '0.5rem', textAlign: 'right' }}>{item.quantity}</td>
-                                  <td style={{ padding: '0.5rem', textAlign: 'right' }}>{item.unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                                  <td style={{ padding: '0.5rem', textAlign: 'right', fontWeight: 600 }}>{item.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                          <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                              <thead>
+                                <tr style={{ background: '#0f172a', color: 'white' }}>
+                                  <th style={{ padding: '1rem', textAlign: lang === 'ar' ? 'right' : 'left' }}>{lang === 'ar' ? 'الوصف / الصنف' : 'Description / Product'}</th>
+                                  <th style={{ padding: '1rem', textAlign: 'center' }}>{lang === 'ar' ? 'الكمية' : 'Qty'}</th>
+                                  <th style={{ padding: '1rem', textAlign: 'center' }}>{lang === 'ar' ? 'الوحدة' : 'Unit'}</th>
+                                  <th style={{ padding: '1rem', textAlign: 'center' }}>{lang === 'ar' ? 'السعر' : 'Price'}</th>
+                                  <th style={{ padding: '1rem', textAlign: lang === 'ar' ? 'left' : 'right' }}>{lang === 'ar' ? 'الإجمالي' : 'Total'}</th>
                                 </tr>
-                              ))}
-                            </tbody>
-                            <tfoot>
-                              <tr>
-                                <td colSpan={3} style={{ padding: '0.5rem', textAlign: 'right', fontWeight: 700 }}>
-                                  {lang === 'ar' ? 'الإجمالي الصافي:' : 'Net Total:'}
-                                </td>
-                                <td style={{ padding: '0.5rem', textAlign: 'right', fontWeight: 900, color: '#059669' }}>
-                                  {inv.netAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} SAR
-                                </td>
-                              </tr>
-                            </tfoot>
-                          </table>
+                              </thead>
+                              <tbody>
+                                {inv.items.map((item: any, idx: number) => (
+                                  <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                    <td style={{ padding: '1rem' }}>
+                                      <div style={{ fontWeight: 600, color: '#1e293b' }}>
+                                        {lang === 'ar' && item.product.nameAr ? item.product.nameAr : item.product.name}
+                                      </div>
+                                      <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '2px' }}>{item.product.sku}</div>
+                                    </td>
+                                    <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 600 }}>{item.quantity}</td>
+                                    <td style={{ padding: '1rem', textAlign: 'center', color: '#64748b' }}>
+                                      {item.unitId ? (lang === 'ar' ? item.unitNameAr : item.unitName) : '—'}
+                                    </td>
+                                    <td style={{ padding: '1rem', textAlign: 'center' }}>{item.unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                    <td style={{ padding: '1rem', textAlign: lang === 'ar' ? 'left' : 'right', fontWeight: 700, color: '#0f172a' }}>
+                                      {item.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                            
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '1.5rem', background: '#f8fafc', borderTop: '2px solid #e2e8f0' }}>
+                              <div style={{ width: '280px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#64748b' }}>
+                                  <span>{lang === 'ar' ? 'المجموع' : 'Subtotal'}:</span>
+                                  <span>{inv.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                </div>
+                                {inv.discount > 0 && (
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#dc2626' }}>
+                                    <span>{lang === 'ar' ? 'الخصم' : 'Discount'}:</span>
+                                    <span>-{inv.discount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                  </div>
+                                )}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', color: '#64748b' }}>
+                                  <span>{lang === 'ar' ? 'الضريبة (15%)' : 'Tax (15%)'}:</span>
+                                  <span>{inv.taxAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '1rem', borderTop: '1px solid #cbd5e1', fontWeight: 900, fontSize: '1.2rem', color: '#059669' }}>
+                                  <span>{lang === 'ar' ? 'الإجمالي الصافي' : 'Net Total'}:</span>
+                                  <span>{inv.netAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} SAR</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -340,6 +346,18 @@ export default function PurchaseInvoiceList({
         .action-icon-btn.print:hover { background: #10b881; color: white; }
         .action-icon-btn.delete { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); color: #f87171; }
         .action-icon-btn.delete:hover { background: #ef4444; color: white; }
+        
+        .invoice-detail-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; }
+        .detail-header-main { display: flex; gap: 2rem; }
+        .inv-badge { display: flex; flex-direction: column; }
+        .inv-badge .label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
+        .inv-badge .value { font-size: 1.1rem; color: #0f172a; font-weight: 800; }
+        
+        .detail-header-supplier { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1.25rem; background: #fff; border-radius: 12px; border: 1.5px solid #e2e8f0; }
+        .supplier-icon { border-radius: 50%; background: #f0fdf4; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .supp-label { font-size: 0.7rem; color: #64748b; font-weight: 700; text-transform: uppercase; }
+        .supp-name { font-size: 1rem; color: #1e293b; font-weight: 800; }
+
         .text-sub { color: var(--text-secondary); }
         .confirm-dialog { background: #1e293b; border-radius: 16px; padding: 2.5rem; max-width: 440px; width: 100%; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); border: 1px solid rgba(255, 255, 255, 0.1); }
         .confirm-dialog h3 { color: white; margin-bottom: 1rem; }
