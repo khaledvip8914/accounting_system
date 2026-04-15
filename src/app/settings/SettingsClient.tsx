@@ -15,6 +15,7 @@ export default function SettingsClient({ lang, dict }: { lang: Lang, dict: any }
     { id: 'taxes', href: '/settings/taxes', label: dict.settings.taxes, icon: '⚖️' },
     { id: 'payroll', href: '/settings/payroll', label: dict.settings.payroll, icon: '💸' },
     { id: 'users', href: '/settings/users', label: dict.settings.users, icon: '👥' },
+    { id: 'roles', href: '/settings/roles', label: lang === 'ar' ? 'الأدوار ومجموعات الصلاحيات' : 'Roles & Permission Groups', icon: '🛡️' },
     { id: 'paymentTerms', href: '/settings/payment-terms', label: dict.settings.paymentTerms, icon: '📄' },
     { id: 'additionalFields', href: '/settings/additional-fields', label: dict.settings.additionalFields, icon: '📝' },
     { id: 'editProfile', href: '/settings/edit-profile', label: dict.settings.editProfile, icon: '👤' },

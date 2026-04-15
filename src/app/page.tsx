@@ -192,13 +192,13 @@ export default async function Home() {
                           </div>
                           <div className="flex-col">
                             <span>{jv.description}</span>
-                            <span className="text-sub">{new Date(jv.date).toLocaleDateString()}</span>
+                            <span className="text-sub" suppressHydrationWarning>{new Date(jv.date).toLocaleDateString()}</span>
                           </div>
                         </div>
                       </td>
                       <td><span className="badge" style={{ background: 'rgba(52, 152, 219, 0.1)', color: '#3498db' }}>{jv.reference}</span></td>
                       <td style={{ textAlign: 'right', fontWeight: 'bold' }}>
-                        ${total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        <span suppressHydrationWarning>${total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                       </td>
                     </tr>
                   );

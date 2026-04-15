@@ -39,6 +39,9 @@ export async function POST(request: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { username },
+      include: {
+        roleRef: true,
+      },
     });
 
     if (!user) {

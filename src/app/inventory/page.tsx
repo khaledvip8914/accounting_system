@@ -1,12 +1,20 @@
 import { prisma } from '@/lib/db';
 import InventoryClient from './InventoryClient';
 import { Lang } from '@/lib/i18n';
+import { getSession } from '@/lib/auth';
+import { redirect } from 'next/navigation';
+
 export const dynamic = 'force-dynamic';
 
 export default async function InventoryPage(props: {
   params: Promise<any>;
   searchParams: Promise<{ lang?: string }>;
 }) {
+  const session = await getSession();
+  if (!session) {
+    redirect('/login');
+  }
+
   const searchParams = await props.searchParams;
   const lang = (searchParams.lang as Lang) || 'ar';
   

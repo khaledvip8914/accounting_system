@@ -32,12 +32,12 @@ function QuotationPrintView({ q, companyProfile, lang }: { q: any, companyProfil
          <div className="info-section">
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                <span>{lang === 'ar' ? 'التاريخ:' : 'Date:'}</span>
-               <span style={{ fontWeight: 'bold' }}>{new Date(q.date).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}</span>
+               <span style={{ fontWeight: 'bold' }} suppressHydrationWarning>{new Date(q.date).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}</span>
             </div>
             {q.validUntil && (
                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span>{lang === 'ar' ? 'صالح حتى:' : 'Valid Until:'}</span>
-                  <span style={{ fontWeight: 'bold' }}>{new Date(q.validUntil).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}</span>
+                  <span style={{ fontWeight: 'bold' }} suppressHydrationWarning>{new Date(q.validUntil).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}</span>
                </div>
             )}
          </div>
@@ -284,7 +284,7 @@ export default function QuotationList({
             {filtered.map((q) => (
               <tr key={q.id}>
                 <td className="font-mono">{q.quotationNumber}</td>
-                <td>{new Date(q.date).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}</td>
+                <td suppressHydrationWarning>{new Date(q.date).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}</td>
                 <td className="font-bold">{lang === 'ar' ? q.customer.nameAr || q.customer.name : q.customer.name}</td>
                 <td>{q.warehouse?.nameAr || q.warehouse?.name || '-'}</td>
                 <td className="font-bold text-right">{q.netAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>

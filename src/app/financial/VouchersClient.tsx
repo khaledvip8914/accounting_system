@@ -183,15 +183,15 @@ export default function VouchersClient({ type, initialVouchers, accounts, lang, 
 
       <div className="table-responsive" style={{ marginTop: '1.5rem' }}>
         <table className="data-table">
-          <thead>
+          <thead style={{ background: '#1e293b', borderBottom: '2px solid #0f172a' }}>
             <tr>
-              <th>{lang === 'ar' ? 'رقم السند' : 'Voucher No.'}</th>
-              <th>{lang === 'ar' ? 'التاريخ' : 'Date'}</th>
-              <th>{lang === 'ar' ? 'البيان' : 'Description'}</th>
-              <th>{primaryLabel.split('(')[0]}</th>
-              <th>{relatedLabel.split('(')[0]}</th>
-              <th style={{ textAlign: 'right' }}>{lang === 'ar' ? 'المبلغ' : 'Amount'}</th>
-              <th style={{ width: '80px', textAlign: 'center' }}>{lang === 'ar' ? 'إجراءات' : 'Actions'}</th>
+              <th style={{ textAlign: lang === 'ar' ? 'right' : 'left', color: '#ffffff', fontWeight: '900' }}>{lang === 'ar' ? 'رقم السند' : 'Voucher No.'}</th>
+              <th style={{ textAlign: lang === 'ar' ? 'right' : 'left', color: '#ffffff', fontWeight: '900' }}>{lang === 'ar' ? 'التاريخ' : 'Date'}</th>
+              <th style={{ textAlign: lang === 'ar' ? 'right' : 'left', color: '#ffffff', fontWeight: '900' }}>{lang === 'ar' ? 'البيان' : 'Description'}</th>
+              <th style={{ textAlign: lang === 'ar' ? 'right' : 'left', color: '#ffffff', fontWeight: '900' }}>{primaryLabel.split('(')[0]}</th>
+              <th style={{ textAlign: lang === 'ar' ? 'right' : 'left', color: '#ffffff', fontWeight: '900' }}>{relatedLabel.split('(')[0]}</th>
+              <th style={{ textAlign: 'right', color: '#ffffff', fontWeight: '900' }}>{lang === 'ar' ? 'المبلغ' : 'Amount'}</th>
+              <th style={{ width: '80px', textAlign: 'center', color: '#ffffff', fontWeight: '900' }}>{lang === 'ar' ? 'إجراءات' : 'Actions'}</th>
             </tr>
           </thead>
           <tbody>

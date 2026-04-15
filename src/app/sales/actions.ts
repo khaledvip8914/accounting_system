@@ -88,7 +88,10 @@ export async function createCostCenter(data: {
 }) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user, 'MANAGE_FINANCIALS')) {
+    const userRole = session?.user?.role;
+    const userPerms = session?.user?.permissions || session?.user?.roleRef?.permissions;
+
+    if (userRole !== 'Admin' && !hasPermission(userPerms, 'production', 'create')) {
       throw new Error('غير مصرح لك بإدارة مراكز التكلفة');
     }
 
@@ -655,7 +658,10 @@ export async function createSalesInvoice(data: {
 }) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user, 'CREATE_INVOICE')) {
+    const userRole = session?.user?.role;
+    const userPerms = session?.user?.permissions || session?.user?.roleRef?.permissions;
+
+    if (userRole !== 'Admin' && !hasPermission(userPerms, 'invoices', 'create')) {
       throw new Error('غير مصرح لك بإنشاء فاتورة مبيعات');
     }
 

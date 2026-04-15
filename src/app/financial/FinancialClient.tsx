@@ -55,7 +55,6 @@ export default function FinancialClient({
     { id: 'journal', label: dict.financial.journalEntries, icon: '📖' },
     { id: 'accounts', label: dict.financial.accounts, icon: '📋' },
     { id: 'opening_balances', label: lang === 'ar' ? 'أرصدة افتتاحية' : 'Opening Balances', icon: '⚖️' },
-    { id: 'reports', label: lang === 'ar' ? 'التقارير المالية' : 'Financial Reports', icon: '📊' },
     { id: 'ledger', label: dict.financial.generalLedger, icon: '📇' },
     { id: 'receipt_vouchers', label: lang === 'ar' ? 'سندات القبض' : 'Receipt Vouchers', icon: '📥' },
     { id: 'payment_vouchers', label: lang === 'ar' ? 'سندات الصرف' : 'Payment Vouchers', icon: '📤' },
@@ -264,17 +263,6 @@ export default function FinancialClient({
             initialAccounts={initialAccountsData} 
             lang={lang} 
             dict={dict.accounts}
-          />
-        )}
-        {activeTab === 'reports' && (
-          <ReportsClient 
-            key={`fin-reports-${startDate}-${endDate}`}
-            balances={filteredTrialBalance}
-            profitLoss={filteredPL} 
-            balanceSheet={initialReportsData.balanceSheet}
-            lang={lang} 
-            dict={dict.reports}
-            defaultTab="trial"
           />
         )}
         {(activeTab === 'receipt_vouchers' || activeTab === 'payment_vouchers') && (

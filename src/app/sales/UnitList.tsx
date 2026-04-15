@@ -71,18 +71,18 @@ export default function UnitList({ units, lang }: { units: any[], lang: string }
 
         <div className="table-container">
           <table>
-            <thead>
+            <thead style={{ background: '#1e293b', borderBottom: '2px solid #0f172a' }}>
               <tr>
-                <th>{lang === 'ar' ? 'الوحدة' : 'Unit'}</th>
-                <th>{lang === 'ar' ? 'الاسم العربي' : 'Arabic Name'}</th>
-                <th style={{ textAlign: 'center' }}>{lang === 'ar' ? 'العلاقة' : 'Relationship'}</th>
-                <th style={{ textAlign: 'center' }}>{lang === 'ar' ? 'معامل التحويل' : 'Factor'}</th>
-                <th></th>
+                <th style={{ color: '#ffffff', fontWeight: '900' }}>{lang === 'ar' ? 'الوحدة' : 'Unit'}</th>
+                <th style={{ color: '#ffffff', fontWeight: '900' }}>{lang === 'ar' ? 'الاسم العربي' : 'Arabic Name'}</th>
+                <th style={{ textAlign: 'center', color: '#ffffff', fontWeight: '900' }}>{lang === 'ar' ? 'العلاقة' : 'Relationship'}</th>
+                <th style={{ textAlign: 'center', color: '#ffffff', fontWeight: '900' }}>{lang === 'ar' ? 'معامل التحويل' : 'Factor'}</th>
+                <th className="no-print"></th>
               </tr>
             </thead>
             <tbody>
               {(units || []).map(u => (
-                <tr key={u.id}>
+                <tr key={u.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                   <td style={{ fontWeight: 'bold' }}>{u.name}</td>
                   <td>{u.nameAr || '—'}</td>
                   <td style={{ textAlign: 'center' }}>

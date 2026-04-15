@@ -343,17 +343,17 @@ export default function AccountsClient({ initialAccounts, dict, lang }: { initia
           </div>
         </div>
         <div className="table-container">
-          <table>
-            <thead>
+          <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+            <thead style={{ background: '#1e293b', borderBottom: '2px solid #0f172a' }}>
               <tr>
-                <th>{dict.code}</th>
-                <th>{dict.name}</th>
-                <th>{dict.type}</th>
-                <th style={{ textAlign: 'center' }}>{lang === 'ar' ? 'طبيعة الحساب' : 'Nature'}</th>
-                <th>{lang === 'ar' ? 'الوصف' : 'Description'}</th>
-                <th style={{ textAlign: 'right', paddingRight: '1rem' }}>{lang === 'ar' ? 'الرصيد' : 'Balance'}</th>
-                <th style={{ textAlign: 'center' }}>{lang === 'ar' ? 'حركات' : 'Tx'}</th>
-                <th>{dict.actions}</th>
+                <th style={{ color: '#ffffff', fontWeight: '900', padding: '12px 1rem', textAlign: lang === 'ar' ? 'right' : 'left' }}>{dict.code}</th>
+                <th style={{ color: '#ffffff', fontWeight: '900', padding: '12px 1rem', textAlign: lang === 'ar' ? 'right' : 'left' }}>{dict.name}</th>
+                <th style={{ color: '#ffffff', fontWeight: '900', padding: '12px 1rem', textAlign: lang === 'ar' ? 'right' : 'left' }}>{dict.type}</th>
+                <th style={{ color: '#ffffff', fontWeight: '900', padding: '12px 1rem', textAlign: 'center' }}>{lang === 'ar' ? 'طبيعة الحساب' : 'Nature'}</th>
+                <th style={{ color: '#ffffff', fontWeight: '900', padding: '12px 1rem', textAlign: lang === 'ar' ? 'right' : 'left' }}>{lang === 'ar' ? 'الوصف' : 'Description'}</th>
+                <th style={{ color: '#ffffff', fontWeight: '900', padding: '12px 1rem', textAlign: 'right' }}>{lang === 'ar' ? 'الرصيد' : 'Balance'}</th>
+                <th style={{ color: '#ffffff', fontWeight: '900', padding: '12px 1rem', textAlign: 'center' }}>{lang === 'ar' ? 'حركات' : 'Tx'}</th>
+                <th style={{ color: '#ffffff', fontWeight: '900', padding: '12px 1rem', textAlign: lang === 'ar' ? 'right' : 'left' }}>{dict.actions}</th>
               </tr>
             </thead>
             <tbody>

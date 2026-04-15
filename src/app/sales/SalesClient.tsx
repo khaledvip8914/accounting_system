@@ -4,10 +4,12 @@ import { useState } from 'react';
 import InvoiceList from './InvoiceList';
 import CustomerList from './CustomerList';
 import QuotationList from './QuotationList';
+import ProductionOrderList from './ProductionOrderList';
 import CreateInvoiceModal from './CreateInvoiceModal';
 import CreateQuotationModal from './CreateQuotationModal';
 import { createSalesInvoice, updateSalesInvoice, createSalesQuotation, updateSalesQuotation } from './actions';
 import { Lang, getDictionary } from '@/lib/i18n';
+import { useUser } from '@/components/UserContext';
 
 export default function SalesClient({
   lang,
@@ -34,6 +36,7 @@ export default function SalesClient({
   initialProductionOrders: any[],
   companyProfile: any
 }) {
+  const { canAccess } = useUser();
   const [activeTab, setActiveTab] = useState('invoices');
   const [showNewInvoice, setShowNewInvoice] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<any | null>(null);
@@ -42,6 +45,16 @@ export default function SalesClient({
   const [editingQuotation, setEditingQuotation] = useState<any | null>(null);
 
   const dict = getDictionary(lang);
+
+  const allTabs = [
+    { id: 'quotations', label: lang === 'ar' ? 'عروض الأسعار' : 'Quotations', icon: '📄', module: 'quotations' as const },
+    { id: 'invoices', label: lang === 'ar' ? 'فواتير المبيعات' : 'Sales Invoices', icon: '🧾', module: 'invoices' as const },
+    { id: 'production', label: lang === 'ar' ? 'أوامر الإنتاج' : 'Production Orders', icon: '🏭', module: 'production' as const },
+    { id: 'customers', label: lang === 'ar' ? 'العملاء' : 'Customers', icon: '👥', module: 'contacts' as const },
+  ];
+
+  const tabs = allTabs.filter(t => canAccess(t.module));
+  const currentTab = tabs.find(t => t.id === activeTab) ? activeTab : (tabs[0]?.id || 'invoices');
 
   const handleInvoiceSave = async (data: any) => {
     let res;
@@ -85,12 +98,6 @@ export default function SalesClient({
     setShowNewQuotation(true);
   };
 
-  const tabs = [
-    { id: 'quotations', label: lang === 'ar' ? 'عروض الأسعار' : 'Quotations', icon: '📄' },
-    { id: 'invoices', label: lang === 'ar' ? 'فواتير المبيعات' : 'Sales Invoices', icon: '🧾' },
-    { id: 'customers', label: lang === 'ar' ? 'العملاء' : 'Customers', icon: '👥' },
-  ];
-
   return (
     <div className="sales-module">
       {/* Print-only Report Header */}
@@ -114,7 +121,7 @@ export default function SalesClient({
           
           <div style={{ marginTop: '2rem', textAlign: 'center', width: '100%' }}>
             <h2 style={{ fontSize: '22px', color: '#1e293b', margin: '0 0 10px', paddingBottom: '5px', borderBottom: '1px solid #eee', display: 'inline-block' }}>
-              {tabs.find(t => t.id === activeTab)?.label}
+              {tabs.find(t => t.id === currentTab)?.label}
             </h2>
           </div>
         </div>
@@ -126,7 +133,7 @@ export default function SalesClient({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`tab-item ${activeTab === tab.id ? 'active' : ''}`}
+                className={`tab-item ${currentTab === tab.id ? 'active' : ''}`}
               >
                 <span className="tab-icon">{tab.icon}</span>
                 {tab.label}
@@ -145,6 +152,16 @@ export default function SalesClient({
       </div>
 
       <div className="tab-content">
+        {currentTab === 'production' && (
+          <ProductionOrderList 
+            orders={initialProductionOrders}
+            products={initialProducts}
+            warehouses={initialWarehouses}
+            units={initialUnits}
+            costCenters={initialCostCenters}
+            lang={lang}
+          />
+        )}
         {activeTab === 'dashboard' && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
              <div className="card text-center" style={{ padding: '1.5rem', background: 'white' }}>

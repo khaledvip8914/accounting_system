@@ -91,8 +91,8 @@ export default function InvoicesClient({ initialInvoices, dict }: { initialInvoi
                 <tr key={inv.id}>
                   <td style={{ fontWeight: '600' }}>{inv.invoiceNumber}</td>
                   <td>{inv.client}</td>
-                  <td className="text-sub">{new Date(inv.date).toLocaleDateString()}</td>
-                  <td className={`amt ${inv.status === 'Paid' ? 'positive' : ''}`}>
+                  <td className="text-sub" suppressHydrationWarning>{new Date(inv.date).toLocaleDateString()}</td>
+                  <td className={`amt ${inv.status === 'Paid' ? 'positive' : ''}`} suppressHydrationWarning>
                     ${inv.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </td>
                   <td>

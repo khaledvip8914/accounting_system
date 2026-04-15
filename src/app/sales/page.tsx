@@ -2,11 +2,18 @@ import { prisma } from '@/lib/db';
 import SalesClient from './SalesClient';
 import { Lang } from '@/lib/i18n';
 import { getCompanyProfile } from '../settings/actions';
+import { getSession } from '@/lib/auth';
+import { redirect } from 'next/navigation';
 
 export default async function SalesPage(props: {
   params: Promise<any>;
   searchParams: Promise<{ lang?: string }>;
 }) {
+  const session = await getSession();
+  if (!session) {
+    redirect('/login');
+  }
+
   const searchParams = await props.searchParams;
   const lang = (searchParams.lang as Lang) || 'ar';
   

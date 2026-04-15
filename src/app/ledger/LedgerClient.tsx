@@ -297,17 +297,17 @@ export default function LedgerClient({
       <div className="card">
         <div className="table-container">
           <table>
-            <thead>
+            <thead style={{ background: '#1e293b', borderBottom: '2px solid #0f172a' }}>
               <tr>
-                <th style={{ width: '40px' }}><input type="checkbox" /></th>
-                <th>{dict.reference || 'Ref'}</th>
-                <th>{dict.date}</th>
-                <th style={{ width: '28%' }}>{dict.description}</th>
-                <th>{financialDict.period}</th>
-                <th style={{ textAlign: 'right' }}>{dict.debit}</th>
-                <th style={{ textAlign: 'right' }}>{dict.credit}</th>
-                <th>{dict.status || 'Status'}</th>
-                <th className="no-print" style={{ width: '100px', textAlign: 'center' }}>{lang === 'ar' ? 'إجراءات' : 'Actions'}</th>
+                <th style={{ width: '40px', color: '#ffffff' }}><input type="checkbox" /></th>
+                <th style={{ color: '#ffffff', fontWeight: '900' }}>{dict.reference || 'Ref'}</th>
+                <th style={{ color: '#ffffff', fontWeight: '900' }}>{dict.date}</th>
+                <th style={{ width: '28%', color: '#ffffff', fontWeight: '900' }}>{dict.description}</th>
+                <th style={{ color: '#ffffff', fontWeight: '900' }}>{financialDict.period}</th>
+                <th style={{ textAlign: 'right', color: '#ffffff', fontWeight: '900' }}>{dict.debit}</th>
+                <th style={{ textAlign: 'right', color: '#ffffff', fontWeight: '900' }}>{dict.credit}</th>
+                <th style={{ color: '#ffffff', fontWeight: '900' }}>{dict.status || 'Status'}</th>
+                <th className="no-print" style={{ width: '100px', textAlign: 'center', color: '#ffffff', fontWeight: '900' }}>{lang === 'ar' ? 'إجراءات' : 'Actions'}</th>
               </tr>
             </thead>
             <tbody>
@@ -383,10 +383,10 @@ export default function LedgerClient({
                           <div style={{ padding: '1rem 2rem' }}>
                             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                               <thead>
-                                <tr style={{ background: '#e2e8f0' }}>
-                                  <th style={{ padding: '0.4rem 0.5rem', textAlign: 'left' }}>{lang === 'ar' ? 'الحساب' : 'Account'}</th>
-                                  <th style={{ padding: '0.4rem 0.5rem', textAlign: 'right' }}>{dict.debit}</th>
-                                  <th style={{ padding: '0.4rem 0.5rem', textAlign: 'right' }}>{dict.credit}</th>
+                                <tr style={{ background: '#1e293b', borderBottom: '1px solid #0f172a' }}>
+                                  <th style={{ padding: '0.6rem 0.5rem', textAlign: 'left', color: '#ffffff', fontWeight: '900' }}>{lang === 'ar' ? 'الحساب' : 'Account'}</th>
+                                  <th style={{ padding: '0.6rem 0.5rem', textAlign: 'right', color: '#ffffff', fontWeight: '900' }}>{dict.debit}</th>
+                                  <th style={{ padding: '0.6rem 0.5rem', textAlign: 'right', color: '#ffffff', fontWeight: '900' }}>{dict.credit}</th>
                                 </tr>
                               </thead>
                               <tbody>

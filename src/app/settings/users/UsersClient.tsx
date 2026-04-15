@@ -1,10 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Lang } from '@/lib/i18n';
+import { useUser } from '@/components/UserContext';
 import { saveUser, deleteUser } from './actions';
 
-export default function UsersClient({ initialUsers, lang, dict }: { initialUsers: any[], lang: Lang, dict: any }) {
+export default function UsersClient({ initialUsers, roles, lang, dict }: { initialUsers: any[], roles: any[], lang: Lang, dict: any }) {
+  const { canAccess } = useUser();
   const [users, setUsers] = useState(initialUsers || []);
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
@@ -16,6 +19,7 @@ export default function UsersClient({ initialUsers, lang, dict }: { initialUsers
     email: '',
     name: '',
     password: '',
+    roleId: '',
     role: 'Accountant',
     permissions: [] as string[]
   });
@@ -27,8 +31,9 @@ export default function UsersClient({ initialUsers, lang, dict }: { initialUsers
         username: user.username,
         email: user.email || '',
         name: user.name || '',
-        password: '', // Don't show old password
-        role: user.role,
+        password: '', 
+        roleId: user.roleId || '',
+        role: user.role || 'Accountant',
         permissions: user.permissions ? JSON.parse(user.permissions) : []
       });
     } else {
@@ -37,6 +42,7 @@ export default function UsersClient({ initialUsers, lang, dict }: { initialUsers
         email: '',
         name: '',
         password: '',
+        roleId: roles[0]?.id || '',
         role: 'Accountant',
         permissions: []
       });
@@ -94,13 +100,20 @@ export default function UsersClient({ initialUsers, lang, dict }: { initialUsers
   return (
     <div className="users-module">
       <div className="page-header">
-        <div>
-          <h1 className="page-title">{lang === 'ar' ? 'إدارة المستخدمين' : 'Users Management'}</h1>
-          <p className="page-subtitle">{lang === 'ar' ? 'إدارة الموظفين المحاسبيين وصلاحياتهم' : 'Manage accounting staff and their permissions'}</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <Link href="/settings" className="btn-secondary" style={{ padding: '0.4rem 0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem', borderRadius: '8px' }}>
+            {lang === 'ar' ? '← عودة' : '← Back'}
+          </Link>
+          <div>
+            <h1 className="page-title">{lang === 'ar' ? 'إدارة المستخدمين' : 'Users Management'}</h1>
+            <p className="page-subtitle">{lang === 'ar' ? 'إدارة الموظفين المحاسبيين وصلاحياتهم' : 'Manage accounting staff and their permissions'}</p>
+          </div>
         </div>
-        <button className="btn-primary" onClick={() => handleOpenModal()}>
-          {lang === 'ar' ? 'إضافة مستخدم جديد +' : 'Add New User +'}
-        </button>
+        {canAccess('users', 'create') && (
+          <button className="btn-primary" onClick={() => handleOpenModal()}>
+            {lang === 'ar' ? 'إضافة مستخدم جديد +' : 'Add New User +'}
+          </button>
+        )}
       </div>
 
       <div className="card">
@@ -131,19 +144,23 @@ export default function UsersClient({ initialUsers, lang, dict }: { initialUsers
                     </td>
                     <td>{user.email || '-'}</td>
                     <td>
-                      <span className="badge" style={{ background: badge.bg, color: badge.color }}>
-                        {badge.text}
+                      <span className="badge" style={{ background: user.role === 'Admin' ? 'rgba(99, 102, 241, 0.1)' : 'rgba(56, 189, 248, 0.1)', color: user.role === 'Admin' ? '#6366f1' : '#38bdf8' }}>
+                         {user.roleRef?.name || user.role}
                       </span>
                     </td>
-                    <td style={{ fontSize: '0.85rem' }}>{new Date(user.createdAt).toLocaleDateString()}</td>
+                    <td style={{ fontSize: '0.85rem' }} suppressHydrationWarning>{new Date(user.createdAt).toLocaleDateString()}</td>
                     <td>
                       <div className="action-row" style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                        <button className="icon-btn edit" onClick={() => handleOpenModal(user)} title="Edit">
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                        </button>
-                        <button className="icon-btn delete" onClick={() => handleDelete(user.id)} title="Delete" disabled={user.username === 'admin'}>
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                        </button>
+                        {canAccess('users', 'edit') && (
+                          <button className="icon-btn edit" onClick={() => handleOpenModal(user)} title="Edit">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                          </button>
+                        )}
+                        {canAccess('users', 'delete') && (
+                          <button className="icon-btn delete" onClick={() => handleDelete(user.id)} title="Delete" disabled={user.username === 'admin' || user.username === 'master'}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -156,7 +173,7 @@ export default function UsersClient({ initialUsers, lang, dict }: { initialUsers
 
       {showModal && (
         <div className="modal-overlay">
-          <div className="modal-content card" style={{ maxWidth: '500px' }}>
+          <div className="modal-content card" style={{ maxWidth: '500px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div className="modal-header">
               <h3>{editingUser ? (lang === 'ar' ? 'تعديل مستخدم' : 'Edit User') : (lang === 'ar' ? 'إضافة مستخدم جديد' : 'New User')}</h3>
               <button 
@@ -165,7 +182,7 @@ export default function UsersClient({ initialUsers, lang, dict }: { initialUsers
               >&times;</button>
             </div>
             
-            <form onSubmit={handleSubmit} className="user-form">
+            <form onSubmit={handleSubmit} className="user-form" style={{ display: 'flex', flexDirection: 'column', overflowY: 'auto', flex: 1, padding: '1.5rem' }}>
               <div className="form-grid">
                 <div className="form-group">
                   <label>{lang === 'ar' ? 'اسم المستخدم' : 'Username'}</label>
@@ -207,58 +224,33 @@ export default function UsersClient({ initialUsers, lang, dict }: { initialUsers
                   />
                 </div>
                 <div className="form-group">
-                  <label>{lang === 'ar' ? 'الصلاحيات' : 'Role'}</label>
+                  <label>{lang === 'ar' ? 'صلاحيات الدور الوظيفي' : 'Role Permissions'}</label>
                   <select 
-                    value={formData.role}
-                    onChange={e => setFormData({...formData, role: e.target.value})}
+                    value={formData.roleId}
+                    onChange={e => setFormData({...formData, roleId: e.target.value})}
                     disabled={editingUser && editingUser.username === 'admin'}
+                    required
                   >
-                    <option value="Admin">{lang === 'ar' ? 'المدير العام' : 'Admin'}</option>
-                    <option value="SiteManager">{lang === 'ar' ? 'مسؤول الموقع' : 'Site Manager'}</option>
-                    <option value="Accountant">{lang === 'ar' ? 'محاسب' : 'Accountant'}</option>
-                    <option value="Employee">{lang === 'ar' ? 'موظف' : 'Employee'}</option>
+                    <option value="">{lang === 'ar' ? '-- اختر الدور --' : '-- Select Role --'}</option>
+                    {roles.map(r => (
+                      <option key={r.id} value={r.id}>{r.name}</option>
+                    ))}
                   </select>
                 </div>
               </div>
 
-              {/* Permissions Section */}
-              <div className="permissions-section">
-                <h4 style={{ margin: '1rem 0 1rem', fontSize: '0.9rem', color: 'var(--text-secondary)', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem' }}>
-                  {lang === 'ar' ? 'صلاحيات إضافية (تجاوز الدور)' : 'Individual Permissions (Role Override)'}
-                </h4>
-                <div className="permissions-grid">
-                  {[
-                    { id: 'EDIT_INVOICE', labelAr: 'تعديل الفواتير', labelEn: 'Edit Invoices' },
-                    { id: 'DELETE_INVOICE', labelAr: 'حذف الفواتير', labelEn: 'Delete Invoices' },
-                    { id: 'EDIT_JOURNAL', labelAr: 'تعديل القيود اليومية', labelEn: 'Edit Journal Entries' },
-                    { id: 'DELETE_JOURNAL', labelAr: 'حذف القيود اليومية', labelEn: 'Delete Journal Entries' },
-                    { id: 'MANAGE_FINANCIALS', labelAr: 'إدارة مراكز التكلفة', labelEn: 'Manage Cost Centers' },
-                    { id: 'MANAGE_INVENTORY', labelAr: 'إدارة المخزون المنتجات', labelEn: 'Manage Inventory/Products' },
-                    { id: 'EDIT_QUOTATION', labelAr: 'تعديل عروض الأسعار', labelEn: 'Edit Quotations' },
-                    { id: 'DELETE_QUOTATION', labelAr: 'حذف عروض الأسعار', labelEn: 'Delete Quotations' },
-                    { id: 'DELETE_PRODUCT', labelAr: 'حذف الأصناف', labelEn: 'Delete Products' },
-                    { id: 'DELETE_CONTACT', labelAr: 'حذف الموردين/العملاء', labelEn: 'Delete Contacts' },
-                  ].map(p => (
-                    <label key={p.id} className="permission-item">
-                      <input 
-                        type="checkbox" 
-                        checked={formData.permissions.includes(p.id)}
-                        onChange={e => {
-                          const newPerms = e.target.checked 
-                            ? [...formData.permissions, p.id]
-                            : formData.permissions.filter(x => x !== p.id);
-                          setFormData({...formData, permissions: newPerms});
-                        }}
-                      />
-                      <span>{lang === 'ar' ? p.labelAr : p.labelEn}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
 
               {error && <div className="error-msg">{error}</div>}
 
-              <div className="modal-footer">
+              <div className="modal-footer" style={{ 
+                position: 'sticky', 
+                bottom: '-1.5rem', 
+                background: 'var(--card-bg)', 
+                padding: '1rem 0',
+                borderTop: '1px solid var(--glass-border)',
+                zIndex: 10,
+                marginTop: '1.5rem'
+              }}>
                 <button type="button" className="btn-secondary" onClick={() => setShowModal(false)}>{lang === 'ar' ? 'إلغاء' : 'Cancel'}</button>
                 <button type="submit" className="btn-primary" disabled={loading}>
                   {loading ? (lang === 'ar' ? 'جاري الحفظ...' : 'Saving...') : (lang === 'ar' ? 'حفظ البيانات' : 'Save Changes')}

@@ -6,8 +6,15 @@ import { getAccounts } from "../accounts/actions";
 import { getTrialBalance, getProfitLoss, getBalanceSheet } from "../reports/actions";
 import { prisma } from "../../lib/db";
 import { getCompanyProfile } from "../settings/actions";
+import { getSession } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 export default async function FinancialManagementPage() {
+  const session = await getSession();
+  if (!session) {
+    redirect('/login');
+  }
+
   const cookieStore = await cookies();
   const lang = cookieStore.get('NX_LANG')?.value || 'en';
   

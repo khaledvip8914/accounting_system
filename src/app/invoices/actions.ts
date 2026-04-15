@@ -33,7 +33,10 @@ export async function createInvoice(data: {
 }) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user?.role, 'CREATE_INVOICE')) {
+    const userRole = session?.user?.role;
+    const userPerms = session?.user?.permissions || session?.user?.roleRef?.permissions;
+
+    if (userRole !== 'Admin' && !hasPermission(userPerms, 'invoices', 'create')) {
       throw new Error('غير مصرح لك بإنشاء فاتورة مبيعات');
     }
 

@@ -1,11 +1,12 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../src/generated/client_v7"
+  provider      = "prisma-client-js"
+  output        = "../src/generated/client_v7"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
+  url      = "file:./dev.db"
 }
 
 model Customer {
@@ -405,9 +406,20 @@ model User {
   password    String
   name        String?
   role        String   @default("Employee")
+  roleId      String?
+  roleRef     Role?    @relation(fields: [roleId], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   permissions String?
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  permissions String   @default("{}") // Stores JSON string of permissions
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  users       User[]
 }
 
 model Employee {

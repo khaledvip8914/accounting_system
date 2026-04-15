@@ -5,8 +5,10 @@ import { createProduct, updateProduct, deleteProduct, translateText, createUnit,
 import * as XLSX from 'xlsx';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
+import { useUser } from '@/components/UserContext';
 
 export default function ProductList({ products, units, warehouses, lang, dict, onViewItemCard }: { products: any[], units: any[], warehouses: any[], lang: string, dict: any, onViewItemCard?: (id: string) => void }) {
+  const { canAccess } = useUser();
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<any | null>(null);
@@ -319,48 +321,54 @@ export default function ProductList({ products, units, warehouses, lang, dict, o
               <button className="btn-secondary no-print" onClick={handleExport}>
                 {lang === 'ar' ? '📤 تصدير إكسيل' : 'Export Excel'}
               </button>
-              <button className="btn-secondary no-print" onClick={() => setShowImportModal(true)}>
-                {lang === 'ar' ? '📥 استيراد' : 'Import'}
-              </button>
-              <button className="btn-primary no-print" onClick={openAdd}>
-                {lang === 'ar' ? '+ صنف جديد' : '+ New Item'}
-              </button>
-              
-              <div style={{ position: 'relative' }}>
-                <button 
-                  className="btn-secondary no-print" 
-                  style={{ color: '#ef4444', borderColor: '#ef4444' }} 
-                  onClick={() => setShowDeleteMenu(!showDeleteMenu)}
-                >
-                  {lang === 'ar' ? '🗑️ حذف' : '🗑️ Delete'}
+              {canAccess('inventory', 'create') && (
+                <button className="btn-secondary no-print" onClick={() => setShowImportModal(true)}>
+                  {lang === 'ar' ? '📥 استيراد' : 'Import'}
                 </button>
-                {showDeleteMenu && (
-                  <>
-                    <div 
-                      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 90 }} 
-                      onClick={() => setShowDeleteMenu(false)} 
-                    />
-                    <div style={{ 
-                      position: 'absolute', top: '100%', right: lang === 'ar' ? 'auto' : 0, left: lang === 'ar' ? 0 : 'auto',
-                      background: '#1e293b', border: '1px solid #334155', borderRadius: '8px', zIndex: 100, 
-                      minWidth: '200px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.5)', overflow: 'hidden', marginTop: '8px'
-                    }}>
-                      <button 
-                        style={{ width: '100%', padding: '0.8rem 1rem', textAlign: lang === 'ar' ? 'right' : 'left', border: 'none', background: 'none', cursor: 'pointer', fontSize: '0.85rem', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }} 
-                        onClick={() => { setSelectionMode(true); setShowDeleteMenu(false); }}
-                      >
-                        <span>📋</span> {lang === 'ar' ? 'تحديد أصناف للحذف' : 'Select items to delete'}
-                      </button>
-                      <button 
-                        style={{ width: '100%', padding: '0.8rem 1rem', textAlign: lang === 'ar' ? 'right' : 'left', border: 'none', background: 'none', cursor: 'pointer', fontSize: '0.85rem', color: '#ef4444', borderTop: '1px solid #334155', display: 'flex', alignItems: 'center', gap: '8px' }} 
-                        onClick={() => { handleDeleteAll(); setShowDeleteMenu(false); }}
-                      >
-                        <span>🔥</span> {lang === 'ar' ? 'حذف كافة الأصناف' : 'Delete All Products'}
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
+              )}
+              {canAccess('inventory', 'create') && (
+                <button className="btn-primary no-print" onClick={openAdd}>
+                  {lang === 'ar' ? '+ صنف جديد' : '+ New Item'}
+                </button>
+              )}
+              
+              {canAccess('inventory', 'delete') && (
+                <div style={{ position: 'relative' }}>
+                  <button 
+                    className="btn-secondary no-print" 
+                    style={{ color: '#ef4444', borderColor: '#ef4444' }} 
+                    onClick={() => setShowDeleteMenu(!showDeleteMenu)}
+                  >
+                    {lang === 'ar' ? '🗑️ حذف' : '🗑️ Delete'}
+                  </button>
+                  {showDeleteMenu && (
+                    <>
+                      <div 
+                        style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 90 }} 
+                        onClick={() => setShowDeleteMenu(false)} 
+                      />
+                      <div style={{ 
+                        position: 'absolute', top: '100%', right: lang === 'ar' ? 'auto' : 0, left: lang === 'ar' ? 0 : 'auto',
+                        background: '#1e293b', border: '1px solid #334155', borderRadius: '8px', zIndex: 100, 
+                        minWidth: '200px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.5)', overflow: 'hidden', marginTop: '8px'
+                      }}>
+                        <button 
+                          style={{ width: '100%', padding: '0.8rem 1rem', textAlign: lang === 'ar' ? 'right' : 'left', border: 'none', background: 'none', cursor: 'pointer', fontSize: '0.85rem', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }} 
+                          onClick={() => { setSelectionMode(true); setShowDeleteMenu(false); }}
+                        >
+                          <span>📋</span> {lang === 'ar' ? 'تحديد أصناف للحذف' : 'Select items to delete'}
+                        </button>
+                        <button 
+                          style={{ width: '100%', padding: '0.8rem 1rem', textAlign: lang === 'ar' ? 'right' : 'left', border: 'none', background: 'none', cursor: 'pointer', fontSize: '0.85rem', color: '#ef4444', borderTop: '1px solid #334155', display: 'flex', alignItems: 'center', gap: '8px' }} 
+                          onClick={() => { handleDeleteAll(); setShowDeleteMenu(false); }}
+                        >
+                          <span>🔥</span> {lang === 'ar' ? 'حذف كافة الأصناف' : 'Delete All Products'}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
 
               {selectionMode && (
                 <div style={{ display: 'flex', gap: '0.5rem', animation: 'fadeIn 0.2s' }}>
@@ -483,8 +491,12 @@ export default function ProductList({ products, units, warehouses, lang, dict, o
                   </td>
                   <td className="no-print" style={{ textAlign: 'right' }}>
                     <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                        <button className="btn-icon" onClick={() => openEdit(p)}>✏️</button>
-                        <button className="btn-icon delete" onClick={() => handleDelete(p.id)}>🗑️</button>
+                        {canAccess('inventory', 'edit') && (
+                          <button className="btn-icon" onClick={() => openEdit(p)}>✏️</button>
+                        )}
+                        {canAccess('inventory', 'delete') && (
+                          <button className="btn-icon delete" onClick={() => handleDelete(p.id)}>🗑️</button>
+                        )}
                     </div>
                   </td>
                 </tr>

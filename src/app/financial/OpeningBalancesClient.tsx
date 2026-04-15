@@ -95,7 +95,7 @@ export default function OpeningBalancesClient({ lang, accounts = [] }: { lang: s
                     <select value={primaryAccountId} onChange={e => setPrimaryAccountId(e.target.value)} className="form-control">
                         <option value="">{lang === 'ar' ? 'اختر الحساب...' : 'Select account...'}</option>
                          {(accounts || [])
-                             .filter(a => ['3101', '3102', '3201', '3301', '3302', '3401'].includes(String(a?.code || '')))
+                             .filter(a => a.type === 'Equity')
                              .map(a => <option key={a.id} value={a.id}>{a?.code || ''} - {lang === 'ar' && a.nameAr ? a.nameAr : a.name}</option>)}
                     </select>
                 </div>
@@ -103,10 +103,10 @@ export default function OpeningBalancesClient({ lang, accounts = [] }: { lang: s
 
             <div className="table-responsive" style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
                 <table className="form-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                        <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                            <th style={{ padding: '12px 16px', textAlign: lang === 'ar' ? 'right' : 'left', width: '60%', color: '#334155', fontWeight: '600', borderInlineEnd: '1px solid #e2e8f0' }}>{lang === 'ar' ? 'اسم الحساب' : 'Account Name'}</th>
-                            <th style={{ padding: '12px 16px', textAlign: lang === 'ar' ? 'right' : 'left', width: '40%', color: '#334155', fontWeight: '600' }}>{lang === 'ar' ? 'الرصيد الافتتاحي' : 'Opening Balance'}</th>
+                    <thead style={{ background: '#1e293b', borderBottom: '2px solid #0f172a' }}>
+                        <tr>
+                            <th style={{ padding: '12px 16px', textAlign: lang === 'ar' ? 'right' : 'left', width: '60%', color: '#ffffff', fontWeight: '900', borderInlineEnd: '1px solid #0f172a' }}>{lang === 'ar' ? 'اسم الحساب' : 'Account Name'}</th>
+                            <th style={{ padding: '12px 16px', textAlign: lang === 'ar' ? 'right' : 'left', width: '40%', color: '#ffffff', fontWeight: '900' }}>{lang === 'ar' ? 'الرصيد الافتتاحي' : 'Opening Balance'}</th>
                         </tr>
                     </thead>
                     <tbody>

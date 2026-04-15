@@ -25,6 +25,7 @@ import { ThemeProvider } from "../components/ThemeProvider";
 import { getSession } from "../lib/auth";
 import LogoutButton from "../components/LogoutButton";
 import AppShell from "../components/AppShell";
+import { UserProvider } from "../components/UserContext";
 
 export default async function RootLayout({
   children,
@@ -39,26 +40,25 @@ export default async function RootLayout({
   const session = await getSession();
   const user = session?.user;
   
-  // A simple way to determine if we're on login page in server layout 
-  // is to check if session doesn't exist and we're likely being redirected or children is LoginPage
-  // But more robust is to just check if the children is specifically the login page or we provide a different layout for it.
-  // For now, let's just make the sidebar/header conditional on session existence.
-  const isAuthPage = !user;
+  // Determine if it's an authenticated session
+  const isAuthenticated = !!user;
 
   return (
     <html lang={lang} dir={dir} className={`${geistSans.variable} ${geistMono.variable}`}>
       <body suppressHydrationWarning>
-        <ThemeProvider>
-          {!user ? (
-            <div className="auth-wrapper">
-              {children}
-            </div>
-          ) : (
-            <AppShell dict={dict} user={user} lang={lang}>
-              {children}
-            </AppShell>
-          )}
-        </ThemeProvider>
+        <UserProvider user={user}>
+          <ThemeProvider>
+            {!isAuthenticated ? (
+              <div className="auth-wrapper">
+                {children}
+              </div>
+            ) : (
+              <AppShell dict={dict} user={user} lang={lang}>
+                {children}
+              </AppShell>
+            )}
+          </ThemeProvider>
+        </UserProvider>
       </body>
     </html>
   );

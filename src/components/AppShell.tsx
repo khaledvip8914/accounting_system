@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import LogoutButton from './LogoutButton';
 import LanguageSwitcher from './LanguageSwitcher';
+import { hasPermission } from '@/lib/permissions';
+import { UserProvider } from './UserContext';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -15,16 +17,28 @@ interface AppShellProps {
 
 export default function AppShell({ children, dict, user, lang }: AppShellProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const dir = lang === 'ar' ? 'rtl' : 'ltr';
 
-  // Close sidebar on route change (mobile)
+  // Permissions check helper
+  const canAccess = (module: any) => {
+    // Admins have access to everything
+    if (user.role === 'Admin') return true;
+    return hasPermission(user.roleRef?.permissions || user.permissions, module, 'view');
+  };
+
+  // Close sidebar on route change (mobile) & fix hydration
   useEffect(() => {
+    setMounted(true);
     setIsSidebarOpen(false);
   }, [pathname]);
 
+  if (!mounted) return <div style={{ opacity: 0 }}>{children}</div>;
+
   return (
-    <div className={`app-container ${isSidebarOpen ? 'sidebar-open' : ''}`} dir={dir}>
+    <UserProvider user={user}>
+      <div className={`app-container ${isSidebarOpen ? 'sidebar-open' : ''}`} dir={dir}>
       {/* Mobile Overlay */}
       {isSidebarOpen && (
         <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)} />
@@ -50,68 +64,90 @@ export default function AppShell({ children, dict, user, lang }: AppShellProps) 
             </span>
             {dict.sidebar.dashboard}
           </Link>
-          <Link href="/financial" className={`nav-item ${pathname.startsWith('/financial') ? 'active' : ''}`}>
-            <span className="nav-icon">
-               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M3 15h6"></path><path d="M3 18h6"></path></svg>
-            </span>
-            {dict.sidebar.financialMgmt}
-          </Link>
-          <Link href="/sales" className={`nav-item ${pathname.startsWith('/sales') ? 'active' : ''}`}>
-            <span className="nav-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-            </span>
-            {dict.sidebar.sales}
-          </Link>
-          <Link href="/inventory" className={`nav-item ${pathname.startsWith('/inventory') ? 'active' : ''}`}>
-            <span className="nav-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
-            </span>
-            {dict.sidebar.inventory}
-          </Link>
+          {canAccess('accounting') && (
+            <Link href="/financial" className={`nav-item ${pathname.startsWith('/financial') ? 'active' : ''}`}>
+              <span className="nav-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M3 15h6"></path><path d="M3 18h6"></path></svg>
+              </span>
+              {dict.sidebar.financialMgmt}
+            </Link>
+          )}
+
+          {(canAccess('quotations') || canAccess('invoices')) && (
+            <Link href="/sales" className={`nav-item ${pathname.startsWith('/sales') ? 'active' : ''}`}>
+              <span className="nav-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+              </span>
+              {dict.sidebar.sales}
+            </Link>
+          )}
+
+          {canAccess('inventory') && (
+            <Link href="/inventory" className={`nav-item ${pathname.startsWith('/inventory') ? 'active' : ''}`}>
+              <span className="nav-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+              </span>
+              {dict.sidebar.inventory}
+            </Link>
+          )}
 
           <div className="nav-label">Operations</div>
-          <Link href="/purchases" className={`nav-item ${pathname.startsWith('/purchases') ? 'active' : ''}`}>
-            <span className="nav-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-            </span>
-            {dict.sidebar.purchases}
-          </Link>
-          <Link href="/warehouses" className={`nav-item ${pathname.startsWith('/warehouses') ? 'active' : ''}`}>
-            <span className="nav-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-            </span>
-            {dict.sidebar.warehouses}
-          </Link>
+          
+          {canAccess('purchases') && (
+            <Link href="/purchases" className={`nav-item ${pathname.startsWith('/purchases') ? 'active' : ''}`}>
+              <span className="nav-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              </span>
+              {dict.sidebar.purchases}
+            </Link>
+          )}
 
-          <Link href="/employees" className={`nav-item ${pathname.startsWith('/employees') ? 'active' : ''}`}>
-            <span className="nav-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-            </span>
-            {dict.sidebar.employees}
-          </Link>
-          <Link href="/salaries" className={`nav-item ${pathname.startsWith('/salaries') ? 'active' : ''}`}>
-            <span className="nav-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-            </span>
-            {lang === 'ar' ? 'الرواتب' : 'Salaries'}
-          </Link>
+          {canAccess('inventory') && (
+            <Link href="/warehouses" className={`nav-item ${pathname.startsWith('/warehouses') ? 'active' : ''}`}>
+              <span className="nav-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+              </span>
+              {dict.sidebar.warehouses}
+            </Link>
+          )}
+
+          {canAccess('hr') && (
+            <>
+              <Link href="/employees" className={`nav-item ${pathname.startsWith('/employees') ? 'active' : ''}`}>
+                <span className="nav-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                </span>
+                {dict.sidebar.employees}
+              </Link>
+              <Link href="/salaries" className={`nav-item ${pathname.startsWith('/salaries') ? 'active' : ''}`}>
+                <span className="nav-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                </span>
+                {lang === 'ar' ? 'الرواتب' : 'Salaries'}
+              </Link>
+            </>
+          )}
 
           <div className="nav-label">Analytics</div>
-          <Link href="/reports" className={`nav-item ${pathname.startsWith('/reports') ? 'active' : ''}`}>
-            <span className="nav-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-            </span>
-            {dict.sidebar.reports}
-          </Link>
+          {canAccess('reports') && (
+            <Link href="/reports" className={`nav-item ${pathname.startsWith('/reports') ? 'active' : ''}`}>
+              <span className="nav-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+              </span>
+              {dict.sidebar.reports}
+            </Link>
+          )}
         </nav>
         
         <div className="nav-footer">
-          <Link href="/settings" className={`nav-item ${pathname.startsWith('/settings') ? 'active' : ''}`}>
-            <span className="nav-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-            </span>
-            {dict.sidebar.settings}
-          </Link>
+          {canAccess('settings') && (
+            <Link href="/settings" className={`nav-item ${pathname.startsWith('/settings') ? 'active' : ''}`}>
+              <span className="nav-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              </span>
+              {dict.sidebar.settings}
+            </Link>
+          )}
           <LogoutButton lang={lang} label={lang === 'ar' ? 'تسجيل الخروج' : 'Logout'} />
         </div>
       </aside>
@@ -232,6 +268,7 @@ export default function AppShell({ children, dict, user, lang }: AppShellProps) 
           }
         }
       `}</style>
-    </div>
+      </div>
+    </UserProvider>
   );
 }

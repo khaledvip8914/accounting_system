@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { useTheme } from '@/components/ThemeProvider';
 import { Lang } from '@/lib/i18n';
 
@@ -49,9 +50,14 @@ export default function ThemeClient({ lang }: { lang: Lang }) {
   return (
     <div className="theme-settings">
       <div className="page-header">
-        <div>
-          <h1 className="page-title">{lang === 'ar' ? 'تخصيص الأشكال' : 'Theme Settings'}</h1>
-          <p className="page-subtitle">{lang === 'ar' ? 'اختر النمط المفضل لمظهر البرنامج' : 'Choose your preferred application look'}</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <Link href="/settings" className="btn-secondary" style={{ padding: '0.4rem 0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem', borderRadius: '8px', fontSize: '0.85rem' }}>
+            {lang === 'ar' ? '← عودة' : '← Back'}
+          </Link>
+          <div>
+            <h1 className="page-title">{lang === 'ar' ? 'تخصيص الأشكال' : 'Theme Settings'}</h1>
+            <p className="page-subtitle">{lang === 'ar' ? 'اختر النمط المفضل لمظهر البرنامج' : 'Choose your preferred application look'}</p>
+          </div>
         </div>
       </div>
 

@@ -254,8 +254,8 @@ export default function ItemCardList({ products, lang, initialProductId }: { pro
         .table-card { padding: 0; background: white; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
         
         table { width: 100%; border-collapse: collapse; }
-        th { background: #f8fafc; padding: 1rem; text-align: ${lang === 'ar' ? 'right' : 'left'}; font-size: 0.85rem; font-weight: 700; color: #0f172a; border-bottom: 2px solid #e2e8f0; }
-        td { padding: 1rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: #0f172a !important; }
+        th { background: #1e293b; padding: 1rem; text-align: ${lang === 'ar' ? 'right' : 'left'}; font-size: 0.85rem; font-weight: 900; color: #ffffff; border-bottom: 2px solid #0f172a; }
+        td { padding: 1rem; border-bottom: 1px solid rgba(0,0,0,0.05); vertical-align: middle; color: #0f172a !important; }
         
         .date-cell { font-size: 0.9rem; font-weight: 500; color: #0f172a !important; }
         .time-sub { font-size: 0.75rem; color: #475569; margin-top: 2px; }

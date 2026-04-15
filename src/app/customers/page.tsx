@@ -2,10 +2,17 @@ import { prisma } from '@/lib/db';
 import CustomerList from '../sales/CustomerList';
 import { Lang, getDictionary } from '@/lib/i18n';
 import { cookies } from 'next/headers';
+import { getSession } from '@/lib/auth';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
 export default async function CustomersPage() {
+  const session = await getSession();
+  if (!session) {
+    redirect('/login');
+  }
+
   const cookieStore = await cookies();
   const lang = (cookieStore.get('NX_LANG')?.value as Lang) || 'ar';
   const dict = getDictionary(lang);

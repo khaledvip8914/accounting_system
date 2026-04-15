@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import Link from 'next/link';
 import { Lang } from '@/lib/i18n';
 import { updateCompanyProfile } from '../actions';
 
@@ -56,8 +57,13 @@ export default function GeneralSettingsClient({ lang, dict, initialProfile }: { 
 
   return (
     <div className="general-settings-container">
-      <div className="settings-header">
-        <h2 className="title">{lang === 'ar' ? 'الإعدادات العامة' : 'General Settings'}</h2>
+      <div className="settings-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <Link href="/settings" className="btn-secondary" style={{ padding: '0.4rem 0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem', borderRadius: '8px', fontSize: '0.85rem', border: '1px solid #e2e8f0' }}>
+            {lang === 'ar' ? '← عودة' : '← Back'}
+          </Link>
+          <h2 className="title">{lang === 'ar' ? 'الإعدادات العامة' : 'General Settings'}</h2>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="settings-form">
