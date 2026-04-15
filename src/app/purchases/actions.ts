@@ -24,7 +24,8 @@ export async function createPurchaseInvoice(data: {
 }) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user?.role, 'CREATE_INVOICE')) {
+    const perms = session?.user?.permissions;
+    if (!hasPermission(perms, 'purchases', 'create')) {
       throw new Error('غير مصرح لك بإنشاء فاتورة مشتريات');
     }
 
@@ -229,7 +230,8 @@ export async function createPurchaseInvoice(data: {
 export async function updatePurchaseInvoice(invoiceId: string, data: any) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user?.role, 'EDIT_INVOICE')) {
+    const perms = session?.user?.permissions;
+    if (!hasPermission(perms, 'purchases', 'edit')) {
       throw new Error('غير مصرح لك بتعديل الفواتير');
     }
 
@@ -459,7 +461,8 @@ export async function updatePurchaseInvoice(invoiceId: string, data: any) {
 export async function deletePurchaseInvoice(invoiceId: string) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user?.role, 'DELETE_INVOICE')) {
+    const perms = session?.user?.permissions;
+    if (!hasPermission(perms, 'purchases', 'delete')) {
       throw new Error('غير مصرح لك بحذف الفواتير');
     }
 
@@ -628,7 +631,8 @@ export async function updateSupplier(id: string, data: { address?: string, taxNu
 export async function deleteSupplier(id: string) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user?.role, 'DELETE_CONTACT')) {
+    const perms = session?.user?.permissions;
+    if (!hasPermission(perms, 'contacts', 'delete')) {
       throw new Error('غير مصرح لك بحذف الموردين');
     }
 
