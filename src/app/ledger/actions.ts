@@ -37,7 +37,7 @@ export async function saveJournalVoucher(data: {
 }) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user, 'CREATE_JOURNAL')) {
+    if (!hasPermission(session?.user?.permissions, 'accounting', 'create')) {
       throw new Error('غير مصرح لك بإنشاء قيد يومية');
     }
 
@@ -86,7 +86,7 @@ export async function saveJournalVoucher(data: {
 export async function deleteJournalVoucher(voucherId: string) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user, 'DELETE_JOURNAL')) {
+    if (!hasPermission(session?.user?.permissions, 'accounting', 'delete')) {
       throw new Error('غير مصرح لك بحذف قيود اليومية');
     }
 
@@ -124,7 +124,7 @@ export async function updateJournalVoucher(
 ) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user, 'EDIT_JOURNAL')) {
+    if (!hasPermission(session?.user?.permissions, 'accounting', 'edit')) {
       throw new Error('غير مصرح لك بتعديل قيود اليومية');
     }
 

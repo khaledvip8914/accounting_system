@@ -8,9 +8,10 @@ import { hasPermission } from '@/lib/permissions';
 export async function saveTransactionVoucher(data: any) {
   try {
     const session = await getSession();
-    if (data.id && !hasPermission(session?.user, 'EDIT_JOURNAL')) {
+    const perms = session?.user?.permissions;
+    if (data.id && !hasPermission(perms, 'accounting', 'edit')) {
       throw new Error('غير مصرح لك بتعديل السندات');
-    } else if (!data.id && !hasPermission(session?.user, 'CREATE_JOURNAL')) {
+    } else if (!data.id && !hasPermission(perms, 'accounting', 'create')) {
       throw new Error('غير مصرح لك بإنشاء سندات');
     }
 
@@ -134,7 +135,7 @@ export async function saveTransactionVoucher(data: any) {
 export async function deleteTransactionVoucher(id: string) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user, 'DELETE_JOURNAL')) {
+    if (!hasPermission(session?.user?.permissions, 'accounting', 'delete')) {
       throw new Error('غير مصرح لك بحذف السندات');
     }
 
@@ -165,7 +166,7 @@ export async function saveOpeningBalances(data: {
 }) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user, 'CREATE_JOURNAL')) {
+    if (!hasPermission(session?.user?.permissions, 'accounting', 'create')) {
       throw new Error('غير مصرح لك بإنشاء قيد يومية');
     }
 
