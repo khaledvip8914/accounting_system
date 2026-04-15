@@ -98,7 +98,7 @@ export default function InvoiceList({
       <div className="card">
         <div className="card-header no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 className="card-title">{lang === 'ar' ? 'فواتير المبيعات' : 'Sales Invoices'}</h2>
-          {canAccess('sales', 'create') && (
+          {canAccess('invoices', 'create') && (
             <button className="btn-primary" onClick={onNewInvoice}>
               {lang === 'ar' ? '+ فاتورة جديدة' : '+ New Invoice'}
             </button>
@@ -200,7 +200,7 @@ export default function InvoiceList({
                         >
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                         </button>
-                        {canAccess('sales', 'edit') && (
+                        {canAccess('invoices', 'edit') && (
                           <button
                             title={lang === 'ar' ? 'تعديل الفاتورة' : 'Edit Invoice'}
                             className="action-icon-btn edit"
@@ -219,7 +219,7 @@ export default function InvoiceList({
                           >
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                           </button>
-                        {canAccess('sales', 'delete') && (
+                        {canAccess('invoices', 'delete') && (
                           <button
                             title={lang === 'ar' ? 'حذف الفاتورة' : 'Delete Invoice'}
                             className="action-icon-btn delete"
