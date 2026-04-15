@@ -54,10 +54,9 @@ export async function getAccounts() {
 export async function createAccount(data: { code: string; name: string; nameAr?: string; type: string; nature?: string; description?: string; parentId?: string }) {
   try {
     const session = await getSession();
-    const userRole = session?.user?.role;
-    const userPerms = session?.user?.permissions || session?.user?.roleRef?.permissions;
+    const perms = session?.user?.permissions;
     
-    if (userRole !== 'Admin' && !hasPermission(userPerms, 'accounting', 'create')) {
+    if (!hasPermission(perms, 'accounting', 'create')) {
       throw new Error('غير مصرح لك بإدارة الحسابات');
     }
 
@@ -84,10 +83,9 @@ export async function createAccount(data: { code: string; name: string; nameAr?:
 export async function updateAccount(id: string, data: { code: string; name: string; nameAr?: string; nature: string; description?: string }) {
   try {
     const session = await getSession();
-    const userRole = session?.user?.role;
-    const userPerms = session?.user?.permissions || session?.user?.roleRef?.permissions;
+    const perms = session?.user?.permissions;
     
-    if (userRole !== 'Admin' && !hasPermission(userPerms, 'accounting', 'edit')) {
+    if (!hasPermission(perms, 'accounting', 'edit')) {
       throw new Error('غير مصرح لك بإدارة الحسابات');
     }
 
@@ -128,10 +126,9 @@ export async function deleteAccount(id: string) {
     const cookieStore = await cookies();
     const lang = cookieStore.get('NX_LANG')?.value || 'en';
     const session = await getSession();
-    const userRole = session?.user?.role;
-    const userPerms = session?.user?.permissions || session?.user?.roleRef?.permissions;
+    const perms = session?.user?.permissions;
     
-    if (userRole !== 'Admin' && !hasPermission(userPerms, 'accounting', 'delete')) {
+    if (!hasPermission(perms, 'accounting', 'delete')) {
       return { success: false, error: lang === 'ar' ? 'غير مصرح لك بمسح الحسابات، يرجى مراجعة المسؤول.' : 'You are not authorized to delete accounts.' };
     }
 
@@ -174,10 +171,9 @@ export async function authorizeDBDeleteAllAccounts() {
 export async function seedProfessionalAccounts() {
   try {
     const session = await getSession();
-    const userRole = session?.user?.role;
-    const userPerms = session?.user?.permissions || session?.user?.roleRef?.permissions;
+    const perms = session?.user?.permissions;
     
-    if (userRole !== 'Admin' && !hasPermission(userPerms, 'accounting', 'create')) {
+    if (!hasPermission(perms, 'accounting', 'create')) {
       return { success: false, error: 'غير مصرح لك بإدارة الحسابات' };
     }
 
