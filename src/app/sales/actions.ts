@@ -837,7 +837,7 @@ export async function createSalesInvoice(data: {
 export async function updateSalesInvoice(invoiceId: string, data: any) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user, 'EDIT_INVOICE')) {
+    if (!hasPermission(session?.user?.permissions, 'invoices', 'edit')) {
       throw new Error('غير مصرح لك بتعديل الفواتير');
     }
 
@@ -1042,7 +1042,7 @@ export async function updateSalesInvoice(invoiceId: string, data: any) {
 export async function deleteSalesInvoice(invoiceId: string) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user, 'DELETE_INVOICE')) {
+    if (!hasPermission(session?.user?.permissions, 'invoices', 'edit')) {
       throw new Error('غير مصرح لك بحذف الفواتير');
     }
 
@@ -1114,7 +1114,7 @@ export async function updateSalesInvoiceStatus(invoiceId: string, status: string
 export async function createCustomer(data: { address?: string, taxNumber?: string, commercialRegistry?: string, name: string, nameAr?: string, code: string, phone?: string, email?: string }) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user, 'MANAGE_CONTACTS')) {
+    if (!hasPermission(session?.user?.permissions, 'contacts', 'edit')) {
       throw new Error('غير مصرح لك بإدارة العملاء');
     }
 
@@ -1165,7 +1165,7 @@ export async function createCustomer(data: { address?: string, taxNumber?: strin
 export async function updateCustomer(id: string, data: { address?: string, taxNumber?: string, commercialRegistry?: string, name: string, nameAr?: string, code: string, phone?: string, email?: string }) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user, 'MANAGE_CONTACTS')) {
+    if (!hasPermission(session?.user?.permissions, 'contacts', 'edit')) {
       throw new Error('غير مصرح لك بإدارة العملاء');
     }
 
@@ -1206,7 +1206,7 @@ export async function updateCustomer(id: string, data: { address?: string, taxNu
 export async function deleteCustomer(id: string) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user, 'DELETE_CONTACT')) {
+    if (!hasPermission(session?.user?.permissions, 'contacts', 'delete')) {
       throw new Error('غير مصرح لك بحذف العملاء');
     }
 
@@ -1253,7 +1253,7 @@ export async function createSalesQuotation(data: {
 }) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user, 'CREATE_QUOTATION')) {
+    if (!hasPermission(session?.user?.permissions, 'quotations', 'create')) {
       throw new Error('غير مصرح لك بإنشاء عروض أسعار');
     }
 
@@ -1298,7 +1298,7 @@ export async function createSalesQuotation(data: {
 export async function updateSalesQuotation(id: string, data: any) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user, 'EDIT_QUOTATION')) {
+    if (!hasPermission(session?.user?.permissions, 'quotations', 'edit')) {
       throw new Error('غير مصرح لك بتعديل عروض الأسعار');
     }
 
@@ -1341,7 +1341,7 @@ export async function updateSalesQuotation(id: string, data: any) {
 export async function deleteSalesQuotation(id: string) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user, 'DELETE_QUOTATION')) {
+    if (!hasPermission(session?.user?.permissions, 'quotations', 'delete')) {
       throw new Error('غير مصرح لك بحذف عروض الأسعار');
     }
 
@@ -1356,7 +1356,7 @@ export async function deleteSalesQuotation(id: string) {
 export async function deleteAllQuotations() {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user, 'DELETE_QUOTATION')) {
+    if (!hasPermission(session?.user?.permissions, 'quotations', 'delete')) {
       throw new Error('غير مصرح لك بحذف عروض الأسعار');
     }
 
@@ -1371,7 +1371,7 @@ export async function deleteAllQuotations() {
 export async function deleteAllProducts() {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user, 'MANAGE_INVENTORY')) {
+    if (!hasPermission(session?.user?.permissions, 'inventory', 'edit')) {
       throw new Error('غير مصرح لك بحذف الأصناف');
     }
 
@@ -1511,7 +1511,7 @@ export async function createProduct(data: {
 }) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user, 'MANAGE_INVENTORY')) {
+    if (!hasPermission(session?.user?.permissions, 'inventory', 'edit')) {
       throw new Error('غير مصرح لك بإدارة المخزون');
     }
 
@@ -1560,7 +1560,7 @@ export async function createProduct(data: {
 export async function updateProduct(id: string, data: any) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user, 'MANAGE_INVENTORY')) {
+    if (!hasPermission(session?.user?.permissions, 'inventory', 'edit')) {
       throw new Error('غير مصرح لك بإدارة المخزون');
     }
 
@@ -1601,7 +1601,7 @@ export async function updateProduct(id: string, data: any) {
 export async function deleteProduct(id: string, lang: string = 'ar') {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user, 'MANAGE_INVENTORY')) {
+    if (!hasPermission(session?.user?.permissions, 'inventory', 'edit')) {
       throw new Error('غير مصرح لك بحذف الأصناف');
     }
 
@@ -1642,7 +1642,7 @@ export async function deleteProduct(id: string, lang: string = 'ar') {
 export async function deleteProducts(ids: string[], lang: string = 'ar') {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user, 'MANAGE_INVENTORY')) {
+    if (!hasPermission(session?.user?.permissions, 'inventory', 'edit')) {
       throw new Error('غير مصرح لك بحذف الأصناف');
     }
 
@@ -1697,7 +1697,7 @@ export async function deleteProducts(ids: string[], lang: string = 'ar') {
 export async function bulkCreateProducts(productsData: any[]) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user, 'MANAGE_INVENTORY')) {
+    if (!hasPermission(session?.user?.permissions, 'inventory', 'edit')) {
       throw new Error('غير مصرح لك بإدارة المخزون');
     }
 

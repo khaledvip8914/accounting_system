@@ -541,7 +541,8 @@ export async function updatePurchaseInvoiceStatus(invoiceId: string, status: str
 export async function createSupplier(data: { address?: string, taxNumber?: string, commercialRegistry?: string, name: string, nameAr?: string, code: string, phone?: string, email?: string }) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user?.role, 'MANAGE_CONTACTS')) {
+    const perms = session?.user?.permissions;
+    if (!hasPermission(perms, 'contacts', 'create')) {
       throw new Error('غير مصرح لك بإدارة الموردين');
     }
 
@@ -591,7 +592,8 @@ export async function createSupplier(data: { address?: string, taxNumber?: strin
 export async function updateSupplier(id: string, data: { address?: string, taxNumber?: string, commercialRegistry?: string, name: string, nameAr?: string, code: string, phone?: string, email?: string }) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user?.role, 'MANAGE_CONTACTS')) {
+    const perms = session?.user?.permissions;
+    if (!hasPermission(perms, 'contacts', 'edit')) {
       throw new Error('غير مصرح لك بإدارة الموردين');
     }
 
