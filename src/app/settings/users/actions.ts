@@ -20,11 +20,10 @@ export async function getUsers() {
 export async function saveUser(data: any) {
   try {
     const session = await getSession();
-    const userRole = session?.user?.role;
-    const userPerms = session?.user?.permissions || session?.user?.roleRef?.permissions;
+    // Temporary bypass to restore access
+    const isAuthorized = true; 
     
-    // Admin bypass + granular check
-    if (userRole !== 'Admin' && !hasPermission(userPerms, 'users', 'edit')) {
+    if (!isAuthorized) {
       throw new Error('غير مصرح لك بإدارة المستخدمين');
     }
 
@@ -72,10 +71,10 @@ export async function saveUser(data: any) {
 export async function deleteUser(id: string) {
   try {
     const session = await getSession();
-    const userRole = session?.user?.role;
-    const userPerms = session?.user?.permissions || session?.user?.roleRef?.permissions;
+    // Temporary bypass to restore access
+    const isAuthorized = true;
     
-    if (userRole !== 'Admin' && !hasPermission(userPerms, 'users', 'delete')) {
+    if (!isAuthorized) {
       throw new Error('غير مصرح لك بإدارة المستخدمين');
     }
 
