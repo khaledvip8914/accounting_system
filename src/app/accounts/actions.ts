@@ -126,9 +126,13 @@ export async function deleteAccount(id: string) {
     const cookieStore = await cookies();
     const lang = cookieStore.get('NX_LANG')?.value || 'en';
     const session = await getSession();
-    const perms = session?.user?.permissions;
+    const user = session?.user;
+    const perms = user?.permissions;
     
-    if (!hasPermission(perms, 'accounting', 'delete')) {
+    // Admin always has full access
+    const isAuthorized = user?.role === 'Admin' || hasPermission(perms, 'accounting', 'delete');
+    
+    if (!isAuthorized) {
       return { success: false, error: lang === 'ar' ? 'غير مصرح لك بمسح الحسابات، يرجى مراجعة المسؤول.' : 'You are not authorized to delete accounts.' };
     }
 
