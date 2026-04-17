@@ -7,15 +7,15 @@ export async function getTrialBalance() {
   try {
     const accounts = await prisma.account.findMany({
       include: {
-        journalEntries: {
+        entries: {
           select: { debit: true, credit: true }
         }
       }
     });
 
     return accounts.map(acc => {
-      const totalDebit = acc.journalEntries.reduce((sum, e) => sum + e.debit, 0);
-      const totalCredit = acc.journalEntries.reduce((sum, e) => sum + e.credit, 0);
+      const totalDebit = acc.entries.reduce((sum, e) => sum + e.debit, 0);
+      const totalCredit = acc.entries.reduce((sum, e) => sum + e.credit, 0);
       return {
         ...acc,
         totalDebit,
@@ -39,7 +39,7 @@ export async function getProfitLoss() {
         ]
       },
       include: {
-        journalEntries: {
+        entries: {
           select: { debit: true, credit: true }
         }
       }
@@ -51,8 +51,8 @@ export async function getProfitLoss() {
     let totalExpenses = 0;
 
     accounts.forEach(acc => {
-      const totalDebit = acc.journalEntries.reduce((sum, e) => sum + e.debit, 0);
-      const totalCredit = acc.journalEntries.reduce((sum, e) => sum + e.credit, 0);
+      const totalDebit = acc.entries.reduce((sum, e) => sum + e.debit, 0);
+      const totalCredit = acc.entries.reduce((sum, e) => sum + e.credit, 0);
       const balance = Math.abs(totalDebit - totalCredit);
 
       const item = { name: acc.name, nameAr: acc.nameAr, balance };
@@ -89,7 +89,7 @@ export async function getBalanceSheet() {
         ]
       },
       include: {
-        journalEntries: {
+        entries: {
           select: { debit: true, credit: true }
         }
       }
@@ -103,8 +103,8 @@ export async function getBalanceSheet() {
     let totalEquity = 0;
 
     accounts.forEach(acc => {
-      const totalDebit = acc.journalEntries.reduce((sum, e) => sum + e.debit, 0);
-      const totalCredit = acc.journalEntries.reduce((sum, e) => sum + e.credit, 0);
+      const totalDebit = acc.entries.reduce((sum, e) => sum + e.debit, 0);
+      const totalCredit = acc.entries.reduce((sum, e) => sum + e.credit, 0);
       const balance = totalDebit - totalCredit;
 
       const item = { name: acc.name, nameAr: acc.nameAr, balance: Math.abs(balance) };
