@@ -10,7 +10,10 @@ export type Module =
   | 'settings' 
   | 'reports' 
   | 'contacts'
-  | 'users';
+  | 'users'
+  | 'sales_reports'
+  | 'purchase_reports'
+  | 'return_reports';
 
 export interface Permissions {
   [key: string]: {
@@ -32,7 +35,10 @@ export const ALL_MODULES: Module[] = [
   'settings', 
   'reports', 
   'contacts',
-  'users'
+  'users',
+  'sales_reports',
+  'purchase_reports',
+  'return_reports'
 ];
 
 export const MODULES = ALL_MODULES;
@@ -63,7 +69,7 @@ export const MODULE_GROUPS: PermissionGroup[] = [
   {
     name: 'System & Reports',
     nameAr: 'النظام والتقارير',
-    modules: ['settings', 'reports', 'users']
+    modules: ['settings', 'reports', 'users', 'sales_reports', 'purchase_reports', 'return_reports']
   }
 ];
 
@@ -79,6 +85,9 @@ export const DEFAULT_PERMISSIONS: Permissions = {
   reports: { view: false, create: false, edit: false, delete: false },
   contacts: { view: false, create: false, edit: false, delete: false },
   users: { view: false, create: false, edit: false, delete: false },
+  sales_reports: { view: false, create: false, edit: false, delete: false },
+  purchase_reports: { view: false, create: false, edit: false, delete: false },
+  return_reports: { view: false, create: false, edit: false, delete: false },
 };
 
 export function hasPermission(
