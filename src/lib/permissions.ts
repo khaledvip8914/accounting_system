@@ -82,23 +82,39 @@ export const DEFAULT_PERMISSIONS: Permissions = {
 };
 
 export function hasPermission(
-  userPermissions: any | string | null,
+  userOrPermissions: any | string | null,
   module: Module,
   action: Action
 ): boolean {
-  if (!userPermissions) return false;
+  if (!userOrPermissions) return false;
+
+  // Support passing the full user object or just permissions
+  const role = typeof userOrPermissions === 'object' ? userOrPermissions.role : null;
+  if (role === 'Admin') return true;
 
   let perms: any;
-  if (typeof userPermissions === 'string') {
+  if (typeof userOrPermissions === 'string') {
     try {
-      perms = JSON.parse(userPermissions);
+      perms = JSON.parse(userOrPermissions);
     } catch (e) {
       console.error('Failed to parse user permissions', e);
       return false;
     }
   } else {
-    perms = userPermissions;
+    // If it's a user object, extract permissions property, otherwise use as is
+    perms = userOrPermissions.permissions || userOrPermissions;
   }
+
+  // Handle case where permissions might still be a string after extraction
+  if (typeof perms === 'string') {
+    try {
+      perms = JSON.parse(perms);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  if (!perms || typeof perms !== 'object') return false;
 
   const modulePerms = perms[module];
   if (!modulePerms) return false;
