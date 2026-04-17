@@ -85,6 +85,54 @@ export default function ReportsClient({
         >
           {dict.balanceSheet}
         </button>
+        <button 
+          className={`tab-btn ${activeTab === 'sales' ? 'active' : ''}`} 
+          onClick={() => setActiveTab('sales')}
+          style={{ 
+            padding: '0.75rem 1.5rem', 
+            background: activeTab === 'sales' ? 'var(--accent-primary)' : 'transparent',
+            color: activeTab === 'sales' ? 'white' : 'var(--text-secondary)',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontWeight: '600',
+            transition: 'all 0.2s'
+          }}
+        >
+          {lang === 'ar' ? 'تقرير المبيعات' : 'Sales Report'}
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'purchases' ? 'active' : ''}`} 
+          onClick={() => setActiveTab('purchases')}
+          style={{ 
+            padding: '0.75rem 1.5rem', 
+            background: activeTab === 'purchases' ? 'var(--accent-primary)' : 'transparent',
+            color: activeTab === 'purchases' ? 'white' : 'var(--text-secondary)',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontWeight: '600',
+            transition: 'all 0.2s'
+          }}
+        >
+          {lang === 'ar' ? 'تقرير المشتريات' : 'Purchases Report'}
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'returns' ? 'active' : ''}`} 
+          onClick={() => setActiveTab('returns')}
+          style={{ 
+            padding: '0.75rem 1.5rem', 
+            background: activeTab === 'returns' ? 'var(--accent-primary)' : 'transparent',
+            color: activeTab === 'returns' ? 'white' : 'var(--text-secondary)',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontWeight: '600',
+            transition: 'all 0.2s'
+          }}
+        >
+          {lang === 'ar' ? 'تقرير المرتجعات' : 'Returns Report'}
+        </button>
       </div>
 
       {activeTab === 'trial' && (
