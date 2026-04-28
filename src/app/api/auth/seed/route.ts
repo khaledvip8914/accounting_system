@@ -22,14 +22,19 @@ export async function GET() {
         password: hashedPassword,
         name: 'Administrator',
         role: 'Admin',
-        email: 'admin@nexaccount.com'
+        email: 'admin@nexaccount.com',
+        emailVerified: new Date()
       }
     });
 
     return NextResponse.json({ 
       success: true, 
-      messageAr: 'تم إنشاء مستخدم المدير (admin) بنجاح. كلمة المرور هي: admin123', 
-      messageEn: 'Admin user (admin) created successfully. Password: admin123' 
+      message: 'Admin user created successfully!',
+      credentials: {
+        username: 'admin',
+        password: 'admin123'
+      },
+      note: 'You can now login at /login'
     });
   } catch (error) {
     console.error('Seed error:', error);
