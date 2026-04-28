@@ -21,7 +21,7 @@ export default async function InventoryPage(props: {
   try {
     const [products, units, costCenters, productionOrders, warehouses, disposalVouchers, suppliers] = await Promise.all([
       prisma.product.findMany({
-        include: { unitRef: true, subUnitRef: true, supplier: true },
+        include: { unitRef: true, subUnitRef: true },
         orderBy: { sku: 'asc' }
       }),
       import('../sales/actions').then(m => m.getUnits()),
