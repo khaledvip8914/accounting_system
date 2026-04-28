@@ -7,7 +7,6 @@ import ProductionOrderList from '../sales/ProductionOrderList';
 import UnitList from '../sales/UnitList';
 import ItemCardList from './ItemCardList';
 import DisposalVoucherList from './DisposalVoucherList';
-import PurchaseOrderList from './PurchaseOrderList';
 import { getDictionary } from '@/lib/i18n';
 
 export default function InventoryClient({
