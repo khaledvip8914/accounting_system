@@ -48,12 +48,16 @@ export async function saveUser(data: any) {
     } else {
       // Create
       if (!password) throw new Error('Password is required for new users');
+      if (!rest.email) throw new Error('Email is required for verification');
+      
       const hashedPassword = await bcrypt.hash(password, 10);
+      const verificationToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
       
       const user = await prisma.user.create({
         data: {
           ...rest,
-          password: hashedPassword
+          password: hashedPassword,
+          verificationToken
         }
       });
       revalidatePath('/settings/users');

@@ -142,7 +142,16 @@ export default function UsersClient({ initialUsers, roles, lang, dict }: { initi
                         </div>
                       </div>
                     </td>
-                    <td>{user.email || '-'}</td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        {user.email || '-'}
+                        {user.emailVerified ? (
+                          <span title={lang === 'ar' ? 'تم التحقق' : 'Verified'} style={{ color: '#10b981' }}>✓</span>
+                        ) : (
+                          <span title={lang === 'ar' ? 'قيد التحقق' : 'Pending Verification'} style={{ color: '#f59e0b', fontSize: '0.8rem' }}>⏳</span>
+                        )}
+                      </div>
+                    </td>
                     <td>
                       <span className="badge" style={{ background: user.role === 'Admin' ? 'rgba(99, 102, 241, 0.1)' : 'rgba(56, 189, 248, 0.1)', color: user.role === 'Admin' ? '#6366f1' : '#38bdf8' }}>
                          {user.roleRef?.name || user.role}
@@ -211,6 +220,7 @@ export default function UsersClient({ initialUsers, roles, lang, dict }: { initi
                     value={formData.email}
                     onChange={e => setFormData({...formData, email: e.target.value})}
                     placeholder="name@company.com"
+                    required
                   />
                 </div>
                 <div className="form-group">
