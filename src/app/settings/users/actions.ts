@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import bcrypt from 'bcryptjs';
 import { getSession } from '@/lib/auth';
 import { hasPermission } from '@/lib/permissions';
+import { sendVerificationEmail } from '@/lib/mail';
 
 export async function getUsers() {
   try {
@@ -60,6 +61,12 @@ export async function saveUser(data: any) {
           verificationToken
         }
       });
+
+      // Send verification email
+      if (user.email) {
+        await sendVerificationEmail(user.email, verificationToken, user.name || user.username);
+      }
+
       revalidatePath('/settings/users');
       return { success: true, user };
     }
