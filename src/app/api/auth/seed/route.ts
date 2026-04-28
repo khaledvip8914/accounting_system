@@ -4,20 +4,13 @@ import bcrypt from 'bcryptjs';
 
 export async function GET() {
   try {
-    // Check if any users exist
-    const userCount = await prisma.user.count();
-    
-    if (userCount > 0) {
-      return NextResponse.json({ 
-        messageAr: 'المستخدمون موجودون بالفعل. لا يمكن البدء من جديد.', 
-        messageEn: 'Users already exist. Seeding aborted.' 
-      }, { status: 400 });
-    }
-
+    // Ensure admin user exists
     const hashedPassword = await bcrypt.hash('admin123', 10);
     
-    await prisma.user.create({
-      data: {
+    const adminUser = await prisma.user.upsert({
+      where: { username: 'admin' },
+      update: {},
+      create: {
         username: 'admin',
         password: hashedPassword,
         name: 'Administrator',
@@ -29,7 +22,7 @@ export async function GET() {
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Admin user created successfully!',
+      message: 'Admin user ensured/created successfully!',
       credentials: {
         username: 'admin',
         password: 'admin123'
