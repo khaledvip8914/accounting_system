@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import PurchaseInvoiceList from './PurchaseInvoiceList';
 import SupplierList from './SupplierList';
+import PurchaseOrderList from './PurchaseOrderList';
 import CreatePurchaseModal from './CreatePurchaseModal';
-import { createPurchaseInvoice, updatePurchaseInvoice } from './actions';
+import CreatePurchaseOrderModal from './CreatePurchaseOrderModal';
+import { createPurchaseInvoice, updatePurchaseInvoice, createPurchaseOrder, updatePurchaseOrder, deletePurchaseOrder } from './actions';
 import { Lang, getDictionary } from '@/lib/i18n';
 
 export default function PurchasesClient({
@@ -15,6 +17,7 @@ export default function PurchasesClient({
   initialAccounts,
   initialWarehouses,
   initialUnits,
+  initialPurchaseOrders,
   companyProfile
 }: {
   lang: string,
@@ -24,15 +27,19 @@ export default function PurchasesClient({
   initialAccounts: any[],
   initialWarehouses: any[],
   initialUnits: any[],
+  initialPurchaseOrders: any[],
   companyProfile: any
 }) {
   const [activeTab, setActiveTab] = useState('invoices');
   const [showNewPurchase, setShowNewPurchase] = useState(false);
+  const [showNewOrder, setShowNewOrder] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<any | null>(null);
+  const [editingOrder, setEditingOrder] = useState<any | null>(null);
   const dict = getDictionary(lang);
 
   const tabs = [
     { id: 'dashboard', label: lang === 'ar' ? 'نظرة عامة' : 'Overview', icon: '📈' },
+    { id: 'purchase-orders', label: lang === 'ar' ? 'طلبات الشراء' : 'Purchase Orders', icon: '📝' },
     { id: 'invoices', label: lang === 'ar' ? 'فواتير المشتريات' : 'Purchase Invoices', icon: '📥' },
     { id: 'suppliers', label: lang === 'ar' ? 'الموردين' : 'Suppliers', icon: '🚛' },
   ];
@@ -53,9 +60,30 @@ export default function PurchasesClient({
     }
   };
 
-  const openEdit = (invoice: any) => {
-    setEditingInvoice(invoice);
-    setShowNewPurchase(true);
+  const handleOrderSave = async (data: any) => {
+    let res;
+    if (editingOrder) {
+      res = await updatePurchaseOrder(editingOrder.id, data);
+    } else {
+      res = await createPurchaseOrder(data);
+    }
+
+    if (res?.success) {
+      setShowNewOrder(false);
+      setEditingOrder(null);
+    } else {
+      alert(res?.error || (lang === 'ar' ? 'حدث خطأ أثناء حفظ الطلب' : 'Error saving order'));
+    }
+  };
+
+  const handleDeleteOrder = async (id: string) => {
+    const res = await deletePurchaseOrder(id);
+    if (!res.success) alert(res.error);
+  };
+
+  const openEditOrder = (order: any) => {
+    setEditingOrder(order);
+    setShowNewOrder(true);
   };
 
   return (
@@ -101,9 +129,6 @@ export default function PurchasesClient({
             ))}
           </div>
         </div>
-        <div className="header-right">
-           {/* Global action buttons can go here */}
-        </div>
       </div>
 
       <div className="tab-content" style={{ marginTop: '1.5rem' }}>
@@ -121,7 +146,22 @@ export default function PurchasesClient({
                     {initialSuppliers.length}
                  </div>
               </div>
+              <div className="card stat-card" style={{ padding: '1.5rem', borderLeft: '4px solid #6366f1' }}>
+                 <div style={{ color: '#64748b', fontSize: '0.875rem' }}>{lang === 'ar' ? 'طلبات شراء نشطة' : 'Active Purchase Orders'}</div>
+                 <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#6366f1', marginTop: '0.5rem' }}>
+                    {initialPurchaseOrders.filter(o => o.status === 'Pending' || o.status === 'Ordered').length}
+                 </div>
+              </div>
            </div>
+        )}
+        {activeTab === 'purchase-orders' && (
+          <PurchaseOrderList 
+            orders={initialPurchaseOrders} 
+            lang={lang} 
+            onNewOrder={() => { setShowNewOrder(true); setEditingOrder(null); }}
+            onEditOrder={openEditOrder}
+            onDeleteOrder={handleDeleteOrder}
+          />
         )}
         {activeTab === 'invoices' && (
           <PurchaseInvoiceList 
@@ -129,7 +169,7 @@ export default function PurchasesClient({
             lang={lang} 
             dict={dict} 
             onNewInvoice={() => { setShowNewPurchase(true); setEditingInvoice(null); }} 
-            onEditInvoice={openEdit}
+            onEditInvoice={(inv) => { setEditingInvoice(inv); setShowNewPurchase(true); }}
             companyProfile={companyProfile}
           />
         )}
@@ -147,6 +187,18 @@ export default function PurchasesClient({
           lang={lang}
           onClose={() => { setShowNewPurchase(false); setEditingInvoice(null); }}
           onSave={handlePurchaseSave}
+        />
+      )}
+
+      {showNewOrder && (
+        <CreatePurchaseOrderModal 
+          orderToEdit={editingOrder}
+          suppliers={initialSuppliers}
+          products={initialProducts}
+          warehouses={initialWarehouses}
+          lang={lang}
+          onClose={() => { setShowNewOrder(false); setEditingOrder(null); }}
+          onSave={handleOrderSave}
         />
       )}
 

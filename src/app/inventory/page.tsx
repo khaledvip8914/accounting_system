@@ -19,9 +19,9 @@ export default async function InventoryPage(props: {
   const lang = (searchParams.lang as Lang) || 'ar';
   
   try {
-    const [products, units, costCenters, productionOrders, warehouses, disposalVouchers] = await Promise.all([
+    const [products, units, costCenters, productionOrders, warehouses, disposalVouchers, suppliers] = await Promise.all([
       prisma.product.findMany({
-        include: { unitRef: true, subUnitRef: true },
+        include: { unitRef: true, subUnitRef: true, supplier: true },
         orderBy: { sku: 'asc' }
       }),
       import('../sales/actions').then(m => m.getUnits()),
@@ -33,6 +33,9 @@ export default async function InventoryPage(props: {
       prisma.disposalVoucher.findMany({
           include: { product: { include: { unitRef: true, subUnitRef: true } }, warehouse: true },
           orderBy: { date: 'desc' }
+      }),
+      prisma.supplier.findMany({
+        orderBy: { name: 'asc' }
       })
     ]);
 
@@ -45,6 +48,7 @@ export default async function InventoryPage(props: {
         initialProductionOrders={productionOrders || []}
         initialWarehouses={warehouses || []}
         initialDisposalVouchers={disposalVouchers || []}
+        initialSuppliers={suppliers || []}
       />
     );
   } catch (err: any) {

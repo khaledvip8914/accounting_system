@@ -27,8 +27,8 @@ model Customer {
 }
 
 model Supplier {
-  id                 String            @id @default(cuid())
-  code               String            @unique
+  id                 String              @id @default(cuid())
+  code               String              @unique
   name               String
   nameAr             String?
   email              String?
@@ -36,10 +36,13 @@ model Supplier {
   address            String?
   taxNumber          String?
   commercialRegistry String?
-  balance            Float             @default(0)
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
+  balance            Float               @default(0)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
   invoices           PurchaseInvoice[]
+  purchaseOrders     PurchaseOrder[]
+  purchaseOrderItems PurchaseOrderItem[]
+  products           Product[]           @relation("ProductSupplier")
 }
 
 model Warehouse {
@@ -59,6 +62,7 @@ model Warehouse {
   transfersFrom    StockTransfer[]   @relation("FromWarehouse")
   stockItems       WarehouseStock[]
   disposalVouchers DisposalVoucher[]
+  purchaseOrders   PurchaseOrder[]
 }
 
 model WarehouseStock {
@@ -73,38 +77,41 @@ model WarehouseStock {
 }
 
 model Product {
-  id               String                @id @default(cuid())
-  sku              String                @unique
-  name             String
-  nameAr           String?
-  description      String?
-  category         String?
-  classification   String                @default("Finished Product")
-  unit             String                @default("pc")
-  unitId           String?
-  costPrice        Float                 @default(0)
-  salePrice        Float                 @default(0)
-  stockQuantity    Float                 @default(0)
-  reorderPoint     Float                 @default(0)
-  caloriesPer100g  Float                 @default(0)
-  expiryDate       DateTime?
-  createdAt        DateTime              @default(now())
-  updatedAt        DateTime              @updatedAt
-  unitQuantity     Float                 @default(1)
-  subUnitId        String?
-  costCenters      CostCenter[]
-  costCenterItems  CostCenterItem[]
-  inventoryLogs    InventoryLog[]
-  items            InvoiceItem[]
-  subUnitRef       UnitOfMeasure?        @relation("SubUnit", fields: [subUnitId], references: [id])
-  unitRef          UnitOfMeasure?        @relation("MainUnit", fields: [unitId], references: [id])
-  productionOrders ProductionOrder[]     @relation("FinishedProduct")
-  usages           ProductionOrderItem[] @relation("RawMaterialUsage")
-  purchaseItems    PurchaseItem[]
-  quotationItems   QuotationItem[]
-  transfers        StockTransferItem[]
-  warehouseStocks  WarehouseStock[]
-  disposalVouchers DisposalVoucher[]
+  id                 String                @id @default(cuid())
+  sku                String                @unique
+  name               String
+  nameAr             String?
+  description        String?
+  category           String?
+  classification     String                @default("Finished Product")
+  unit               String                @default("pc")
+  unitId             String?
+  costPrice          Float                 @default(0)
+  salePrice          Float                 @default(0)
+  stockQuantity      Float                 @default(0)
+  reorderPoint       Float                 @default(0)
+  caloriesPer100g    Float                 @default(0)
+  expiryDate         DateTime?
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  unitQuantity       Float                 @default(1)
+  subUnitId          String?
+  costCenters        CostCenter[]
+  costCenterItems    CostCenterItem[]
+  inventoryLogs      InventoryLog[]
+  items              InvoiceItem[]
+  subUnitRef         UnitOfMeasure?        @relation("SubUnit", fields: [subUnitId], references: [id])
+  unitRef            UnitOfMeasure?        @relation("MainUnit", fields: [unitId], references: [id])
+  productionOrders   ProductionOrder[]     @relation("FinishedProduct")
+  usages             ProductionOrderItem[] @relation("RawMaterialUsage")
+  purchaseItems      PurchaseItem[]
+  quotationItems     QuotationItem[]
+  transfers          StockTransferItem[]
+  warehouseStocks    WarehouseStock[]
+  disposalVouchers   DisposalVoucher[]
+  purchaseOrderItems PurchaseOrderItem[]
+  supplierId         String?
+  supplier           Supplier?             @relation("ProductSupplier", fields: [supplierId], references: [id])
 }
 
 model SalesInvoice {
@@ -492,4 +499,38 @@ model DisposalVoucher {
   updatedAt     DateTime  @updatedAt
   product       Product   @relation(fields: [productId], references: [id])
   warehouse     Warehouse @relation(fields: [warehouseId], references: [id])
+}
+
+model PurchaseOrder {
+  id             String              @id @default(cuid())
+  orderNumber    String              @unique
+  date           DateTime            @default(now())
+  supplierId     String?
+  warehouseId    String?
+  totalAmount    Float
+  taxAmount      Float               @default(0)
+  discount       Float               @default(0)
+  netAmount      Float
+  status         String              @default("Pending") // Pending, Ordered, Closed, Cancelled
+  isTaxInclusive Boolean             @default(false)
+  notes          String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  warehouse      Warehouse?          @relation(fields: [warehouseId], references: [id])
+  supplier       Supplier?           @relation(fields: [supplierId], references: [id])
+  items          PurchaseOrderItem[]
+}
+
+model PurchaseOrderItem {
+  id         String        @id @default(cuid())
+  orderId    String
+  productId  String
+  unitId     String?
+  supplierId String?
+  quantity   Float
+  unitPrice  Float
+  total      Float
+  product    Product       @relation(fields: [productId], references: [id])
+  supplier   Supplier?     @relation(fields: [supplierId], references: [id])
+  order      PurchaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }

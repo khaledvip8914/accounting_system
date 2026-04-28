@@ -7,7 +7,7 @@ import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { useUser } from '@/components/UserContext';
 
-export default function ProductList({ products, units, warehouses, lang, dict, onViewItemCard }: { products: any[], units: any[], warehouses: any[], lang: string, dict: any, onViewItemCard?: (id: string) => void }) {
+export default function ProductList({ products, units, warehouses, suppliers, lang, dict, onViewItemCard }: { products: any[], units: any[], warehouses: any[], suppliers: any[], lang: string, dict: any, onViewItemCard?: (id: string) => void }) {
   const { canAccess } = useUser();
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -22,6 +22,7 @@ export default function ProductList({ products, units, warehouses, lang, dict, o
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectionMode, setSelectionMode] = useState(false);
   const [showDeleteMenu, setShowDeleteMenu] = useState(false);
+  const [stockFilter, setStockFilter] = useState<'all' | 'low' | 'out'>('all');
 
   const [formData, setFormData] = useState({
     sku: '',
@@ -37,16 +38,26 @@ export default function ProductList({ products, units, warehouses, lang, dict, o
     caloriesPer100g: 0,
     category: '',
     reorderPoint: 0,
-    expiryDate: ''
+    expiryDate: '',
+    supplierId: ''
   });
 
   const filtered = (products || []).filter(p => {
     const s = (searchTerm || '').toLowerCase();
-    return (
+    const matchesSearch = (
       (p?.name || '').toLowerCase().includes(s) ||
       (p?.nameAr || '').toLowerCase().includes(s) ||
       (p?.sku || '').toLowerCase().includes(s)
     );
+
+    let matchesStock = true;
+    if (stockFilter === 'out') {
+      matchesStock = p.stockQuantity <= 0;
+    } else if (stockFilter === 'low') {
+      matchesStock = p.stockQuantity > 0 && p.stockQuantity <= (p.reorderPoint || 0);
+    }
+    
+    return matchesSearch && matchesStock;
   });
 
   const openAdd = () => {
@@ -54,7 +65,7 @@ export default function ProductList({ products, units, warehouses, lang, dict, o
     setFormData({
       sku: '', name: '', nameAr: '', classification: 'Finished Product',
       costPrice: 0, salePrice: 0, unit: 'Piece', unitId: units[0]?.id || '', subUnitId: '', caloriesPer100g: 0,
-      category: '', reorderPoint: 0, unitQuantity: 1, expiryDate: ''
+      category: '', reorderPoint: 0, unitQuantity: 1, expiryDate: '', supplierId: ''
     });
     setShowModal(true);
   };
@@ -75,7 +86,8 @@ export default function ProductList({ products, units, warehouses, lang, dict, o
       reorderPoint: p.reorderPoint || 0,
       unitQuantity: p.unitQuantity || 1,
       subUnitId: p.subUnitId || '',
-      expiryDate: p.expiryDate ? new Date(p.expiryDate).toISOString().split('T')[0] : ''
+      expiryDate: p.expiryDate ? new Date(p.expiryDate).toISOString().split('T')[0] : '',
+      supplierId: p.supplierId || ''
     });
     setShowModal(true);
   };
@@ -383,15 +395,27 @@ export default function ProductList({ products, units, warehouses, lang, dict, o
           </div>
         </div>
 
-        <div className="filter-bar no-print" style={{ padding: '1rem', borderBottom: '1px solid var(--glass-border)' }}>
+        <div className="filter-bar no-print" style={{ padding: '1rem', borderBottom: '1px solid var(--glass-border)', display: 'flex', gap: '1rem' }}>
            <input 
              type="text" 
              placeholder={lang === 'ar' ? "البحث عن صنف (الاسم، الكود)..." : "Search items (Name, SKU)..."}
              value={searchTerm}
              onChange={e => setSearchTerm(e.target.value)}
              className="search-input"
-             style={{ width: '100%', padding: '0.6rem 1rem', borderRadius: '8px' }}
+             style={{ flex: 1, padding: '0.6rem 1rem', borderRadius: '8px' }}
            />
+           <select 
+             value={stockFilter} 
+             onChange={e => setStockFilter(e.target.value as any)}
+             style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--card-bg)', color: 'var(--text-primary)' }}
+           >
+             <option value="all">{lang === 'ar' ? 'جميع الحالات' : 'All Statuses'}</option>
+             <option value="low">{lang === 'ar' ? 'أوشك على النفاذ' : 'Low Stock'}</option>
+             <option value="out">{lang === 'ar' ? 'نفد المخزون' : 'Out of Stock'}</option>
+           </select>
+           <button className="btn-secondary" onClick={() => window.print()}>
+             {lang === 'ar' ? '🖨️ طباعة' : '🖨️ Print'}
+           </button>
         </div>
 
         <div className="table-container">
@@ -410,10 +434,12 @@ export default function ProductList({ products, units, warehouses, lang, dict, o
                 <th style={{ textAlign: lang === 'ar' ? 'right' : 'left' }}>{lang === 'ar' ? 'رقم الصنف' : 'SKU / Code'}</th>
                 <th style={{ textAlign: lang === 'ar' ? 'right' : 'left' }}>{lang === 'ar' ? 'اسم الصنف' : 'Name'}</th>
                 <th style={{ textAlign: 'center' }}>{lang === 'ar' ? 'التصنيف' : 'Classification'}</th>
-                <th style={{ textAlign: 'right' }}>{lang === 'ar' ? 'التكلفة' : 'Cost'}</th>
+                <th style={{ textAlign: 'right' }}>{lang === 'ar' ? 'التكلفة (شامل الضريبة)' : 'Cost (Inc. VAT)'}</th>
                 <th style={{ textAlign: 'center' }}>{lang === 'ar' ? 'السعرات' : 'Calories'}</th>
+                <th style={{ textAlign: 'center' }}>{lang === 'ar' ? 'حالة المخزون' : 'Stock Status'}</th>
                 <th style={{ textAlign: 'center' }}>{lang === 'ar' ? 'وحدة القياس' : 'Unit'}</th>
                 <th style={{ textAlign: 'center' }}>{lang === 'ar' ? 'تاريخ الانتهاء' : 'Expiry'}</th>
+                <th style={{ textAlign: 'right' }}>{lang === 'ar' ? 'الحد الأدنى' : 'Min. Qty'}</th>
                 <th style={{ textAlign: 'right' }}>{lang === 'ar' ? 'الكمية' : 'Stock'}</th>
                 <th className="no-print"></th>
               </tr>
@@ -472,6 +498,15 @@ export default function ProductList({ products, units, warehouses, lang, dict, o
                     )}
                   </td>
                   <td style={{ textAlign: 'center' }}>
+                    {p.stockQuantity <= 0 ? (
+                      <span style={{ color: '#ef4444', fontWeight: 'bold' }}>{lang === 'ar' ? 'نفد المخزون' : 'Out of Stock'}</span>
+                    ) : p.stockQuantity <= (p.reorderPoint || 0) ? (
+                      <span style={{ color: '#f59e0b', fontWeight: 'bold' }}>{lang === 'ar' ? 'أوشك على النفاذ' : 'Low Stock'}</span>
+                    ) : (
+                      <span style={{ color: '#10b981' }}>{lang === 'ar' ? 'متوفر' : 'In Stock'}</span>
+                    )}
+                  </td>
+                  <td style={{ textAlign: 'center' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
                         <span className="badge">
                             {lang === 'ar' ? (p.unitRef?.nameAr || p.unit) : (p.unitRef?.name || p.unit)}
@@ -485,6 +520,9 @@ export default function ProductList({ products, units, warehouses, lang, dict, o
                   </td>
                   <td style={{ textAlign: 'center', fontSize: '0.8rem', color: p.expiryDate && new Date(p.expiryDate) < new Date() ? 'var(--accent-danger)' : 'inherit' }}>
                     {p.expiryDate ? new Date(p.expiryDate).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US') : '—'}
+                  </td>
+                  <td style={{ textAlign: 'right', color: '#64748b' }}>
+                    {(p.reorderPoint || 0).toLocaleString(undefined, { minimumFractionDigits: 1 })}
                   </td>
                   <td style={{ textAlign: 'right', fontWeight: 'bold', color: (p.stockQuantity || 0) <= (p.reorderPoint || 0) ? '#dc2626' : 'inherit' }}>
                     {(p.stockQuantity || 0).toLocaleString(undefined, { minimumFractionDigits: 1 })}
@@ -568,7 +606,7 @@ export default function ProductList({ products, units, warehouses, lang, dict, o
                         <input type="number" step="any" value={formData.unitQuantity} onChange={e => setFormData({...formData, unitQuantity: parseFloat(e.target.value) || 1})} />
                     </div>
                     <div className="form-group">
-                    <label>{lang === 'ar' ? 'سعر التكلفة' : 'Cost Price'}</label>
+                    <label>{lang === 'ar' ? 'سعر التكلفة (شامل الضريبة)' : 'Cost Price (Inc. VAT)'}</label>
                     <input 
                         type="number" step="0.0001" value={formData.costPrice} 
                         onChange={e => setFormData({...formData, costPrice: parseFloat(e.target.value)})} 
@@ -581,13 +619,27 @@ export default function ProductList({ products, units, warehouses, lang, dict, o
                         <input type="number" step="0.01" value={formData.salePrice} onChange={e => setFormData({...formData, salePrice: parseFloat(e.target.value)})} />
                     </div>
                     <div className="form-group">
-                    <label>{lang === 'ar' ? 'السعرات/100جم' : 'Calories/100g'}</label>
-                    <input 
-                        type="number" step="0.1" value={formData.caloriesPer100g} 
-                        onChange={e => setFormData({...formData, caloriesPer100g: parseFloat(e.target.value)})} 
-                        disabled={formData.classification !== 'Raw Material'}
-                        style={{ background: formData.classification !== 'Raw Material' ? '#f1f5f9' : 'white' }}
-                    />
+                      <label>{lang === 'ar' ? 'أقل كمية للطلب (التنبيه)' : 'Minimum Order Qty (Alert)'}</label>
+                      <input 
+                          type="number" step="0.01" value={formData.reorderPoint} 
+                          onChange={e => setFormData({...formData, reorderPoint: parseFloat(e.target.value) || 0})} 
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>{lang === 'ar' ? 'السعرات/100جم' : 'Calories/100g'}</label>
+                      <input 
+                          type="number" step="0.1" value={formData.caloriesPer100g} 
+                          onChange={e => setFormData({...formData, caloriesPer100g: parseFloat(e.target.value)})} 
+                          disabled={formData.classification !== 'Raw Material'}
+                          style={{ background: formData.classification !== 'Raw Material' ? '#f1f5f9' : 'white' }}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>{lang === 'ar' ? 'المورد الافتراضي' : 'Default Supplier'}</label>
+                      <select value={formData.supplierId} onChange={e => setFormData({...formData, supplierId: e.target.value})}>
+                          <option value="">-- {lang === 'ar' ? 'اختر المورد' : 'Select Supplier'} --</option>
+                          {suppliers.map(s => (<option key={s.id} value={s.id}>{lang === 'ar' ? s.nameAr || s.name : s.name}</option>))}
+                      </select>
                     </div>
                 </div>
               </div>

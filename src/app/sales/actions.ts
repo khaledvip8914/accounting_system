@@ -1508,6 +1508,7 @@ export async function createProduct(data: {
   expiryDate?: string | null;
   unitQuantity?: number;
   subUnitId?: string | null;
+  supplierId?: string | null;
 }) {
   try {
     const session = await getSession();
@@ -1547,6 +1548,7 @@ export async function createProduct(data: {
         expiryDate: (data.expiryDate && data.expiryDate.trim() !== "") ? new Date(data.expiryDate) : null,
         unitQuantity: data.unitQuantity || 1,
         subUnitId: data.subUnitId || null,
+        supplierId: data.supplierId || null,
       }
     });
 
@@ -1583,6 +1585,7 @@ export async function updateProduct(id: string, data: any) {
             expiryDate: (data.expiryDate && data.expiryDate.trim() !== "") ? new Date(data.expiryDate) : null,
             unitQuantity: Number(data.unitQuantity) || 1,
             subUnitId: data.subUnitId || null,
+            supplierId: data.supplierId || null,
           }
         });
 

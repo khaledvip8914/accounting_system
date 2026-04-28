@@ -92,20 +92,14 @@ export default function CreatePurchaseModal({
   };
 
   const totals = useMemo(() => {
-    const rawSubtotal = items.reduce((sum, item) => sum + item.total, 0);
+    const rawSubtotal = items.reduce((sum, item) => sum + (Number(item.total) || 0), 0);
     
-    if (isTaxInclusive) {
-      const netAmount = rawSubtotal - discount;
-      const subtotal = netAmount / 1.15;
-      const taxAmount = netAmount - subtotal;
-      return { subtotal, taxAmount, netAmount };
-    } else {
-      const subtotal = rawSubtotal;
-      const taxAmount = (subtotal - discount) * 0.15;
-      const netAmount = (subtotal - discount) + taxAmount;
-      return { subtotal, taxAmount, netAmount };
-    }
-  }, [items, discount, isTaxInclusive]);
+    // Always treat as tax-inclusive now to match Purchase Orders and user request
+    const netAmount = rawSubtotal - discount;
+    const subtotal = netAmount / 1.15;
+    const taxAmount = netAmount - subtotal;
+    return { subtotal, taxAmount, netAmount };
+  }, [items, discount]);
 
   const handleQuickAdd = async (data: any) => {
     return createSupplier(data);

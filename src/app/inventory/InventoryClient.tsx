@@ -7,6 +7,7 @@ import ProductionOrderList from '../sales/ProductionOrderList';
 import UnitList from '../sales/UnitList';
 import ItemCardList from './ItemCardList';
 import DisposalVoucherList from './DisposalVoucherList';
+import PurchaseOrderList from './PurchaseOrderList';
 import { getDictionary } from '@/lib/i18n';
 
 export default function InventoryClient({
@@ -16,7 +17,8 @@ export default function InventoryClient({
   initialCostCenters,
   initialProductionOrders,
   initialWarehouses,
-  initialDisposalVouchers
+  initialDisposalVouchers,
+  initialSuppliers
 }: {
   lang: string,
   initialProducts: any[],
@@ -24,7 +26,8 @@ export default function InventoryClient({
   initialCostCenters: any[],
   initialProductionOrders: any[],
   initialWarehouses: any[],
-  initialDisposalVouchers: any[]
+  initialDisposalVouchers: any[],
+  initialSuppliers: any[]
 }) {
   const [activeTab, setActiveTab] = useState('products');
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
@@ -69,6 +72,7 @@ export default function InventoryClient({
             products={initialProducts} 
             units={initialUnits} 
             warehouses={initialWarehouses}
+            suppliers={initialSuppliers}
             lang={lang} 
             dict={dict} 
             onViewItemCard={handleViewItemCard} 

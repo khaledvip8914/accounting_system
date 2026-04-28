@@ -45,14 +45,15 @@ export async function createPurchaseInvoice(data: {
         discount: data.discount,
         netAmount: data.netAmount,
         status: data.status,
-        warehouseId: data.warehouseId, isTaxInclusive: data.isTaxInclusive,
+        warehouseId: data.warehouseId || null, 
+        isTaxInclusive: data.isTaxInclusive,
         items: {
-          create: data.items.map((i: any) => ({
+          create: (data.items || []).map((i: any) => ({
             productId: i.productId,
-            unitId: i.unitId,
-            quantity: i.quantity,
-            unitPrice: i.unitPrice,
-            total: i.total
+            unitId: i.unitId || null,
+            quantity: Number(i.quantity) || 0,
+            unitPrice: Number(i.unitPrice) || 0,
+            total: Number(i.total) || 0
           }))
         }
       },
@@ -658,6 +659,132 @@ export async function deleteSupplier(id: string) {
 
     revalidatePath('/purchases');
     revalidatePath('/ledger');
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+// ─── PURCHASE ORDERS ───────────────────────────────────────────────────
+export async function getPurchaseOrders() {
+  try {
+    return await prisma.purchaseOrder.findMany({
+      include: { supplier: true, warehouse: true, items: { include: { product: true } } },
+      orderBy: { date: 'desc' }
+    });
+  } catch (error) {
+    return [];
+  }
+}
+
+export async function createPurchaseOrder(data: {
+  supplierId?: string | null;
+  date: string;
+  items: any[];
+  subtotal: number;
+  taxAmount: number;
+  discount: number;
+  netAmount: number;
+  status: string;
+  notes?: string;
+  warehouseId?: string;
+  isTaxInclusive?: boolean;
+}) {
+  try {
+    const session = await getSession();
+    const perms = session?.user?.permissions;
+    if (!hasPermission(perms, 'purchases', 'create')) {
+      throw new Error('غير مصرح لك بإنشاء طلب شراء');
+    }
+
+    const count = await prisma.purchaseOrder.count();
+    const orderNumber = `PO-${new Date().getFullYear()}-${(count + 1).toString().padStart(3, '0')}`;
+
+    const order = await prisma.purchaseOrder.create({
+      data: {
+        orderNumber,
+        date: new Date(data.date),
+        supplierId: data.supplierId || null,
+        totalAmount: data.subtotal,
+        taxAmount: data.taxAmount,
+        discount: data.discount,
+        netAmount: data.netAmount,
+        status: data.status,
+        warehouseId: data.warehouseId || null,
+        isTaxInclusive: data.isTaxInclusive,
+        notes: data.notes,
+        items: {
+          create: (data.items || []).map((i: any) => ({
+            productId: i.productId,
+            unitId: i.unitId,
+            supplierId: i.supplierId || null,
+            quantity: Number(i.quantity) || 0,
+            unitPrice: Number(i.unitPrice) || 0,
+            total: Number(i.total) || 0
+          }))
+        }
+      }
+    });
+
+    revalidatePath('/purchases');
+    return { success: true, order };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function updatePurchaseOrder(orderId: string, data: any) {
+  try {
+    const session = await getSession();
+    const perms = session?.user?.permissions;
+    if (!hasPermission(perms, 'purchases', 'edit')) {
+      throw new Error('غير مصرح لك بتعديل طلبات الشراء');
+    }
+
+    const order = await prisma.$transaction(async (tx) => {
+      await tx.purchaseOrderItem.deleteMany({ where: { orderId } });
+      return await tx.purchaseOrder.update({
+        where: { id: orderId },
+        data: {
+          date: new Date(data.date),
+          supplierId: data.supplierId || null,
+          totalAmount: data.subtotal,
+          taxAmount: data.taxAmount,
+          discount: data.discount,
+          netAmount: data.netAmount,
+          status: data.status,
+          warehouseId: data.warehouseId || null,
+          notes: data.notes,
+          items: {
+            create: (data.items || []).map((i: any) => ({
+              productId: i.productId,
+              unitId: i.unitId,
+              supplierId: i.supplierId || null,
+              quantity: Number(i.quantity) || 0,
+              unitPrice: Number(i.unitPrice) || 0,
+              total: Number(i.total) || 0
+            }))
+          }
+        }
+      });
+    });
+
+    revalidatePath('/purchases');
+    return { success: true, order };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function deletePurchaseOrder(orderId: string) {
+  try {
+    const session = await getSession();
+    const perms = session?.user?.permissions;
+    if (!hasPermission(perms, 'purchases', 'delete')) {
+      throw new Error('غير مصرح لك بحذف طلبات الشراء');
+    }
+
+    await prisma.purchaseOrder.delete({ where: { id: orderId } });
+    revalidatePath('/purchases');
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };

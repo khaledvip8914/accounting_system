@@ -184,7 +184,8 @@ exports.Prisma.ProductScalarFieldEnum = {
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   unitQuantity: 'unitQuantity',
-  subUnitId: 'subUnitId'
+  subUnitId: 'subUnitId',
+  supplierId: 'supplierId'
 };
 
 exports.Prisma.SalesInvoiceScalarFieldEnum = {
@@ -505,6 +506,34 @@ exports.Prisma.DisposalVoucherScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.PurchaseOrderScalarFieldEnum = {
+  id: 'id',
+  orderNumber: 'orderNumber',
+  date: 'date',
+  supplierId: 'supplierId',
+  warehouseId: 'warehouseId',
+  totalAmount: 'totalAmount',
+  taxAmount: 'taxAmount',
+  discount: 'discount',
+  netAmount: 'netAmount',
+  status: 'status',
+  isTaxInclusive: 'isTaxInclusive',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.PurchaseOrderItemScalarFieldEnum = {
+  id: 'id',
+  orderId: 'orderId',
+  productId: 'productId',
+  unitId: 'unitId',
+  supplierId: 'supplierId',
+  quantity: 'quantity',
+  unitPrice: 'unitPrice',
+  total: 'total'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -546,7 +575,9 @@ exports.Prisma.ModelName = {
   Employee: 'Employee',
   EmployeeFinancialMove: 'EmployeeFinancialMove',
   SalaryPayment: 'SalaryPayment',
-  DisposalVoucher: 'DisposalVoucher'
+  DisposalVoucher: 'DisposalVoucher',
+  PurchaseOrder: 'PurchaseOrder',
+  PurchaseOrderItem: 'PurchaseOrderItem'
 };
 
 /**
