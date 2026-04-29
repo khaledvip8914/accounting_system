@@ -289,18 +289,36 @@ export default function ProductList({ products, units, warehouses, suppliers, la
         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
         
-        const mappedData = jsonData.map((item: any) => ({
-           sku: item.SKU || item['رقم الصنف'],
-           name: item['Name (EN)'] || item['الاسم بالإنجليزية'] || item.Name,
-           nameAr: item['Name (AR)'] || item['الاسم بالعربية'] || item.NameAr,
-           category: item.Category || item['القسم'],
-           classification: item.Classification || item['التصنيف'],
-           unit: item.Unit || item['الوحدة'],
-           costPrice: parseFloat(item.Cost || item['التكلفة']) || 0,
-           salePrice: parseFloat(item.Price || item['السعر']) || 0,
-           stockQuantity: parseFloat(item.Stock || item['الكمية']) || 0,
-           unitQuantity: parseFloat(item['Sub-Units in Main'] || item['الكمية في الوحدة']) || 1,
-        }));
+        const mappedData = jsonData.map((item: any) => {
+           // Helper to get value from multiple possible header keys
+           const getVal = (keys: string[]) => {
+             for (const k of keys) {
+               if (item[k] !== undefined) return item[k];
+             }
+             return undefined;
+           };
+
+           // Detection for classification
+           let cls = getVal(['Classification', 'التصنيف', 'Type', 'النوع']);
+           if (cls === 'مادة خام' || cls === 'Raw Material') cls = 'Raw Material';
+           else if (cls === 'منتج شبه تام' || cls === 'Semi-finished') cls = 'Semi-finished';
+           else if (cls === 'منتج تام' || cls === 'Finished Product') cls = 'Finished Product';
+
+           return {
+            sku: getVal(['SKU', 'رقم الصنف', 'Code', 'كود']),
+            name: getVal(['Name (EN)', 'الاسم بالإنجليزية', 'Name', 'الاسم']),
+            nameAr: getVal(['Name (AR)', 'الاسم بالعربية', 'NameAr', 'الاسم عربي']),
+            category: getVal(['Category', 'القسم', 'المجموعة']),
+            classification: cls || 'Finished Product',
+            unit: getVal(['Unit', 'الوحدة', 'Main Unit']),
+            subUnit: getVal(['SubUnit', 'الوحدة الصغرى', 'Base Unit']),
+            costPrice: parseFloat(getVal(['Cost', 'التكلفة', 'Cost Price'])) || 0,
+            salePrice: parseFloat(getVal(['Price', 'السعر', 'Sale Price'])) || 0,
+            stockQuantity: parseFloat(getVal(['Stock', 'الكمية', 'Current Stock'])) || 0,
+            unitQuantity: parseFloat(getVal(['Sub-Units in Main', 'الكمية في الوحدة', 'Unit Qty'])) || 1,
+            calories: parseFloat(getVal(['Calories', 'السعرات', 'Kcal'])) || 0,
+           };
+        });
 
         const res = await bulkCreateProducts(mappedData);
         if (res.success) {
