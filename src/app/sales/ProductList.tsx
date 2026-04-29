@@ -25,6 +25,7 @@ export default function ProductList({ products, units, warehouses, suppliers, ca
   const [stockFilter, setStockFilter] = useState<'all' | 'low' | 'out'>('all');
   const [classificationFilter, setClassificationFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [supplierFilter, setSupplierFilter] = useState('all');
 
   const [formData, setFormData] = useState({
     sku: '',
@@ -61,8 +62,9 @@ export default function ProductList({ products, units, warehouses, suppliers, ca
 
     const matchesClassification = classificationFilter === 'all' || p.classification === classificationFilter;
     const matchesCategory = categoryFilter === 'all' || p.categoryId === categoryFilter;
+    const matchesSupplier = supplierFilter === 'all' || p.supplierId === supplierFilter;
     
-    return matchesSearch && matchesStock && matchesClassification && matchesCategory;
+    return matchesSearch && matchesStock && matchesClassification && matchesCategory && matchesSupplier;
   });
 
   const openAdd = () => {
@@ -449,6 +451,16 @@ export default function ProductList({ products, units, warehouses, suppliers, ca
              <option value="all">{lang === 'ar' ? 'جميع الأقسام' : 'All Categories'}</option>
              {categories.map(c => (
                <option key={c.id} value={c.id}>{lang === 'ar' ? c.nameAr || c.name : c.name}</option>
+             ))}
+           </select>
+           <select 
+             value={supplierFilter} 
+             onChange={e => setSupplierFilter(e.target.value)}
+             style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--card-bg)', color: 'var(--text-primary)' }}
+           >
+             <option value="all">{lang === 'ar' ? 'جميع الموردين' : 'All Suppliers'}</option>
+             {suppliers.map(s => (
+               <option key={s.id} value={s.id}>{lang === 'ar' ? s.nameAr || s.name : s.name}</option>
              ))}
            </select>
            <button className="btn-secondary" onClick={() => window.print()}>
