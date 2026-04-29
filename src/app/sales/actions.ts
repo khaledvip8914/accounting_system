@@ -1764,6 +1764,12 @@ export async function bulkCreateProducts(productsData: any[]) {
         const catName = (p.cat || p.category || '').toString().toLowerCase();
         const categoryId = catMap.get(catName) || catMapAr.get(catName) || null;
 
+        // Auto-fix classification based on category name if not explicit
+        let classification = p.classification;
+        if (catName === 'raw material' || catName === 'مادة خام' || catName === 'خامة') {
+           classification = 'Raw Material';
+        }
+
         // Check for duplicate SKU
         const existing = await prisma.product.findUnique({ where: { sku } });
         if (existing) {
@@ -1789,7 +1795,7 @@ export async function bulkCreateProducts(productsData: any[]) {
                 name: p.name || existing.name,
                 nameAr: p.nameAr || existing.nameAr,
                 category: p.category || existing.category,
-                classification: p.classification || existing.classification,
+                classification: classification || existing.classification,
                 unit: p.unit || existing.unit,
                 unitId: unitId || existing.unitId,
                 subUnitId: subUnitId || existing.subUnitId,
@@ -1814,7 +1820,7 @@ export async function bulkCreateProducts(productsData: any[]) {
             name: p.name || p.nameAr || 'Unnamed Item',
             nameAr: p.nameAr || null,
             category: p.category || null,
-            classification: p.classification || 'Finished Product',
+            classification: classification || 'Finished Product',
             unit: p.unit || 'Piece',
             unitId: unitId,
             subUnitId: subUnitId,

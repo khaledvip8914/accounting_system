@@ -23,6 +23,8 @@ export default function ProductList({ products, units, warehouses, suppliers, ca
   const [selectionMode, setSelectionMode] = useState(false);
   const [showDeleteMenu, setShowDeleteMenu] = useState(false);
   const [stockFilter, setStockFilter] = useState<'all' | 'low' | 'out'>('all');
+  const [classificationFilter, setClassificationFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
 
   const [formData, setFormData] = useState({
     sku: '',
@@ -37,7 +39,6 @@ export default function ProductList({ products, units, warehouses, suppliers, ca
     subUnitId: '',
     categoryId: '',
     caloriesPer100g: 0,
-    category: '',
     reorderPoint: 0,
     expiryDate: '',
     supplierId: ''
@@ -57,8 +58,11 @@ export default function ProductList({ products, units, warehouses, suppliers, ca
     } else if (stockFilter === 'low') {
       matchesStock = p.stockQuantity > 0 && p.stockQuantity <= (p.reorderPoint || 0);
     }
+
+    const matchesClassification = classificationFilter === 'all' || p.classification === classificationFilter;
+    const matchesCategory = categoryFilter === 'all' || p.categoryId === categoryFilter;
     
-    return matchesSearch && matchesStock;
+    return matchesSearch && matchesStock && matchesClassification && matchesCategory;
   });
 
   const openAdd = () => {
@@ -84,7 +88,6 @@ export default function ProductList({ products, units, warehouses, suppliers, ca
       unit: p.unit || 'Piece',
       unitId: p.unitId || '',
       caloriesPer100g: p.caloriesPer100g || 0,
-      category: p.category || '',
       categoryId: p.categoryId || '',
       reorderPoint: p.reorderPoint || 0,
       unitQuantity: p.unitQuantity || 1,
@@ -429,6 +432,26 @@ export default function ProductList({ products, units, warehouses, suppliers, ca
              <option value="low">{lang === 'ar' ? 'أوشك على النفاذ' : 'Low Stock'}</option>
              <option value="out">{lang === 'ar' ? 'نفد المخزون' : 'Out of Stock'}</option>
            </select>
+           <select 
+             value={classificationFilter} 
+             onChange={e => setClassificationFilter(e.target.value)}
+             style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--card-bg)', color: 'var(--text-primary)' }}
+           >
+             <option value="all">{lang === 'ar' ? 'جميع التصنيفات' : 'All Classifications'}</option>
+             <option value="Raw Material">{lang === 'ar' ? 'مادة خام' : 'Raw Material'}</option>
+             <option value="Semi-finished">{lang === 'ar' ? 'منتج شبه تام' : 'Semi-finished'}</option>
+             <option value="Finished Product">{lang === 'ar' ? 'منتج تام' : 'Finished Product'}</option>
+           </select>
+           <select 
+             value={categoryFilter} 
+             onChange={e => setCategoryFilter(e.target.value)}
+             style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--card-bg)', color: 'var(--text-primary)' }}
+           >
+             <option value="all">{lang === 'ar' ? 'جميع الأقسام' : 'All Categories'}</option>
+             {categories.map(c => (
+               <option key={c.id} value={c.id}>{lang === 'ar' ? c.nameAr || c.name : c.name}</option>
+             ))}
+           </select>
            <button className="btn-secondary" onClick={() => window.print()}>
              {lang === 'ar' ? '🖨️ طباعة' : '🖨️ Print'}
            </button>
@@ -591,9 +614,12 @@ export default function ProductList({ products, units, warehouses, suppliers, ca
                     <label>{lang === 'ar' ? 'الاسم بالإنجليزية (EN)' : 'English Name (EN)'}</label>
                     <input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
                     </div>
-                    <div className="form-group">
-                    <label>{lang === 'ar' ? 'القسم' : 'Category'}</label>
-                    <input value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} />
+                    <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                       <label>{lang === 'ar' ? 'القسم (نظامي)' : 'Category (System)'}</label>
+                       <select value={formData.categoryId} onChange={e => setFormData({...formData, categoryId: e.target.value})}>
+                           <option value="">-- {lang === 'ar' ? 'اختر القسم' : 'Select Category'} --</option>
+                           {categories.map(c => (<option key={c.id} value={c.id}>{lang === 'ar' ? c.nameAr || c.name : c.name}</option>))}
+                       </select>
                     </div>
                     <div className="form-group">
                     <label>{lang === 'ar' ? 'التصنيف' : 'Classification'}</label>
@@ -649,13 +675,6 @@ export default function ProductList({ products, units, warehouses, suppliers, ca
                           disabled={formData.classification !== 'Raw Material'}
                           style={{ background: formData.classification !== 'Raw Material' ? '#f1f5f9' : 'white' }}
                       />
-                    </div>
-                    <div className="form-group">
-                       <label>{lang === 'ar' ? 'القسم (نظامي)' : 'Category (System)'}</label>
-                       <select value={formData.categoryId} onChange={e => setFormData({...formData, categoryId: e.target.value})}>
-                           <option value="">-- {lang === 'ar' ? 'اختر القسم' : 'Select Category'} --</option>
-                           {categories.map(c => (<option key={c.id} value={c.id}>{lang === 'ar' ? c.nameAr || c.name : c.name}</option>))}
-                       </select>
                     </div>
                     <div className="form-group">
                       <label>{lang === 'ar' ? 'المورد الافتراضي' : 'Default Supplier'}</label>
