@@ -71,7 +71,7 @@ export default function ProductList({ products, units, warehouses, suppliers, ca
       sku: '', name: '', nameAr: '', classification: 'Finished Product',
       costPrice: 0, salePrice: 0, unit: 'Piece', unitId: units[0]?.id || '', subUnitId: '', 
       categoryId: '', caloriesPer100g: 0,
-      category: '', reorderPoint: 0, unitQuantity: 1, expiryDate: '', supplierId: ''
+      reorderPoint: 0, unitQuantity: 1, expiryDate: '', supplierId: ''
     });
     setShowModal(true);
   };
