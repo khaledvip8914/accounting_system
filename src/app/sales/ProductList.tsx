@@ -222,15 +222,14 @@ export default function ProductList({ products, units, warehouses, suppliers, ca
       { header: 'SKU', key: 'sku', width: 15 },
       { header: 'Name (AR)', key: 'nameAr', width: 25 },
       { header: 'Name (EN)', key: 'nameEn', width: 25 },
+      { header: 'Category', key: 'cat', width: 20 },
       { header: 'Classification', key: 'classification', width: 20 },
-      { header: 'Category', key: 'category', width: 15 },
       { header: 'Cost', key: 'cost', width: 10 },
       { header: 'Price', key: 'price', width: 10 },
       { header: 'Stock', key: 'stock', width: 10 },
       { header: 'Unit', key: 'unit', width: 15 },
       { header: 'Sub-Units in Main', key: 'unitQty', width: 18 },
       { header: 'SubUnit', key: 'subUnit', width: 15 },
-      { header: 'Category', key: 'cat', width: 20 },
       { header: 'Calories', key: 'kcal', width: 12 }
     ];
 
@@ -266,10 +265,10 @@ export default function ProductList({ products, units, warehouses, suppliers, ca
     const catRange = `'Cats (Helper)'!$A$1:$A$${categoryList.length || 1}`;
 
     for (let i = 2; i <= 100; i++) {
-       sheet.getCell(`D${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: classificationList };
+       sheet.getCell(`E${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: classificationList };
        sheet.getCell(`I${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [unitRange] };
        sheet.getCell(`K${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [unitRange] };
-       sheet.getCell(`L${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [catRange] };
+       sheet.getCell(`D${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [catRange] };
     }
 
     // 5. Generate and Save
