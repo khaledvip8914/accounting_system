@@ -299,7 +299,9 @@ export default function ProductList({ products, units, warehouses, suppliers, la
            };
 
            // Detection for classification
-           let cls = getVal(['Classification', 'التصنيف', 'Type', 'النوع']);
+           let clsRaw = getVal(['Classification', 'التصنيف', 'Type', 'النوع']);
+           let cls = (typeof clsRaw === 'string') ? clsRaw.trim() : clsRaw;
+           
            if (cls === 'مادة خام' || cls === 'Raw Material') cls = 'Raw Material';
            else if (cls === 'منتج شبه تام' || cls === 'Semi-finished') cls = 'Semi-finished';
            else if (cls === 'منتج تام' || cls === 'Finished Product') cls = 'Finished Product';
