@@ -83,6 +83,8 @@ model Product {
   nameAr             String?
   description        String?
   category           String?
+  categoryId         String?
+  categoryRef        Category?             @relation(fields: [categoryId], references: [id])
   classification     String                @default("Finished Product")
   unit               String                @default("pc")
   unitId             String?
@@ -112,6 +114,15 @@ model Product {
   purchaseOrderItems PurchaseOrderItem[]
   supplierId         String?
   supplier           Supplier?           @relation("ProductSupplier", fields: [supplierId], references: [id])
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  nameAr    String?
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model SalesInvoice {

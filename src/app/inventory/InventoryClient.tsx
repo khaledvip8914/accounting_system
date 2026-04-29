@@ -7,6 +7,7 @@ import ProductionOrderList from '../sales/ProductionOrderList';
 import UnitList from '../sales/UnitList';
 import ItemCardList from './ItemCardList';
 import DisposalVoucherList from './DisposalVoucherList';
+import CategoryList from './CategoryList';
 import { getDictionary } from '@/lib/i18n';
 
 export default function InventoryClient({
@@ -17,7 +18,8 @@ export default function InventoryClient({
   initialProductionOrders,
   initialWarehouses,
   initialDisposalVouchers,
-  initialSuppliers
+  initialSuppliers,
+  initialCategories
 }: {
   lang: string,
   initialProducts: any[],
@@ -26,7 +28,8 @@ export default function InventoryClient({
   initialProductionOrders: any[],
   initialWarehouses: any[],
   initialDisposalVouchers: any[],
-  initialSuppliers: any[]
+  initialSuppliers: any[],
+  initialCategories: any[]
 }) {
   const [activeTab, setActiveTab] = useState('products');
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
@@ -44,6 +47,7 @@ export default function InventoryClient({
     { id: 'disposal', label: lang === 'ar' ? 'سند إتلاف صنف' : 'Item Disposal', icon: '💥' },
     { id: 'item-card', label: lang === 'ar' ? 'بطاقة الصنف' : 'Item Card', icon: '📇' },
     { id: 'units', label: lang === 'ar' ? 'وحدات القياس' : 'Units/Scale', icon: '⚖️' },
+    { id: 'categories', label: lang === 'ar' ? 'الأقسام' : 'Categories', icon: '📁' },
   ];
 
   return (
@@ -72,6 +76,7 @@ export default function InventoryClient({
             units={initialUnits} 
             warehouses={initialWarehouses}
             suppliers={initialSuppliers}
+            categories={initialCategories}
             lang={lang} 
             dict={dict} 
             onViewItemCard={handleViewItemCard} 
@@ -82,6 +87,7 @@ export default function InventoryClient({
         {activeTab === 'disposal' && <DisposalVoucherList vouchers={initialDisposalVouchers} products={initialProducts} warehouses={initialWarehouses} units={initialUnits} lang={lang} />}
         {activeTab === 'item-card' && <ItemCardList products={initialProducts} lang={lang} initialProductId={selectedProductId} />}
         {activeTab === 'units' && <UnitList units={initialUnits} lang={lang} />}
+        {activeTab === 'categories' && <CategoryList categories={initialCategories} lang={lang} />}
       </div>
 
       <style jsx>{`

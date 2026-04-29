@@ -1552,6 +1552,7 @@ export async function createProduct(data: {
         expiryDate: (data.expiryDate && data.expiryDate.trim() !== "") ? new Date(data.expiryDate) : null,
         unitQuantity: data.unitQuantity || 1,
         subUnitId: data.subUnitId || null,
+        categoryId: data.categoryId || null,
         supplierId: data.supplierId || null,
       }
     });
@@ -1591,6 +1592,7 @@ export async function updateProduct(id: string, data: any) {
             expiryDate: (data.expiryDate && data.expiryDate.trim() !== "") ? new Date(data.expiryDate) : null,
             unitQuantity: Number(data.unitQuantity) || 1,
             subUnitId: data.subUnitId || null,
+            categoryId: data.categoryId || null,
             supplierId: data.supplierId || null,
           }
         });
@@ -1724,6 +1726,10 @@ export async function bulkCreateProducts(productsData: any[]) {
     const allUnits = await prisma.unitOfMeasure.findMany();
     const unitMap = new Map(allUnits.map(u => [u.name.toLowerCase(), u.id]));
     const unitMapAr = new Map(allUnits.filter(u => u.nameAr).map(u => [u.nameAr!.toLowerCase(), u.id]));
+    
+    const allCategories = await prisma.category.findMany();
+    const catMap = new Map(allCategories.map(c => [c.name.toLowerCase(), c.id]));
+    const catMapAr = new Map(allCategories.filter(c => c.nameAr).map(c => [c.nameAr!.toLowerCase(), c.id]));
 
     const currentCount = await prisma.product.count();
     let created = 0;
@@ -1754,6 +1760,9 @@ export async function bulkCreateProducts(productsData: any[]) {
         const subUnitName = (p.subUnit || '').toLowerCase();
         const subUnitId = unitMap.get(subUnitName) || unitMapAr.get(subUnitName) || null;
 
+        const catName = (p.cat || p.category || '').toString().toLowerCase();
+        const categoryId = catMap.get(catName) || catMapAr.get(catName) || null;
+
         // Check for duplicate SKU
         const existing = await prisma.product.findUnique({ where: { sku } });
         if (existing) {
@@ -1766,6 +1775,7 @@ export async function bulkCreateProducts(productsData: any[]) {
             (p.unit && p.unit !== existing.unit) ||
             (unitId !== existing.unitId) ||
             (subUnitId !== existing.subUnitId) ||
+            (categoryId !== existing.categoryId) ||
             (p.costPrice !== undefined && parseFloat(p.costPrice) !== existing.costPrice) ||
             (p.salePrice !== undefined && parseFloat(p.salePrice) !== existing.salePrice) ||
             (p.reorderPoint !== undefined && parseFloat(p.reorderPoint) !== existing.reorderPoint) ||
@@ -1782,6 +1792,7 @@ export async function bulkCreateProducts(productsData: any[]) {
                 unit: p.unit || existing.unit,
                 unitId: unitId || existing.unitId,
                 subUnitId: subUnitId || existing.subUnitId,
+                categoryId: categoryId || existing.categoryId,
                 costPrice: p.costPrice !== undefined ? parseFloat(p.costPrice) : existing.costPrice,
                 salePrice: p.salePrice !== undefined ? parseFloat(p.salePrice) : existing.salePrice,
                 reorderPoint: p.reorderPoint !== undefined ? parseFloat(p.reorderPoint) : existing.reorderPoint,
@@ -1806,6 +1817,7 @@ export async function bulkCreateProducts(productsData: any[]) {
             unit: p.unit || 'Piece',
             unitId: unitId,
             subUnitId: subUnitId,
+            categoryId: categoryId,
             costPrice: parseFloat(p.costPrice) || 0,
             salePrice: parseFloat(p.salePrice) || 0,
             stockQuantity: parseFloat(p.stockQuantity) || 0,

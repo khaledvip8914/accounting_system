@@ -7,7 +7,7 @@ import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { useUser } from '@/components/UserContext';
 
-export default function ProductList({ products, units, warehouses, suppliers, lang, dict, onViewItemCard }: { products: any[], units: any[], warehouses: any[], suppliers: any[], lang: string, dict: any, onViewItemCard?: (id: string) => void }) {
+export default function ProductList({ products, units, warehouses, suppliers, categories, lang, dict, onViewItemCard }: { products: any[], units: any[], warehouses: any[], suppliers: any[], categories: any[], lang: string, dict: any, onViewItemCard?: (id: string) => void }) {
   const { canAccess } = useUser();
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -35,6 +35,7 @@ export default function ProductList({ products, units, warehouses, suppliers, la
     unitId: '',
     unitQuantity: 1,
     subUnitId: '',
+    categoryId: '',
     caloriesPer100g: 0,
     category: '',
     reorderPoint: 0,
@@ -83,6 +84,7 @@ export default function ProductList({ products, units, warehouses, suppliers, la
       unitId: p.unitId || '',
       caloriesPer100g: p.caloriesPer100g || 0,
       category: p.category || '',
+      categoryId: p.categoryId || '',
       reorderPoint: p.reorderPoint || 0,
       unitQuantity: p.unitQuantity || 1,
       subUnitId: p.subUnitId || '',
@@ -223,14 +225,18 @@ export default function ProductList({ products, units, warehouses, suppliers, la
       { header: 'Stock', key: 'stock', width: 10 },
       { header: 'Unit', key: 'unit', width: 15 },
       { header: 'Sub-Units in Main', key: 'unitQty', width: 18 },
-      { header: 'SubUnit', key: 'subUnit', width: 15 }
+      { header: 'SubUnit', key: 'subUnit', width: 15 },
+      { header: 'Category', key: 'cat', width: 20 },
+      { header: 'Calories', key: 'kcal', width: 12 }
     ];
 
-    // 2. Add Reference Units to the hidden sheet
+    // 2. Add Reference Sheets
     const unitList = units.map(u => lang === 'ar' ? (u.nameAr || u.name) : u.name);
-    unitList.forEach((u, i) => {
-        unitSheet.getCell(i + 1, 1).value = u;
-    });
+    unitList.forEach((u, i) => unitSheet.getCell(i + 1, 1).value = u);
+
+    const categoryList = categories.map(c => lang === 'ar' ? (c.nameAr || c.name) : c.name);
+    const catSheet = workbook.addWorksheet('Cats (Helper)', { state: 'hidden' });
+    categoryList.forEach((c, i) => catSheet.getCell(i + 1, 1).value = c);
 
     // 3. Add Sample Data
     const sampleRow = {
@@ -244,33 +250,22 @@ export default function ProductList({ products, units, warehouses, suppliers, la
       stock: 100,
       unit: unitList[0] || 'Piece',
       unitQty: 1,
-      subUnit: unitList[0] || 'Piece'
+      subUnit: unitList[0] || 'Piece',
+      cat: categoryList[0] || 'General',
+      kcal: 150
     };
     sheet.addRow(sampleRow);
 
     // 4. Add Data Validations
     const classificationList = ['"Raw Material,Semi-finished,Finished Product"'];
     const unitRange = `'Units (Helper)'!$A$1:$A$${unitList.length || 1}`;
+    const catRange = `'Cats (Helper)'!$A$1:$A$${categoryList.length || 1}`;
 
     for (let i = 2; i <= 100; i++) {
-       // Classification Dropdown
-       sheet.getCell(`D${i}`).dataValidation = {
-         type: 'list',
-         allowBlank: true,
-         formulae: classificationList
-       };
-       // Unit Dropdown
-       sheet.getCell(`I${i}`).dataValidation = {
-         type: 'list',
-         allowBlank: true,
-         formulae: [unitRange]
-       };
-       // SubUnit Dropdown
-       sheet.getCell(`K${i}`).dataValidation = {
-         type: 'list',
-         allowBlank: true,
-         formulae: [unitRange]
-       };
+       sheet.getCell(`D${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: classificationList };
+       sheet.getCell(`I${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [unitRange] };
+       sheet.getCell(`K${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [unitRange] };
+       sheet.getCell(`L${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [catRange] };
     }
 
     // 5. Generate and Save
@@ -653,6 +648,13 @@ export default function ProductList({ products, units, warehouses, suppliers, la
                           disabled={formData.classification !== 'Raw Material'}
                           style={{ background: formData.classification !== 'Raw Material' ? '#f1f5f9' : 'white' }}
                       />
+                    </div>
+                    <div className="form-group">
+                       <label>{lang === 'ar' ? 'القسم (نظامي)' : 'Category (System)'}</label>
+                       <select value={formData.categoryId} onChange={e => setFormData({...formData, categoryId: e.target.value})}>
+                           <option value="">-- {lang === 'ar' ? 'اختر القسم' : 'Select Category'} --</option>
+                           {categories.map(c => (<option key={c.id} value={c.id}>{lang === 'ar' ? c.nameAr || c.name : c.name}</option>))}
+                       </select>
                     </div>
                     <div className="form-group">
                       <label>{lang === 'ar' ? 'المورد الافتراضي' : 'Default Supplier'}</label>
