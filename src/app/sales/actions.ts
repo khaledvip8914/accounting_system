@@ -1510,6 +1510,7 @@ export async function createProduct(data: {
   expiryDate?: string | null;
   unitQuantity?: number;
   subUnitId?: string | null;
+  categoryId?: string | null;
   supplierId?: string | null;
 }) {
   try {
