@@ -63,12 +63,18 @@ export async function saveUser(data: any) {
       });
 
       // Send verification email
+      let emailSent = false;
       if (user.email) {
-        await sendVerificationEmail(user.email, verificationToken, user.name || user.username);
+        const mailResult = await sendVerificationEmail(user.email, verificationToken, user.name || user.username);
+        emailSent = mailResult.success;
       }
 
       revalidatePath('/settings/users');
-      return { success: true, user };
+      return { 
+        success: true, 
+        user, 
+        message: emailSent ? 'تم إنشاء المستخدم وإرسال بريد التحقق بنجاح' : 'تم إنشاء المستخدم ولكن فشل إرسال بريد التحقق. يرجى التأكد من إعدادات البريد الإلكتروني.'
+      };
     }
   } catch (error: any) {
     console.error('Save user error:', error);

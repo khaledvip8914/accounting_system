@@ -68,6 +68,7 @@ export default function UsersClient({ initialUsers, roles, lang, dict }: { initi
         setUsers(users.map((u: any) => u.id === uId ? uData : u));
       } else {
         setUsers([res.user, ...users]);
+        if (res.message) alert(res.message);
       }
       setShowModal(false);
     } else {
