@@ -257,6 +257,8 @@ export default function AppShell({ children, dict, user, lang }: AppShellProps) 
             z-index: 200;
             transform: translateX(${lang === 'ar' ? '100%' : '-100%'});
             transition: transform 0.3s ease;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
           }
 
           .sidebar.active {
