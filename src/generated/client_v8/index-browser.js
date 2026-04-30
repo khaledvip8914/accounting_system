@@ -115,6 +115,9 @@ Prisma.NullTypes = {
  */
 
 exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
+  ReadUncommitted: 'ReadUncommitted',
+  ReadCommitted: 'ReadCommitted',
+  RepeatableRead: 'RepeatableRead',
   Serializable: 'Serializable'
 });
 
@@ -172,6 +175,7 @@ exports.Prisma.ProductScalarFieldEnum = {
   nameAr: 'nameAr',
   description: 'description',
   category: 'category',
+  categoryId: 'categoryId',
   classification: 'classification',
   unit: 'unit',
   unitId: 'unitId',
@@ -186,6 +190,14 @@ exports.Prisma.ProductScalarFieldEnum = {
   unitQuantity: 'unitQuantity',
   subUnitId: 'subUnitId',
   supplierId: 'supplierId'
+};
+
+exports.Prisma.CategoryScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  nameAr: 'nameAr',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.SalesInvoiceScalarFieldEnum = {
@@ -426,6 +438,8 @@ exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   username: 'username',
   email: 'email',
+  emailVerified: 'emailVerified',
+  verificationToken: 'verificationToken',
   password: 'password',
   name: 'name',
   role: 'role',
@@ -539,6 +553,11 @@ exports.Prisma.SortOrder = {
   desc: 'desc'
 };
 
+exports.Prisma.QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
+};
+
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
@@ -551,6 +570,7 @@ exports.Prisma.ModelName = {
   Warehouse: 'Warehouse',
   WarehouseStock: 'WarehouseStock',
   Product: 'Product',
+  Category: 'Category',
   SalesInvoice: 'SalesInvoice',
   PurchaseInvoice: 'PurchaseInvoice',
   InvoiceItem: 'InvoiceItem',

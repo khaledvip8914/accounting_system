@@ -5,7 +5,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -83,6 +83,8 @@ model Product {
   nameAr             String?
   description        String?
   category           String?
+  categoryId         String?
+  categoryRef        Category?             @relation(fields: [categoryId], references: [id])
   classification     String                @default("Finished Product")
   unit               String                @default("pc")
   unitId             String?
@@ -112,6 +114,15 @@ model Product {
   purchaseOrderItems PurchaseOrderItem[]
   supplierId         String?
   supplier           Supplier?             @relation("ProductSupplier", fields: [supplierId], references: [id])
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  nameAr    String?
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model SalesInvoice {
@@ -407,17 +418,19 @@ model ProductionOrderItem {
 }
 
 model User {
-  id          String   @id @default(cuid())
-  username    String   @unique
-  email       String?  @unique
-  password    String
-  name        String?
-  role        String   @default("Employee")
-  roleId      String?
-  roleRef     Role?    @relation(fields: [roleId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  permissions String?
+  id                String    @id @default(cuid())
+  username          String    @unique
+  email             String?   @unique
+  emailVerified     DateTime?
+  verificationToken String?
+  password          String
+  name              String?
+  role              String    @default("Employee")
+  roleId            String?
+  roleRef           Role?     @relation(fields: [roleId], references: [id])
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  permissions       String?
 }
 
 model Role {

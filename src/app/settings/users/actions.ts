@@ -64,16 +64,32 @@ export async function saveUser(data: any) {
 
       // Send verification email
       let emailSent = false;
-      if (user.email) {
-        const mailResult = await sendVerificationEmail(user.email, verificationToken, user.name || user.username);
-        emailSent = mailResult.success;
+      const smtpUser = process.env.EMAIL_SERVER_USER;
+      const smtpPass = process.env.EMAIL_SERVER_PASSWORD;
+
+      if (user.email && smtpUser && smtpPass) {
+        try {
+          // Set a timeout for email sending to prevent hanging the whole action
+          const mailResult = await Promise.race([
+            sendVerificationEmail(user.email, verificationToken, user.name || user.username),
+            new Promise<{success: boolean, error: string}>((_, reject) => 
+              setTimeout(() => reject(new Error('Email timeout')), 8000)
+            )
+          ]);
+          emailSent = mailResult.success;
+        } catch (mailError) {
+          console.error('Non-blocking email error:', mailError);
+          emailSent = false;
+        }
       }
 
       revalidatePath('/settings/users');
       return { 
         success: true, 
         user, 
-        message: emailSent ? 'تم إنشاء المستخدم وإرسال بريد التحقق بنجاح' : 'تم إنشاء المستخدم ولكن فشل إرسال بريد التحقق. يرجى التأكد من إعدادات البريد الإلكتروني.'
+        message: emailSent 
+          ? 'تم إنشاء المستخدم وإرسال بريد التحقق بنجاح' 
+          : (smtpUser ? 'تم إنشاء المستخدم ولكن فشل إرسال بريد التحقق.' : 'تم إنشاء المستخدم بنجاح (بريد التحقق معطل حالياً).')
       };
     }
   } catch (error: any) {
