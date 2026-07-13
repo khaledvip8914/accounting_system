@@ -11,9 +11,10 @@ import { redirect } from "next/navigation";
 
 export default async function FinancialManagementPage() {
   const session = await getSession();
-  if (!session) {
+  if (!session || !session.user || !session.user.companyId) {
     redirect('/login');
   }
+  const companyId = session.user.companyId;
 
   const cookieStore = await cookies();
   const lang = cookieStore.get('NX_LANG')?.value || 'en';
@@ -29,10 +30,12 @@ export default async function FinancialManagementPage() {
   ]);
 
   const flatAccounts = await prisma.account.findMany({
+    where: { companyId },
     orderBy: { code: 'asc' }
   });
 
   const transactionVouchers = await prisma.transactionVoucher.findMany({
+    where: { companyId },
     include: { primaryAccount: true, relatedAccount: true },
     orderBy: { createdAt: 'desc' }
   });

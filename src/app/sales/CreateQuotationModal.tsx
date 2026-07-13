@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { createCustomer } from './actions';
+import CreateCustomerModal from '@/components/CreateCustomerModal';
+import SearchableSelect from '@/components/SearchableSelect';
 
 type Product = {
   id: string;
@@ -71,6 +74,11 @@ export default function CreateQuotationModal({
   
   const [discount, setDiscount] = useState(quotationToEdit?.discount || 0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
+
+  const handleQuickAdd = async (data: any) => {
+    return createCustomer(data);
+  };
 
   const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
 
@@ -170,18 +178,30 @@ export default function CreateQuotationModal({
           <div className="quotation-form-grid">
             <div className="form-group">
               <label>{lang === 'ar' ? 'العميل' : 'Customer'}</label>
-              <select 
-                value={selectedCustomerId} 
-                onChange={e => setSelectedCustomerId(e.target.value)}
-                required
-              >
-                <option value="">{lang === 'ar' ? '--- اختر عميلاً ---' : '--- Select Customer ---'}</option>
-                {customers.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.code} - {lang === 'ar' && c.nameAr ? c.nameAr : c.name}
-                  </option>
-                ))}
-              </select>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <select 
+                  value={selectedCustomerId} 
+                  onChange={e => setSelectedCustomerId(e.target.value)}
+                  required
+                  style={{ flex: 1 }}
+                >
+                  <option value="">{lang === 'ar' ? '--- اختر عميلاً ---' : '--- Select Customer ---'}</option>
+                  {customers.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.code} - {lang === 'ar' && c.nameAr ? c.nameAr : c.name}
+                    </option>
+                  ))}
+                </select>
+                <button 
+                  type="button" 
+                  className="btn-quick-add" 
+                  onClick={() => setShowQuickAdd(true)}
+                  title={lang === 'ar' ? 'إضافة عميل سريع' : 'Quick Add Customer'}
+                  style={{ background: '#ca8a04', color: 'white', border: 'none', width: '38px', height: '38px', borderRadius: '8px', cursor: 'pointer', fontWeight: 700, fontSize: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  +
+                </button>
+              </div>
             </div>
 
             <div className="form-group">
@@ -246,18 +266,26 @@ export default function CreateQuotationModal({
                     {items.map((item, index) => (
                       <tr key={index}>
                         <td>
-                           <select 
-                             value={item.productId} 
-                             onChange={e => updateItem(index, 'productId', e.target.value)}
-                             required
-                           >
-                             <option value="">{lang === 'ar' ? 'اختر صنفاً...' : 'Select item...'}</option>
-                             {products.map(p => (
-                               <option key={p.id} value={p.id}>
-                                 {p.sku} - {lang === 'ar' && p.nameAr ? p.nameAr : p.name}
-                               </option>
-                             ))}
-                           </select>
+                           <SearchableSelect
+                             options={products}
+                             value={item.productId}
+                             onChange={(value) => updateItem(index, 'productId', value)}
+                             lang={lang}
+                             placeholder={lang === 'ar' ? 'اختر صنفاً...' : 'Select item...'}
+                           />
+                           {item.productId && (
+                             <div style={{ fontSize: '0.75rem', color: '#854d0e', marginTop: '4px', fontWeight: 600 }}>
+                               {lang === 'ar' ? 'المخزون الحالي: ' : 'Current Stock: '}
+                               <span style={{ 
+                                 color: (products.find(p => p.id === item.productId)?.stockQuantity || 0) <= 0 ? '#ef4444' : '#166534',
+                                 background: (products.find(p => p.id === item.productId)?.stockQuantity || 0) <= 0 ? '#fee2e2' : '#dcfce7',
+                                 padding: '1px 4px',
+                                 borderRadius: '4px'
+                               }}>
+                                 {products.find(p => p.id === item.productId)?.stockQuantity || 0}
+                               </span>
+                             </div>
+                           )}
                         </td>
                         <td>
                           <input 
@@ -331,6 +359,14 @@ export default function CreateQuotationModal({
               </button>
           </div>
         </form>
+
+        {showQuickAdd && (
+          <CreateCustomerModal
+            lang={lang}
+            onClose={() => setShowQuickAdd(false)}
+            onSave={handleQuickAdd}
+          />
+        )}
       </div>
 
       <style jsx>{`

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import LogoutButton from './LogoutButton';
@@ -13,18 +13,29 @@ interface AppShellProps {
   dict: any;
   user: any;
   lang: string;
+  subscriptionEndsAt?: string | null;
 }
 
-export default function AppShell({ children, dict, user, lang }: AppShellProps) {
+export default function AppShell({ children, dict, user, lang, subscriptionEndsAt }: AppShellProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const notificationsRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const dir = lang === 'ar' ? 'rtl' : 'ltr';
 
+  // Calculate days left
+  let daysLeft: number | null = null;
+  if (subscriptionEndsAt) {
+    const diff = new Date(subscriptionEndsAt).getTime() - new Date().getTime();
+    daysLeft = Math.max(0, Math.ceil(diff / (1000 * 3600 * 24)));
+  }
+
   // Permissions check helper
   const canAccess = (module: any) => {
-    // Admins have access to everything
-    if (user.role === 'Admin') return true;
+    // Admins and SuperAdmins have access to everything
+    if (user.role === 'Admin' || user.role === 'SuperAdmin') return true;
     return hasPermission(user.roleRef?.permissions || user.permissions, module, 'view');
   };
 
@@ -32,7 +43,38 @@ export default function AppShell({ children, dict, user, lang }: AppShellProps) 
   useEffect(() => {
     setMounted(true);
     setIsSidebarOpen(false);
+    setIsNotificationsOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    if (mounted && canAccess('sales')) {
+      fetch('/api/notifications')
+        .then(res => res.json())
+        .then(data => {
+          if (data.notifications) {
+            setNotifications(data.notifications);
+          }
+        })
+        .catch(err => console.error('Error fetching notifications:', err));
+    }
+  }, [mounted, pathname]);
+
+  // Handle click outside notifications dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
+        setIsNotificationsOpen(false);
+      }
+    }
+    
+    if (isNotificationsOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isNotificationsOpen]);
 
   if (!mounted) return <div style={{ opacity: 0 }}>{children}</div>;
 
@@ -47,9 +89,11 @@ export default function AppShell({ children, dict, user, lang }: AppShellProps) 
       {/* Sidebar */}
       <aside className={`sidebar ${isSidebarOpen ? 'active' : ''}`}>
         <div className="sidebar-header">
-           <div className="logo-container">
-             <div className="logo-icon">N</div>
-             <div className="logo-text">{dict.sidebar.brand}</div>
+           <div className="logo-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', marginBottom: '1rem', marginTop: '1rem' }}>
+             <div style={{ width: '100px', height: '100px', borderRadius: '50%', overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '0.5rem', background: '#1e293b', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+               <img src="/qaydx-logo.png" alt="QaydX" style={{ width: '140%', height: '140%', objectFit: 'cover' }} />
+             </div>
+             <div className="logo-text" style={{ fontSize: '1.5rem', fontWeight: '900' }}>{dict.sidebar.brand}</div>
            </div>
            <button className="mobile-close" onClick={() => setIsSidebarOpen(false)}>
              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -154,6 +198,14 @@ export default function AppShell({ children, dict, user, lang }: AppShellProps) 
 
       {/* Main Content */}
       <main className="main-wrapper">
+        {daysLeft !== null && daysLeft <= 30 && (
+          <div className="subscription-warning bg-red-600/90 text-white text-center py-2 px-4 font-bold text-sm w-full shadow-md z-50 flex items-center justify-center gap-2">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            {lang === 'ar' 
+              ? `تنبيه هام: اشتراكك ينتهي خلال ${daysLeft} يوم. يرجى التواصل مع الإدارة لتجديد الاشتراك لتجنب إيقاف النظام.`
+              : `Important: Your subscription expires in ${daysLeft} days. Please contact management to renew and avoid service interruption.`}
+          </div>
+        )}
         <header className="header">
           <div className="header-mobile-toggle">
             <button className="hamburger" onClick={() => setIsSidebarOpen(true)}>
@@ -169,10 +221,48 @@ export default function AppShell({ children, dict, user, lang }: AppShellProps) 
           
           <div className="header-actions">
             <LanguageSwitcher currentLang={lang} />
-            <button className="action-btn no-mobile">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-              <span className="badge">3</span>
-            </button>
+            
+            <div className="notifications-wrapper" ref={notificationsRef} style={{ position: 'relative' }}>
+              <button 
+                className={`action-btn no-mobile ${notifications.length > 0 ? 'has-notifications' : ''}`}
+                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                {notifications.length > 0 && <span className="badge">{notifications.length}</span>}
+              </button>
+              
+              {isNotificationsOpen && (
+                <div className="notifications-dropdown">
+                  <div className="notifications-header">
+                    <h4>{lang === 'ar' ? 'التنبيهات' : 'Notifications'}</h4>
+                    {notifications.length > 0 && <span className="notifications-count">{notifications.length}</span>}
+                  </div>
+                  <div className="notifications-list">
+                    {notifications.length === 0 ? (
+                      <div className="no-notifications">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                        <p>{lang === 'ar' ? 'لا توجد تنبيهات جديدة' : 'No new notifications'}</p>
+                      </div>
+                    ) : (
+                      notifications.map(notif => (
+                        <Link href={notif.link || '#'} key={notif.id} className="notification-item">
+                          <div className="notification-icon error">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                          </div>
+                          <div className="notification-content">
+                            <h5>{lang === 'ar' ? notif.titleAr : notif.title}</h5>
+                            <p>{lang === 'ar' ? notif.messageAr : notif.message}</p>
+                            <span className="notification-time">
+                              {new Date(notif.date).toLocaleTimeString(lang === 'ar' ? 'ar-SA' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                        </Link>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             
             <div className="user-profile">
               <div className="avatar">
@@ -268,6 +358,133 @@ export default function AppShell({ children, dict, user, lang }: AppShellProps) 
           .main-wrapper {
             width: 100vw;
           }
+        }
+
+        .notifications-dropdown {
+          position: absolute;
+          top: 120%;
+          left: ${lang === 'ar' ? '0' : 'auto'};
+          right: ${lang === 'ar' ? 'auto' : '0'};
+          width: 320px;
+          background: #ffffff;
+          border-radius: 12px;
+          box-shadow: 0 10px 40px -10px rgba(0,0,0,0.15);
+          border: 1px solid #e2e8f0;
+          z-index: 1000;
+          overflow: hidden;
+          transform-origin: top right;
+          animation: dropIn 0.2s ease-out;
+        }
+
+        @keyframes dropIn {
+          from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .notifications-header {
+          padding: 1rem 1.25rem;
+          border-bottom: 1px solid #f1f5f9;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: #f8fafc;
+        }
+
+        .notifications-header h4 {
+          margin: 0;
+          font-size: 1rem;
+          font-weight: 700;
+          color: #0f172a;
+        }
+
+        .notifications-count {
+          background: #ef4444;
+          color: white;
+          font-size: 0.75rem;
+          font-weight: 700;
+          padding: 0.15rem 0.5rem;
+          border-radius: 50px;
+        }
+
+        .notifications-list {
+          max-height: 400px;
+          overflow-y: auto;
+        }
+
+        .no-notifications {
+          padding: 3rem 1.5rem;
+          text-align: center;
+          color: #94a3b8;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .notification-item {
+          display: flex;
+          gap: 1rem;
+          padding: 1rem 1.25rem;
+          border-bottom: 1px solid #f1f5f9;
+          text-decoration: none;
+          transition: background 0.2s;
+        }
+
+        .notification-item:hover {
+          background: #f8fafc;
+        }
+
+        .notification-item:last-child {
+          border-bottom: none;
+        }
+
+        .notification-icon {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-shrink: 0;
+        }
+
+        .notification-icon.error {
+          background: #fef2f2;
+          color: #ef4444;
+        }
+
+        .notification-content h5 {
+          margin: 0 0 0.25rem 0;
+          font-size: 0.9rem;
+          font-weight: 700;
+          color: #0f172a;
+        }
+
+        .notification-content p {
+          margin: 0 0 0.5rem 0;
+          font-size: 0.85rem;
+          color: #64748b;
+          line-height: 1.4;
+        }
+
+        .notification-time {
+          font-size: 0.75rem;
+          color: #94a3b8;
+          font-weight: 500;
+        }
+
+        .action-btn.has-notifications {
+          color: #0f172a;
+          animation: ring 4s infinite;
+        }
+
+        @keyframes ring {
+          0% { transform: rotate(0); }
+          5% { transform: rotate(15deg); }
+          10% { transform: rotate(-10deg); }
+          15% { transform: rotate(5deg); }
+          20% { transform: rotate(0); }
+          100% { transform: rotate(0); }
         }
       `}</style>
       </div>

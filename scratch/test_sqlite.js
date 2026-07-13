@@ -1,18 +1,26 @@
-const { PrismaClient } = require('../src/generated/client_v7');
+const { PrismaClient } = require('../src/generated/client_v8');
 
-async function main() {
-  const prisma = new PrismaClient();
+async function test() {
+  const prisma = new PrismaClient({
+    datasources: {
+      db: {
+        url: 'file:../prisma/dev.db',
+      },
+    },
+  });
+
   try {
-    const userCount = await prisma.user.count();
-    console.log('Successfully connected to SQLite database.');
-    console.log('User count:', userCount);
+    console.log('Testing SQLite connection...');
+    const accounts = await prisma.account.findMany({ take: 5 });
+    console.log('SQLite connection successful!');
+    console.log('Accounts found:', accounts.length);
     process.exit(0);
   } catch (err) {
-    console.error('Failed to connect to database:', err.message);
+    console.error('SQLite Error:', err.message);
     process.exit(1);
   } finally {
     await prisma.$disconnect();
   }
 }
 
-main();
+test();

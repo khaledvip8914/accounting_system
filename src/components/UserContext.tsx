@@ -13,11 +13,10 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export function UserProvider({ children, user }: { children: ReactNode; user: any }) {
   const canAccess = (module: Module, action: Action = 'view') => {
     if (!user) return false;
-    if (user.role === 'Admin') return true;
+    if (user.role === 'Admin' || user.role === 'SuperAdmin') return true;
     
-    // Check both roleRef permissions and direct user permissions (fallback)
-    const permissions = user.roleRef?.permissions || user.permissions;
-    return hasPermission(permissions, module, action);
+    // Pass the full user object to the central permission utility
+    return hasPermission(user, module, action);
   };
 
   return (

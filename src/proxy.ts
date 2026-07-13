@@ -6,7 +6,35 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Paths that don't require authentication
-  if (pathname.startsWith('/login') || pathname.startsWith('/api/auth/login')) {
+  if (
+    pathname.startsWith('/api/auth/login') ||
+    pathname.startsWith('/api/auth/signup') ||
+    pathname.startsWith('/api/auth/forgot-password') ||
+    pathname.startsWith('/api/auth/reset-password') ||
+    pathname.startsWith('/signup') ||
+    pathname.startsWith('/forgot-password') ||
+    pathname.startsWith('/reset-password')
+  ) {
+    return NextResponse.next();
+  }
+
+  // Redirect authenticated users away from the login page
+  if (pathname === '/login') {
+    if (session) {
+      try {
+        const payload = await decrypt(session);
+        if (payload?.user) {
+          return NextResponse.redirect(new URL('/', request.url));
+        }
+      } catch (err) {
+        // invalid session, continue to login
+      }
+    }
+    return NextResponse.next();
+  }
+
+  // Bypass static files like images
+  if (pathname.match(/\.(svg|png|jpg|jpeg|gif|webp)$/)) {
     return NextResponse.next();
   }
 

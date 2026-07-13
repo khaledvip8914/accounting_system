@@ -242,6 +242,27 @@ export default function SalesClient({
         .header-actions { display: flex; gap: 0.75rem; }
         .btn-export { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.2s; }
         .btn-export.pdf { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
+        @media (max-width: 768px) {
+          .sales-header {
+            flex-direction: column;
+            align-items: stretch;
+            padding: 1rem;
+            margin: -1rem -1rem 1rem -1rem;
+            gap: 1rem;
+          }
+          .header-left {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 0.5rem;
+          }
+          .header-right {
+            width: 100%;
+            display: flex;
+            justify-content: flex-start;
+          }
+        }
       `}</style>
     </div>
   );

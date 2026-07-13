@@ -37,13 +37,19 @@ export default function FinancialClient({
     const params = new URLSearchParams(window.location.search);
     const tab = params.get('tab');
     const accId = params.get('accountId');
+    const accCode = params.get('accountCode');
     if (tab) {
       setActiveTab(tab);
     }
     if (accId) {
       setSelectedLedgerAccountId(accId);
+    } else if (accCode) {
+      const matchedAccount = accountsForLedger.find(a => a.code === accCode);
+      if (matchedAccount) {
+        setSelectedLedgerAccountId(matchedAccount.id);
+      }
     }
-  }, []);
+  }, [accountsForLedger]);
   const dict = getDictionary(lang);
 
   const applyFilters = () => {
@@ -208,7 +214,7 @@ export default function FinancialClient({
         <div className="header-left">
           <div className="tabs-container">
             {tabs.map((tab) => (
-              <button
+              <button suppressHydrationWarning
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`tab-item ${activeTab === tab.id ? 'active' : ''}`}
@@ -230,17 +236,17 @@ export default function FinancialClient({
               <label>{lang === 'ar' ? 'إلى' : 'To'}</label>
               <input type="date" value={tempEndDate} onChange={e => setTempEndDate(e.target.value)} />
             </div>
-            <button className="btn-filter" onClick={applyFilters}>
+            <button suppressHydrationWarning className="btn-filter" onClick={applyFilters}>
               {lang === 'ar' ? 'فلترة' : 'Filter'} 🔍
             </button>
           </div>
 
           <div className="header-actions">
-            <button className="btn-export pdf" onClick={() => window.print()}>
+            <button suppressHydrationWarning className="btn-export pdf" onClick={() => window.print()}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
               PDF
             </button>
-            <button className="btn-export excel" onClick={handleExportExcel}>
+            <button suppressHydrationWarning className="btn-export excel" onClick={handleExportExcel}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
               Excel
             </button>
@@ -469,6 +475,41 @@ export default function FinancialClient({
           .financial-module { background: white !important; color: black !important; padding: 0 !important; }
           .tab-content { padding: 0 !important; }
           .ledger-container { background: white !important; color: black !important; }
+        }
+
+        @media (max-width: 768px) {
+          .financial-header {
+            flex-direction: column;
+            align-items: stretch;
+            padding: 1rem;
+            margin: -1rem -1rem 1rem -1rem;
+            gap: 1rem;
+          }
+          .header-left {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 0.5rem;
+          }
+          .header-right {
+            width: 100%;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 1rem;
+          }
+          .date-filters {
+            width: 100%;
+            flex-wrap: wrap;
+            justify-content: space-between;
+          }
+          .header-actions {
+            width: 100%;
+            justify-content: space-between;
+          }
+          .btn-export {
+            flex: 1;
+            justify-content: center;
+          }
         }
       `}</style>
     </div>

@@ -9,9 +9,10 @@ export const dynamic = 'force-dynamic';
 
 export default async function CustomersPage() {
   const session = await getSession();
-  if (!session) {
+  if (!session || !session.user || !session.user.companyId) {
     redirect('/login');
   }
+  const companyId = session.user.companyId;
 
   const cookieStore = await cookies();
   const lang = (cookieStore.get('NX_LANG')?.value as Lang) || 'ar';
@@ -19,6 +20,7 @@ export default async function CustomersPage() {
   
   try {
     const customers = await prisma.customer.findMany({
+      where: { companyId },
       orderBy: { name: 'asc' }
     });
 

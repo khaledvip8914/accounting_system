@@ -1,6 +1,24 @@
 const path = require('path')
+const fs = require('fs')
 
 const dir = path.join(__dirname)
+
+// Load .env file manually for standalone server
+if (fs.existsSync(path.join(dir, '.env'))) {
+  const envFile = fs.readFileSync(path.join(dir, '.env'), 'utf8')
+  envFile.split('\n').forEach(line => {
+    const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/)
+    if (match) {
+      const key = match[1]
+      let value = match[2] || ''
+      if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1)
+      else if (value.startsWith("'") && value.endsWith("'")) value = value.slice(1, -1)
+      if (process.env[key] === undefined) {
+        process.env[key] = value
+      }
+    }
+  })
+}
 
 process.env.NODE_ENV = 'production'
 process.chdir(__dirname)
@@ -23,6 +41,8 @@ if (
 ) {
   keepAliveTimeout = undefined
 }
+
+const fsPromises = require('fs').promises;
 
 startServer({
   dir,

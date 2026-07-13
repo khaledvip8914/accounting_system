@@ -14,7 +14,7 @@ export async function GET() {
         password: hashedPassword,
         name: 'Administrator',
         role: 'Admin',
-        email: 'admin@nexaccount.com'
+        email: 'admin@qaydx.com'
       }
     });
 

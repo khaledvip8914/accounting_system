@@ -1,16 +1,27 @@
 'use client';
 
+import { useState } from 'react';
 import { Lang } from '@/lib/i18n';
 import Link from 'next/link';
+import ZatcaOnboarding from '@/components/ZatcaOnboarding';
 
-export default function SettingsClient({ lang, dict }: { lang: Lang, dict: any }) {
+interface SettingsClientProps {
+  lang: Lang;
+  dict: any;
+  companyId: string;
+  zatcaStatus: string;
+}
+
+export default function SettingsClient({ lang, dict, companyId, zatcaStatus }: SettingsClientProps) {
+  const [isZatcaModalOpen, setIsZatcaModalOpen] = useState(false);
+
   const settingsCategories = [
     { id: 'general', href: '/settings/general', label: dict.settings.general, icon: '⚙️' },
     { id: 'financialYears', href: '/settings/financial-years', label: dict.settings.financialYears, icon: '📅' },
     { id: 'analysisDimensions', href: '/settings/analysis-dimensions', label: dict.settings.analysisDimensions, icon: '📐' },
     { id: 'theme', href: '/settings/theme', label: lang === 'ar' ? 'الأشكال' : 'Theme', icon: '🎨' },
     { id: 'subscription', href: '/settings/subscription', label: dict.settings.subscription, icon: '💳' },
-    { id: 'zatca', href: '/settings/zatca', label: dict.settings.zatca, icon: '🔗' },
+    { id: 'zatca', href: '#', action: 'modal', label: dict.settings.zatca, icon: '🔗' },
     { id: 'currencies', href: '/settings/currencies', label: dict.settings.currencies, icon: '💱' },
     { id: 'taxes', href: '/settings/taxes', label: dict.settings.taxes, icon: '⚖️' },
     { id: 'payroll', href: '/settings/payroll', label: dict.settings.payroll, icon: '💸' },
@@ -21,6 +32,7 @@ export default function SettingsClient({ lang, dict }: { lang: Lang, dict: any }
     { id: 'editProfile', href: '/settings/edit-profile', label: dict.settings.editProfile, icon: '👤' },
     { id: 'attachments', href: '/settings/attachments', label: dict.settings.attachments, icon: '📎' },
     { id: 'productProps', href: '/settings/product-props', label: dict.settings.productProps, icon: '📦' },
+    { id: 'api', href: '/settings/api', label: lang === 'ar' ? 'ربط API (الأنظمة الخارجية)' : 'API Integration', icon: '🔌' },
   ];
 
   return (
@@ -33,8 +45,8 @@ export default function SettingsClient({ lang, dict }: { lang: Lang, dict: any }
       </div>
 
       <div className="settings-grid">
-        {settingsCategories.map((cat) => (
-          <Link key={cat.id} href={cat.href}>
+        {settingsCategories.map((cat) => {
+          const cardContent = (
             <div className="card settings-card">
               <div className="settings-icon">{cat.icon}</div>
               <div className="settings-label">{cat.label}</div>
@@ -48,9 +60,31 @@ export default function SettingsClient({ lang, dict }: { lang: Lang, dict: any }
                 </svg>
               </div>
             </div>
-          </Link>
-        ))}
+          );
+
+          if (cat.action === 'modal') {
+            return (
+              <div key={cat.id} onClick={() => setIsZatcaModalOpen(true)}>
+                {cardContent}
+              </div>
+            );
+          }
+
+          return (
+            <Link key={cat.id} href={cat.href || '#'}>
+              {cardContent}
+            </Link>
+          );
+        })}
       </div>
+
+      {isZatcaModalOpen && (
+        <ZatcaOnboarding 
+          companyId={companyId} 
+          currentStatus={zatcaStatus} 
+          onClose={() => setIsZatcaModalOpen(false)} 
+        />
+      )}
 
       <style jsx>{`
         .settings-grid {

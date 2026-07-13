@@ -22,6 +22,11 @@ export default function CreateCustomerModal({
     phone: '',
     email: '',
     address: '',
+    streetName: '',
+    buildingNumber: '',
+    city: '',
+    district: '',
+    postalCode: '',
     taxNumber: '',
     commercialRegistry: ''
   });
@@ -83,8 +88,27 @@ export default function CreateCustomerModal({
               <input value={formData.commercialRegistry} onChange={e => setFormData({...formData, commercialRegistry: e.target.value})} />
             </div>
             <div className="form-group full-width">
-              <label>{lang === 'ar' ? 'العنوان الوطني / التفصيلي' : 'National / Detailed Address'}</label>
-              <textarea value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+              <h4 style={{ margin: '1rem 0 0.5rem', color: '#1e293b' }}>{lang === 'ar' ? 'العنوان الوطني (مطلوب لـ ZATCA B2B)' : 'National Address (Required for ZATCA B2B)'}</h4>
+            </div>
+            <div className="form-group">
+              <label>{lang === 'ar' ? 'اسم الشارع' : 'Street Name'}</label>
+              <input value={formData.streetName} onChange={e => setFormData({...formData, streetName: e.target.value})} />
+            </div>
+            <div className="form-group">
+              <label>{lang === 'ar' ? 'رقم المبنى' : 'Building Number'}</label>
+              <input value={formData.buildingNumber} onChange={e => setFormData({...formData, buildingNumber: e.target.value})} />
+            </div>
+            <div className="form-group">
+              <label>{lang === 'ar' ? 'المدينة' : 'City'}</label>
+              <input value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} />
+            </div>
+            <div className="form-group">
+              <label>{lang === 'ar' ? 'الحي' : 'District'}</label>
+              <input value={formData.district} onChange={e => setFormData({...formData, district: e.target.value})} />
+            </div>
+            <div className="form-group">
+              <label>{lang === 'ar' ? 'الرمز البريدي' : 'Postal Code'}</label>
+              <input value={formData.postalCode} onChange={e => setFormData({...formData, postalCode: e.target.value})} />
             </div>
           </div>
 

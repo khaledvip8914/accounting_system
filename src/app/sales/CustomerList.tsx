@@ -9,7 +9,7 @@ export default function CustomerList({ customers, lang, dict }: { customers: any
   const [showModal, setShowModal] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [editingCustomer, setEditingCustomer] = useState<any | null>(null);
-  const [formData, setFormData] = useState({ code: '', name: '', nameAr: '', phone: '', email: '' });
+  const [formData, setFormData] = useState<any>({ code: '', name: '', nameAr: '', phone: '', email: '' });
 
   const filtered = (customers || []).filter(c => {
     const s = (searchTerm || '').toLowerCase();
@@ -54,7 +54,15 @@ export default function CustomerList({ customers, lang, dict }: { customers: any
       name: customer.name || '',
       nameAr: customer.nameAr || '',
       phone: customer.phone || '',
-      email: customer.email || ''
+      email: customer.email || '',
+      address: customer.address || '',
+      streetName: customer.streetName || '',
+      buildingNumber: customer.buildingNumber || '',
+      city: customer.city || '',
+      district: customer.district || '',
+      postalCode: customer.postalCode || '',
+      taxNumber: customer.taxNumber || '',
+      commercialRegistry: customer.commercialRegistry || ''
     });
     setShowModal(true);
   };
@@ -110,7 +118,11 @@ export default function CustomerList({ customers, lang, dict }: { customers: any
                 <tr key={c.id}>
                   <td><span className="badge">{c.code}</span></td>
                   <td>
-                    <div style={{ fontWeight: '600' }}>{lang === 'ar' && c.nameAr ? c.nameAr : c.name}</div>
+                    <div style={{ fontWeight: '600' }}>
+                      <a href={`/financial?tab=ledger&accountCode=1130-${c.code}`} style={{ color: 'var(--accent-primary)', textDecoration: 'none' }} title={lang === 'ar' ? 'عرض كشف الحساب' : 'View Account Statement'}>
+                        {lang === 'ar' && c.nameAr ? c.nameAr : c.name}
+                      </a>
+                    </div>
                     <div className="text-sub" style={{ fontSize: '0.75rem' }}>{c.email || ''}</div>
                   </td>
                   <td className="text-secondary">{c.phone || '-'}</td>

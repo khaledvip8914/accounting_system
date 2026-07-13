@@ -5,12 +5,30 @@ import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/auth';
 import { hasPermission } from '@/lib/permissions';
 
+async function getAuthContext() {
+  const session = await getSession();
+  if (!session || !session.user || !session.user.companyId) {
+    throw new Error('Unauthorized');
+  }
+  return {
+    companyId: session.user.companyId,
+    permissions: session.user,
+    role: session.user.role
+  };
+}
+
 export async function getAccounts() {
-  return await prisma.account.findMany({ orderBy: { code: 'asc' } });
+  const { companyId } = await getAuthContext();
+  return await prisma.account.findMany({ 
+    where: { companyId },
+    orderBy: { code: 'asc' } 
+  });
 }
 
 export async function getJournalVouchers() {
+  const { companyId } = await getAuthContext();
   return await prisma.journalVoucher.findMany({
+    where: { companyId },
     include: {
       entries: {
         include: { account: true }
@@ -21,7 +39,11 @@ export async function getJournalVouchers() {
 }
 
 export async function getJournalEntries() {
+  const { companyId } = await getAuthContext();
   return await prisma.journalEntry.findMany({
+    where: { 
+      account: { companyId }
+    },
     include: { 
       account: true,
       journalVoucher: true
@@ -36,8 +58,8 @@ export async function saveJournalVoucher(data: {
   lines: { accountId: string; debit: number; credit: number; description?: string }[];
 }) {
   try {
-    const session = await getSession();
-    if (!hasPermission(session?.user?.permissions, 'accounting', 'create')) {
+    const { companyId, permissions, role } = await getAuthContext();
+    if (role !== 'Admin' && !hasPermission(permissions, 'accounting', 'create')) {
       throw new Error('غير مصرح لك بإنشاء قيد يومية');
     }
 
@@ -50,12 +72,13 @@ export async function saveJournalVoucher(data: {
 
     const date = new Date(data.date + 'T12:00:00Z');
     
-    // Generate simple reference: JV-Year-Count
-    const count = await prisma.journalVoucher.count();
+    // Generate simple reference: JV-Year-Count (scoped to company)
+    const count = await prisma.journalVoucher.count({ where: { companyId } });
     const reference = `JV-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
 
     await prisma.journalVoucher.create({
       data: {
+        companyId,
         reference,
         date,
         description: data.description,
@@ -82,22 +105,28 @@ export async function saveJournalVoucher(data: {
   }
 }
 
-// ─── DELETE JOURNAL VOUCHER ───────────────────────────────────────────────
 export async function deleteJournalVoucher(voucherId: string) {
   try {
-    const session = await getSession();
-    if (!hasPermission(session?.user?.permissions, 'accounting', 'delete')) {
+    const { companyId, permissions, role } = await getAuthContext();
+    if (role !== 'Admin' && !hasPermission(permissions, 'accounting', 'delete')) {
       throw new Error('غير مصرح لك بحذف قيود اليومية');
     }
+
+    // Verify ownership
+    const existing = await prisma.journalVoucher.findUnique({
+      where: { id: voucherId },
+      select: { companyId: true }
+    });
+    if (!existing || existing.companyId !== companyId) throw new Error('Not found');
 
     await prisma.$transaction(async (tx: any) => {
       // Unlink from any invoices first
       await tx.salesInvoice.updateMany({
-        where: { journalVoucherId: voucherId },
+        where: { companyId, journalVoucherId: voucherId },
         data: { journalVoucherId: null }
       });
       await tx.purchaseInvoice.updateMany({
-        where: { journalVoucherId: voucherId },
+        where: { companyId, journalVoucherId: voucherId },
         data: { journalVoucherId: null }
       });
       // Delete entries then voucher
@@ -113,7 +142,6 @@ export async function deleteJournalVoucher(voucherId: string) {
   }
 }
 
-// ─── UPDATE JOURNAL VOUCHER ───────────────────────────────────────────────
 export async function updateJournalVoucher(
   voucherId: string,
   data: {
@@ -123,10 +151,17 @@ export async function updateJournalVoucher(
   }
 ) {
   try {
-    const session = await getSession();
-    if (!hasPermission(session?.user?.permissions, 'accounting', 'edit')) {
+    const { companyId, permissions, role } = await getAuthContext();
+    if (role !== 'Admin' && !hasPermission(permissions, 'accounting', 'edit')) {
       throw new Error('غير مصرح لك بتعديل قيود اليومية');
     }
+
+    // Verify ownership
+    const existing = await prisma.journalVoucher.findUnique({
+      where: { id: voucherId },
+      select: { companyId: true }
+    });
+    if (!existing || existing.companyId !== companyId) throw new Error('Not found');
 
     const totalDebit = data.lines.reduce((sum, l) => sum + l.debit, 0);
     const totalCredit = data.lines.reduce((sum, l) => sum + l.credit, 0);
@@ -165,20 +200,21 @@ export async function updateJournalVoucher(
   }
 }
 
-
 export async function setupDefaultAccounts() {
-  const count = await prisma.account.count();
+  const { companyId } = await getAuthContext();
+  const count = await prisma.account.count({ where: { companyId } });
   if (count === 0) {
     await prisma.account.createMany({
       data: [
-        { code: '1000', name: 'Cash', type: 'Asset' },
-        { code: '1200', name: 'Accounts Receivable', type: 'Asset' },
-        { code: '2000', name: 'Accounts Payable', type: 'Liability' },
-        { code: '3000', name: 'Owner Equity', type: 'Equity' },
-        { code: '4000', name: 'Sales Revenue', type: 'Revenue' },
-        { code: '5000', name: 'Operating Expense', type: 'Expense' },
+        { companyId, code: '1000', name: 'Cash', type: 'Asset' },
+        { companyId, code: '1200', name: 'Accounts Receivable', type: 'Asset' },
+        { companyId, code: '2000', name: 'Accounts Payable', type: 'Liability' },
+        { companyId, code: '3000', name: 'Owner Equity', type: 'Equity' },
+        { companyId, code: '4000', name: 'Sales Revenue', type: 'Revenue' },
+        { companyId, code: '5000', name: 'Operating Expense', type: 'Expense' },
       ]
     });
     revalidatePath('/ledger');
   }
 }
+

@@ -110,7 +110,11 @@ export default function SupplierList({ suppliers, lang, dict }: { suppliers: any
                 <tr key={s.id}>
                   <td><span className="badge" style={{ background: '#fef3c7', color: '#92400e' }}>{s.code}</span></td>
                   <td>
-                    <div style={{ fontWeight: '600' }}>{lang === 'ar' && s.nameAr ? s.nameAr : s.name}</div>
+                    <div style={{ fontWeight: '600' }}>
+                      <a href={`/financial?tab=ledger&accountCode=2000-${s.code}`} style={{ color: 'var(--accent-primary)', textDecoration: 'none' }} title={lang === 'ar' ? 'عرض كشف الحساب' : 'View Account Statement'}>
+                        {lang === 'ar' && s.nameAr ? s.nameAr : s.name}
+                      </a>
+                    </div>
                     <div className="text-sub" style={{ fontSize: '0.75rem' }}>{s.email || ''}</div>
                   </td>
                   <td className="text-secondary">{s.phone || '-'}</td>

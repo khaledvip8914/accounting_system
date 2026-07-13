@@ -5,13 +5,23 @@ import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/auth';
 import { hasPermission } from '@/lib/permissions';
 
+async function getAuthContext() {
+  const session = await getSession();
+  if (!session || !session.user || !session.user.companyId) {
+    throw new Error('Unauthorized');
+  }
+  return {
+    companyId: session.user.companyId,
+    permissions: session.user
+  };
+}
+
 export async function saveTransactionVoucher(data: any) {
   try {
-    const session = await getSession();
-    const perms = session?.user?.permissions;
-    if (data.id && !hasPermission(perms, 'accounting', 'edit')) {
+    const { companyId, permissions } = await getAuthContext();
+    if (data.id && !hasPermission(permissions, 'accounting', 'edit')) {
       throw new Error('غير مصرح لك بتعديل السندات');
-    } else if (!data.id && !hasPermission(perms, 'accounting', 'create')) {
+    } else if (!data.id && !hasPermission(permissions, 'accounting', 'create')) {
       throw new Error('غير مصرح لك بإنشاء سندات');
     }
 
@@ -27,16 +37,20 @@ export async function saveTransactionVoucher(data: any) {
 
       if (data.id) {
         // Edit flow
-        const existing = await tx.transactionVoucher.findUnique({ where: { id: data.id } });
+        const existing = await tx.transactionVoucher.findFirst({ 
+            where: { id: data.id, companyId } 
+        });
         if (!existing) throw new Error('Voucher not found');
         voucherNumber = existing.voucherNumber;
 
         // Cleanup linked JV entries if exist
         if (existing.journalVoucherId) {
-          await tx.journalEntry.deleteMany({ where: { journalVoucherId: existing.journalVoucherId } });
-          // Update the existing JV instead of deleting it to avoid cascade issues if any
+          await tx.journalEntry.deleteMany({ 
+              where: { journalVoucher: { id: existing.journalVoucherId, companyId } } 
+          });
+          
           await tx.journalVoucher.update({
-            where: { id: existing.journalVoucherId },
+            where: { id: existing.journalVoucherId, companyId },
             data: {
               date: new Date(data.date),
               description: data.description
@@ -46,7 +60,7 @@ export async function saveTransactionVoucher(data: any) {
         }
 
         voucher = await tx.transactionVoucher.update({
-          where: { id: data.id },
+          where: { id: data.id, companyId },
           data: {
             date: new Date(data.date),
             amount: data.amount,
@@ -61,9 +75,9 @@ export async function saveTransactionVoucher(data: any) {
         const prefix = data.type === 'RECEIPT' ? 'RV' : 'PV';
         const year = new Date().getFullYear();
         
-        // Find max number for this type/year
+        // Find max number for this type/year/company
         const lastVoucher = await tx.transactionVoucher.findFirst({
-           where: { type: data.type, voucherNumber: { contains: `${prefix}-${year}` } },
+           where: { companyId, type: data.type, voucherNumber: { contains: `${prefix}-${year}` } },
            orderBy: { voucherNumber: 'desc' }
         });
 
@@ -78,6 +92,7 @@ export async function saveTransactionVoucher(data: any) {
 
         voucher = await tx.transactionVoucher.create({
           data: {
+            companyId,
             voucherNumber,
             type: data.type,
             date: new Date(data.date),
@@ -100,6 +115,7 @@ export async function saveTransactionVoucher(data: any) {
       } else {
         const newJv = await tx.journalVoucher.create({
           data: {
+            companyId,
             reference: voucherNumber,
             date: new Date(data.date),
             description: data.description,
@@ -117,7 +133,7 @@ export async function saveTransactionVoucher(data: any) {
 
       // 3. Link JV to TransactionVoucher
       const finalVoucher = await tx.transactionVoucher.update({
-        where: { id: voucher.id },
+        where: { id: voucher.id, companyId },
         data: { journalVoucherId: jvId },
         include: { primaryAccount: true, relatedAccount: true }
       });
@@ -134,21 +150,27 @@ export async function saveTransactionVoucher(data: any) {
 
 export async function deleteTransactionVoucher(id: string) {
   try {
-    const session = await getSession();
-    if (!hasPermission(session?.user?.permissions, 'accounting', 'delete')) {
+    const { companyId, permissions } = await getAuthContext();
+    if (!hasPermission(permissions, 'accounting', 'delete')) {
       throw new Error('غير مصرح لك بحذف السندات');
     }
 
     await prisma.$transaction(async (tx: any) => {
-      const existing = await tx.transactionVoucher.findUnique({ where: { id } });
+      const existing = await tx.transactionVoucher.findFirst({ 
+          where: { id, companyId } 
+      });
       if (!existing) throw new Error('Voucher not found');
 
       if (existing.journalVoucherId) {
-        await tx.journalEntry.deleteMany({ where: { journalVoucherId: existing.journalVoucherId } });
-        await tx.journalVoucher.delete({ where: { id: existing.journalVoucherId } });
+        await tx.journalEntry.deleteMany({ 
+            where: { journalVoucher: { id: existing.journalVoucherId, companyId } } 
+        });
+        await tx.journalVoucher.delete({ 
+            where: { id: existing.journalVoucherId, companyId } 
+        });
       }
       
-      await tx.transactionVoucher.delete({ where: { id } });
+      await tx.transactionVoucher.delete({ where: { id, companyId } });
     });
 
     revalidatePath('/financial');
@@ -165,8 +187,8 @@ export async function saveOpeningBalances(data: {
   rows: { accountId: string; balance: number }[];
 }) {
   try {
-    const session = await getSession();
-    if (!hasPermission(session?.user?.permissions, 'accounting', 'create')) {
+    const { companyId, permissions } = await getAuthContext();
+    if (!hasPermission(permissions, 'accounting', 'create')) {
       throw new Error('غير مصرح لك بإنشاء قيد يومية');
     }
 
@@ -178,7 +200,9 @@ export async function saveOpeningBalances(data: {
       for (const row of data.rows) {
         if (!row.accountId || isNaN(row.balance)) continue;
         
-        const account = await tx.account.findUnique({ where: { id: row.accountId } });
+        const account = await tx.account.findFirst({ 
+            where: { id: row.accountId, companyId } 
+        });
         if (!account) throw new Error('حساب غير موجود');
 
         let debit = 0;
@@ -236,12 +260,13 @@ export async function saveOpeningBalances(data: {
         }
       }
 
-      // Generate OB Journal Voucher reference
-      const count = await tx.journalVoucher.count();
+      // Generate OB Journal Voucher reference (scoped to company)
+      const count = await tx.journalVoucher.count({ where: { companyId } });
       const reference = `OB-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
 
       const voucher = await tx.journalVoucher.create({
         data: {
+          companyId,
           reference,
           date: new Date(data.date),
           description: data.description || 'قيد أرصدة افتتاحية',

@@ -1,20 +1,31 @@
 import { prisma } from '../lib/db';
 import { cookies } from 'next/headers';
 import { getDictionary } from '../lib/i18n';
+import { getSession } from '../lib/auth';
+import { redirect } from 'next/navigation';
+import WelcomePopup from '../components/WelcomePopup';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Home() {
+export default async function Home({ searchParams }: { searchParams: { welcome?: string } }) {
+  const session = await getSession();
+  if (!session || !session.user || !session.user.companyId) {
+    redirect('/login');
+  }
+
+  const companyId = session.user.companyId;
   const cookieStore = await cookies();
   const lang = cookieStore.get('NX_LANG')?.value || 'en';
   const dict = getDictionary(lang).dashboard;
 
   const invoices = await prisma.salesInvoice.findMany({
+    where: { companyId },
     orderBy: { createdAt: 'desc' },
     take: 5
   });
 
   const accounts = await prisma.account.findMany({
+    where: { companyId },
     include: {
       entries: true
     }
@@ -44,6 +55,7 @@ export default async function Home() {
 
   // Recent journal vouchers
   const recentJV = await prisma.journalVoucher.findMany({
+    where: { companyId },
     orderBy: { createdAt: 'desc' },
     take: 4,
     include: { entries: { include: { account: true } } }
@@ -208,6 +220,9 @@ export default async function Home() {
           </div>
         </div>
       </div>
+      
+      {/* Welcome Popup for new signups */}
+      <WelcomePopup lang={lang} />
     </div>
   );
 }

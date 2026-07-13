@@ -1,0 +1,176 @@
+--- src/app/sales/actions.ts
++++ src/app/sales/actions.ts
+@@ -1550,60 +1550,60 @@
+   try {
+-    const session = await getSession();
+-    // Temporary bypass to restore access
+-    const isAuthorized = true;
+-    if (!isAuthorized && !hasPermission(session?.user?.permissions, 'inventory', 'edit')) {
++    const { companyId, permissions } = await getAuthContext();
++    const isAuthorized = true; // Temporary bypass
++    if (!isAuthorized && !hasPermission(permissions, 'inventory', 'edit')) {
+       throw new Error('غير مصرح لك بإدارة المخزون');
+     }
+ 
+@@ -1525,7 +1583,7 @@
+     if (!finalSku) {
+       const cls = data.classification;
+       const count = await prisma.product.count({
+-        where: { classification: cls }
++        where: { classification: cls, companyId }
+       });
+       
+       let prefix = 'PRD';
+@@ -1538,6 +1596,7 @@
+ 
+     const product = await prisma.product.create({
+       data: {
++        companyId,
+         sku: finalSku,
+         name: data.name,
+         nameAr: data.nameAr || null,
+@@ -1712,10 +1771,8 @@
+ 
+ export async function bulkCreateProducts(productsData: any[]) {
+   try {
+-    const session = await getSession();
+-    // Temporary bypass to restore access
+-    const isAuthorized = true;
+-    if (!isAuthorized && !hasPermission(session?.user?.permissions, 'inventory', 'edit')) {
++    const { companyId, permissions: user } = await getAuthContext();
++    if (!hasPermission(user, 'inventory', 'edit')) {
+       throw new Error('غير مصرح لك بإدارة المخزون');
+     }
+ 
+@@ -1725,12 +1782,18 @@
+ 
+     // Fetch all units once for name-to-id mapping
+     const allUnits = await prisma.unitOfMeasure.findMany();
+-    const unitMap = new Map(allUnits.map(u => [u.name.toLowerCase(), u.id]));
+-    const unitMapAr = new Map(allUnits.filter(u => u.nameAr).map(u => [u.nameAr!.toLowerCase(), u.id]));
++    const unitMap = new Map();
++    allUnits.forEach(u => {
++      unitMap.set(u.name.toLowerCase().trim(), u.id);
++      if (u.nameAr) unitMap.set(u.nameAr.toLowerCase().trim(), u.id);
++    });
+     
+     const allCategories = await prisma.category.findMany();
+-    const catMap = new Map(allCategories.map(c => [c.name.toLowerCase(), c.id]));
+-    const catMapAr = new Map(allCategories.filter(c => c.nameAr).map(c => [c.nameAr!.toLowerCase(), c.id]));
++    const catMap = new Map();
++    allCategories.forEach(c => {
++      catMap.set(c.name.toLowerCase().trim(), c.id);
++      if (c.nameAr) catMap.set(c.nameAr.toLowerCase().trim(), c.id);
++    });
+ 
+     const currentCount = await prisma.product.count();
+     let created = 0;
+@@ -1754,15 +1817,15 @@
+           sku = `${prefix}-${(currentCount + i + 1).toString().padStart(4, '0')}`;
+         }
+ 
+-        // Resolve unitId from name
+-        const unitName = (p.unit || '').toLowerCase();
+-        const unitId = unitMap.get(unitName) || unitMapAr.get(unitName) || null;
++        // Resolve unitId and categoryId from name
++        const unitName = (p.unit || '').toString().toLowerCase().trim();
++        const unitId = unitMap.get(unitName) || null;
+ 
+-        const subUnitName = (p.subUnit || '').toLowerCase();
+-        const subUnitId = unitMap.get(subUnitName) || unitMapAr.get(subUnitName) || null;
++        const subUnitName = (p.subUnit || '').toString().toLowerCase().trim();
++        const subUnitId = unitMap.get(subUnitName) || null;
+ 
+-        const catName = (p.cat || p.category || '').toString().toLowerCase();
+-        const categoryId = catMap.get(catName) || catMapAr.get(catName) || null;
++        const catName = (p.cat || p.category || '').toString().toLowerCase().trim();
++        const categoryId = catMap.get(catName) || null;
+ 
+         // Auto-fix classification based on category name if not explicit
+         let classification = p.classification;
+@@ -1771,7 +1834,7 @@
+         }
+ 
+         // Check for duplicate SKU
+-        const existing = await prisma.product.findUnique({ where: { sku } });
++        const existing = await prisma.product.findFirst({ where: { companyId, sku } });
+         if (existing) {
+           // Compare fields to see if update is needed
+           const hasChanges = 
+@@ -1865,3 +1911,76 @@
+     // Placeholder for bulk recipe creation
+     return { success: true, message: 'Feature coming soon or handled manually' };
+ }
++
++export async function processZatcaInvoiceAction(id: string) {
++  try {
++    const { companyId } = await getAuthContext();
++    await processZatcaInvoice(id);
++    const invoice = await prisma.salesInvoice.findUnique({ where: { id }});
++    revalidatePath('/sales');
++    return { success: true, xml: invoice?.zatcaXml, qr: invoice?.zatcaQrCode, hash: invoice?.zatcaInvoiceHash };
++  } catch (error: any) {
++    return { success: false, error: error.message };
++  }
++}
++
++export async function createCreditNote(originalInvoiceId: string) {
++  try {
++    const { companyId } = await getAuthContext();
++    const original = await prisma.salesInvoice.findUnique({
++      where: { id: originalInvoiceId },
++      include: { items: true }
++    });
++    if (!original || original.companyId !== companyId) {
++      throw new Error('Invoice not found');
++    }
++
++    const latestInvoice = await prisma.salesInvoice.findFirst({
++      where: { companyId },
++      orderBy: { createdAt: 'desc' }
++    });
++    let nextNum = 1;
++    if (latestInvoice && latestInvoice.invoiceNumber.startsWith('INV-')) {
++      const numPart = latestInvoice.invoiceNumber.replace('INV-', '');
++      const parsed = parseInt(numPart, 10);
++      if (!isNaN(parsed)) {
++        nextNum = parsed + 1;
++      }
++    } else if (latestInvoice) {
++      nextNum = Math.floor(Math.random() * 10000);
++    }
++    const newNumber = `INV-${nextNum.toString().padStart(6, '0')}`;
++
++    const creditNote = await prisma.salesInvoice.create({
++      data: {
++        companyId,
++        invoiceNumber: newNumber,
++        invoiceType: '381',
++        referenceId: original.id,
++        date: new Date(),
++        customerId: original.customerId,
++        warehouseId: original.warehouseId,
++        totalAmount: original.totalAmount,
++        taxAmount: original.taxAmount,
++        discount: original.discount,
++        netAmount: original.netAmount,
++        status: 'Draft',
++        isTaxInclusive: original.isTaxInclusive,
++        items: {
++          create: original.items.map(item => ({
++            productId: item.productId,
++            unitId: item.unitId,
++            quantity: item.quantity,
++            unitPrice: item.unitPrice,
++            total: item.total
++          }))
++        }
++      }
++    });
++
++    revalidatePath('/sales');
++    return { success: true, id: creditNote.id };
++  } catch (error: any) {
++    return { success: false, error: error.message };
++  }
++}

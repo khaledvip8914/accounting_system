@@ -10,9 +10,10 @@ export default async function SalesPage(props: {
   searchParams: Promise<{ lang?: string }>;
 }) {
   const session = await getSession();
-  if (!session) {
+  if (!session || !session.user || !session.user.companyId) {
     redirect('/login');
   }
+  const companyId = session.user.companyId;
 
   const searchParams = await props.searchParams;
   const lang = (searchParams.lang as Lang) || 'ar';
@@ -20,27 +21,35 @@ export default async function SalesPage(props: {
   try {
     const [invoices, quotations, customers, warehouses, accounts, companyProfile] = await Promise.all([
       prisma.salesInvoice.findMany({
+        where: { companyId },
         include: { customer: true, items: { include: { product: true } } },
         orderBy: { createdAt: 'desc' }
       }),
       prisma.salesQuotation.findMany({
+        where: { companyId },
         include: { customer: true, items: { include: { product: true } }, convertedTo: true },
         orderBy: { createdAt: 'desc' }
       }),
       prisma.customer.findMany({
+        where: { companyId },
         orderBy: { name: 'asc' }
       }),
       prisma.warehouse.findMany({
+        where: { companyId },
         orderBy: { code: 'asc' }
       }),
       prisma.account.findMany({
+        where: { companyId },
         orderBy: { code: 'asc' }
       }),
       getCompanyProfile()
     ]);
 
     // Fetch products just for the selection in invoices/quotations
-    const products = await prisma.product.findMany({ orderBy: { sku: 'asc' } });
+    const products = await prisma.product.findMany({ 
+        where: { companyId },
+        orderBy: { sku: 'asc' } 
+    });
 
     return (
       <SalesClient 

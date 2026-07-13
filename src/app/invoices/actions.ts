@@ -5,9 +5,22 @@ import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/auth';
 import { hasPermission } from '@/lib/permissions';
 
+async function getAuthContext() {
+  const session = await getSession();
+  if (!session || !session.user || !session.user.companyId) {
+    throw new Error('Unauthorized');
+  }
+  return {
+    companyId: session.user.companyId,
+    permissions: session.user
+  };
+}
+
 export async function getInvoices() {
   try {
+    const { companyId } = await getAuthContext();
     const invoices = await prisma.salesInvoice.findMany({
+      where: { companyId },
       orderBy: { createdAt: 'desc' },
       include: { customer: true }
     });
@@ -32,32 +45,33 @@ export async function createInvoice(data: {
   status: string;
 }) {
   try {
-    const session = await getSession();
-    const perms = session?.user?.permissions;
+    const { companyId, permissions } = await getAuthContext();
 
-    if (!hasPermission(perms, 'invoices', 'create')) {
+    if (!hasPermission(permissions, 'invoices', 'create')) {
       throw new Error('غير مصرح لك بإنشاء فاتورة مبيعات');
     }
 
-    // Treat data.customerId as the client name and auto-create or find a customer
+    // Treat data.customerId as the client name and auto-create or find a customer (Scoped to company)
     let customer = await prisma.customer.findFirst({
-      where: { name: data.customerId }
+      where: { name: data.customerId, companyId }
     });
 
     if (!customer) {
       customer = await prisma.customer.create({
         data: {
+          companyId,
           code: `CUST-${Date.now()}`,
           name: data.customerId
         }
       });
     }
 
-    const count = await prisma.salesInvoice.count();
+    const count = await prisma.salesInvoice.count({ where: { companyId } });
     const invoiceNumber = `INV-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
 
     await prisma.salesInvoice.create({
       data: {
+        companyId,
         invoiceNumber,
         customerId: customer.id,
         netAmount: data.netAmount,

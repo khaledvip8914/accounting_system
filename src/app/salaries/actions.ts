@@ -2,13 +2,27 @@
 
 import { prisma_latest as prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import { getSession } from '@/lib/auth';
+
+async function getAuthContext() {
+  const session = await getSession();
+  if (!session || !session.user || !session.user.companyId) {
+    throw new Error('Unauthorized');
+  }
+  return {
+    companyId: session.user.companyId,
+    permissions: session.user
+  };
+}
 
 export async function getPayrollData(month: number, year: number) {
+  const { companyId } = await getAuthContext();
   const employees = await prisma.employee.findMany({
-    where: { status: 'Active' },
+    where: { status: 'Active', companyId },
     include: {
       financialMoves: {
         where: {
+          companyId,
           date: {
             gte: new Date(year, month - 1, 1),
             lt: new Date(year, month, 1)
@@ -17,7 +31,7 @@ export async function getPayrollData(month: number, year: number) {
         }
       },
       salaryPayments: {
-        where: { month, year }
+        where: { month, year, companyId }
       }
     }
   });
@@ -51,17 +65,24 @@ export async function getPayrollData(month: number, year: number) {
 
 export async function approveSalary({ employeeId, month, year, amounts }: { employeeId: string, month: number, year: number, amounts: any }) {
   try {
-    // 1. Find necessary accounts
-    const expenseAcc = await prisma.account.findFirst({ where: { code: '6000' } });
-    const payableAcc = await prisma.account.findFirst({ where: { code: '2100' } });
-    const advancesAcc = await prisma.account.findFirst({ where: { code: '1135' } });
-    const penaltiesAcc = await prisma.account.findFirst({ where: { code: '4400' } });
+    const { companyId } = await getAuthContext();
+
+    // 1. Find necessary accounts (Scoped to company)
+    const expenseAcc = await prisma.account.findFirst({ where: { code: '6000', companyId } });
+    const payableAcc = await prisma.account.findFirst({ where: { code: '2100', companyId } });
+    const advancesAcc = await prisma.account.findFirst({ where: { code: '1135', companyId } });
+    const penaltiesAcc = await prisma.account.findFirst({ where: { code: '4400', companyId } });
 
     // 2. Start Transaction
     const result = await prisma.$transaction(async (tx) => {
       // Create SalaryPayment record
       const payment = await tx.salaryPayment.upsert({
-        where: { employeeId_month_year: { employeeId, month, year } },
+        where: { 
+            employeeId_month_year: { employeeId, month, year },
+            // employee: { companyId } // Not supported by prisma upsert unique filter directly easily, 
+            // but the findUnique for upsert is strictly unique. 
+            // We should check if employeeId belongs to companyId beforehand.
+        },
         update: {
           basicSalary: amounts.basicSalary,
           allowances: amounts.allowances,
@@ -72,6 +93,7 @@ export async function approveSalary({ employeeId, month, year, amounts }: { empl
           status: 'Approved'
         },
         create: {
+          companyId,
           employeeId,
           month,
           year,
@@ -85,12 +107,18 @@ export async function approveSalary({ employeeId, month, year, amounts }: { empl
         }
       });
 
+      // Verify ownership if it was an update
+      if (payment.companyId !== companyId) {
+          throw new Error('Unauthorized salary payment update attempt');
+      }
+
       // Create Journal Voucher
       const date = new Date();
       const ref = `SAL-${year}${month.toString().padStart(2, '0')}-${amounts.code}`;
       
       const jv = await tx.journalVoucher.create({
         data: {
+          companyId,
           reference: ref,
           date: new Date(),
           description: `Salary Payment - ${amounts.name} - ${month}/${year}`,
@@ -158,7 +186,7 @@ export async function approveSalary({ employeeId, month, year, amounts }: { empl
 
       // Link payment to JV
       await tx.salaryPayment.update({
-        where: { id: payment.id },
+        where: { id: payment.id, companyId },
         data: { journalVoucherId: jv.id }
       });
 

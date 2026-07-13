@@ -46,7 +46,7 @@ export default function PurchasesClient({
 
   const handlePurchaseSave = async (data: any) => {
     let res;
-    if (editingInvoice) {
+    if (editingInvoice && editingInvoice.id) {
       res = await updatePurchaseInvoice(editingInvoice.id, { ...data, lang });
     } else {
       res = await createPurchaseInvoice({ ...data, lang });
@@ -86,6 +86,31 @@ export default function PurchasesClient({
     setShowNewOrder(true);
   };
 
+  const handleConvertToInvoice = (order: any) => {
+    // Map order data to a new invoice format
+    const newInvoiceData = {
+      orderId: order.id,
+      supplierId: order.supplierId,
+      warehouseId: order.warehouseId || '',
+      date: new Date().toISOString(),
+      isTaxInclusive: order.isTaxInclusive,
+      notes: lang === 'ar' ? `محولة من أمر شراء رقم ${order.orderNumber}` : `Converted from PO ${order.orderNumber}`,
+      items: order.items.map((item: any) => ({
+        id: Math.random().toString(36).substr(2, 9),
+        productId: item.productId,
+        unitId: item.unitId || '',
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        taxPercent: 15,
+        total: item.total
+      }))
+    };
+    
+    setEditingInvoice(newInvoiceData);
+    setActiveTab('invoices');
+    setShowNewPurchase(true);
+  };
+
   return (
     <div className="purchases-module">
       {/* Print-only Report Header */}
@@ -122,6 +147,7 @@ export default function PurchasesClient({
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`tab-item ${activeTab === tab.id ? 'active' : ''}`}
+                suppressHydrationWarning
               >
                 <span className="tab-icon">{tab.icon}</span>
                 {tab.label}
@@ -158,9 +184,10 @@ export default function PurchasesClient({
           <PurchaseOrderList 
             orders={initialPurchaseOrders} 
             lang={lang} 
-            onNewOrder={() => { setShowNewOrder(true); setEditingOrder(null); }}
+            onNewOrder={() => { setEditingOrder(null); setShowNewOrder(true); }}
             onEditOrder={openEditOrder}
             onDeleteOrder={handleDeleteOrder}
+            onConvertToInvoice={handleConvertToInvoice}
           />
         )}
         {activeTab === 'invoices' && (
@@ -233,6 +260,22 @@ export default function PurchasesClient({
           content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: #059669; border-radius: 3px 3px 0 0;
         }
         .stat-card { border-left: 4px solid #059669; }
+
+        @media (max-width: 768px) {
+          .purchases-header {
+            flex-direction: column;
+            align-items: stretch;
+            padding: 1rem;
+            margin: -1rem -1rem 1rem -1rem;
+            gap: 1rem;
+          }
+          .header-left {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 0.5rem;
+          }
+        }
       `}</style>
     </div>
   );

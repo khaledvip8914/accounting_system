@@ -5,25 +5,31 @@ import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/auth';
 import { hasPermission } from '@/lib/permissions';
 import { computeBaseUnitQty, getUnitWeightInGramsServer } from '@/lib/inventory-helpers';
+import { processZatcaInvoice } from '@/lib/zatca/invoice-processor';
 
 
 export async function getUnits() {
+  const session = await getSession();
+  const companyId = session?.user?.companyId;
+  if (!companyId) return [];
+
   const units = await prisma.unitOfMeasure.findMany({ 
+    where: { companyId },
     include: { parentUnit: true, childUnits: true },
     orderBy: { name: 'asc' } 
   });
   if (units.length === 0) {
     const defaults = [
-      { name: 'Kilogram', nameAr: 'كيلوجرام' },
-      { name: 'Gram', nameAr: 'جرام' },
-      { name: 'Liter', nameAr: 'لتر' },
-      { name: 'Milliliter', nameAr: 'مليلتر' },
-      { name: 'Piece', nameAr: 'قطعة' },
-      { name: 'Carton', nameAr: 'كرتون' },
-      { name: 'Bag', nameAr: 'كيس' }
+      { name: 'Kilogram', nameAr: 'كيلوجرام', companyId },
+      { name: 'Gram', nameAr: 'جرام', companyId },
+      { name: 'Liter', nameAr: 'لتر', companyId },
+      { name: 'Milliliter', nameAr: 'مليلتر', companyId },
+      { name: 'Piece', nameAr: 'قطعة', companyId },
+      { name: 'Carton', nameAr: 'كرتون', companyId },
+      { name: 'Bag', nameAr: 'كيس', companyId }
     ];
     await prisma.unitOfMeasure.createMany({ data: defaults });
-    return prisma.unitOfMeasure.findMany({ orderBy: { name: 'asc' } });
+    return prisma.unitOfMeasure.findMany({ where: { companyId }, orderBy: { name: 'asc' } });
   }
   return units;
 }
@@ -31,12 +37,17 @@ export async function getUnits() {
 
 export async function createUnit(data: { name: string, nameAr?: string, parentUnitId?: string | null, conversionFactor?: number }) {
   try {
+     const session = await getSession();
+     const companyId = session?.user?.companyId;
+     if (!companyId) throw new Error('Unauthorized');
+
      const unit = await prisma.unitOfMeasure.create({ 
        data: { 
          name: data.name, 
          nameAr: data.nameAr || null,
          parentUnitId: data.parentUnitId || null,
-         conversionFactor: data.conversionFactor || 1
+         conversionFactor: data.conversionFactor || 1,
+         companyId
        } 
      });
      revalidatePath('/sales');
@@ -65,7 +76,12 @@ export async function updateUnit(id: string, data: any) {
 }
 
 export async function getCostCenters() {
+  const session = await getSession();
+  const companyId = session?.user?.companyId;
+  if (!companyId) return [];
+
   return prisma.costCenter.findMany({ 
+    where: { companyId },
     include: { 
       product: { include: { unitRef: true } }, 
       items: { include: { product: { include: { unitRef: true } }, unit: true } } 
@@ -90,6 +106,9 @@ export async function createCostCenter(data: {
     const session = await getSession();
     const perms = session?.user?.permissions;
 
+    const companyId = session?.user?.companyId;
+    if (!companyId) throw new Error('Unauthorized');
+
     if (!hasPermission(perms, 'production', 'create')) {
       throw new Error('غير مصرح لك بإدارة مراكز التكلفة');
     }
@@ -99,6 +118,7 @@ export async function createCostCenter(data: {
     const cc = await prisma.$transaction(async (tx) => {
         const createdCc = await tx.costCenter.create({
             data: {
+              companyId,
               code: data.code,
               name: data.name,
               nameAr: data.nameAr || null,
@@ -213,7 +233,12 @@ export async function deleteCostCenter(id: string) {
 }
 
 export async function getProductionOrders() {
+  const session = await getSession();
+  const companyId = session?.user?.companyId;
+  if (!companyId) return [];
+
   return prisma.productionOrder.findMany({
+    where: { companyId },
     include: { 
       product: { include: { unitRef: true } }, 
       warehouse: true, 
@@ -311,7 +336,11 @@ export async function createProductionOrder(data: {
   notes?: string
 }) {
   try {
-     const count = await prisma.productionOrder.count();
+     const session = await getSession();
+     const companyId = session?.user?.companyId;
+     if (!companyId) throw new Error('Unauthorized');
+
+     const count = await prisma.productionOrder.count({ where: { companyId } });
      const orderNumber = `PO-${(count + 1).toString().padStart(4, '0')}`;
 
      const recipe = await prisma.costCenter.findFirst({
@@ -336,6 +365,7 @@ export async function createProductionOrder(data: {
 
      const order = await prisma.productionOrder.create({
         data: {
+           companyId,
            orderNumber,
            productId: data.productId,
            quantity: data.quantity,
@@ -827,6 +857,10 @@ export async function createSalesInvoice(data: {
 
     revalidatePath('/sales');
     revalidatePath('/financial');
+    
+    // Process ZATCA Invoice in background
+    processZatcaInvoice(result.id).catch(err => console.error('ZATCA process failed:', err));
+    
     return { success: true, invoice: result };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -1123,7 +1157,7 @@ export async function createCustomer(data: { address?: string, taxNumber?: strin
       const cust = await tx.customer.create({ data });
 
       // 2. Ensure Accounts Receivable (Asset) exists
-      let arAccount = await tx.account.findUnique({ where: { code: '1130' } });
+      let arAccount = await tx.account.findFirst({ where: { code: '1130' } });
       if (!arAccount) {
         arAccount = await tx.account.create({
           data: { code: '1130', name: 'Accounts Receivable', nameAr: 'الذمم المدينة', type: 'Asset' }
@@ -1131,7 +1165,7 @@ export async function createCustomer(data: { address?: string, taxNumber?: strin
       }
 
       // 3. Ensure 'Customers' (1130) exists as child of AR
-      let customersGroup = await tx.account.findUnique({ where: { code: '1130' } });
+      let customersGroup = await tx.account.findFirst({ where: { code: '1130' } });
       if (!customersGroup) {
         customersGroup = await tx.account.create({
           data: { code: '1130', name: 'Customers', nameAr: 'العملاء', type: 'Asset', parentId: arAccount.id }
@@ -1180,7 +1214,7 @@ export async function updateCustomer(id: string, data: { address?: string, taxNu
 
       // Update linked account if exists
       const accountCode = `1130-${original.code}`;
-      const account = await tx.account.findUnique({ where: { code: accountCode } });
+      const account = await tx.account.findFirst({ where: { code: accountCode } });
       if (account) {
         await tx.account.update({
           where: { id: account.id },
@@ -1219,7 +1253,7 @@ export async function deleteCustomer(id: string) {
 
       // 2. Delete linked account (only if no entries exist)
       const accountCode = `1130-${original.code}`;
-      const account = await tx.account.findUnique({ 
+      const account = await tx.account.findFirst({ 
         where: { code: accountCode },
         include: { entries: true }
       });
@@ -1257,14 +1291,18 @@ export async function createSalesQuotation(data: {
       throw new Error('غير مصرح لك بإنشاء عروض أسعار');
     }
 
+    const companyId = session?.user?.companyId;
+    if (!companyId) throw new Error('Unauthorized');
+
     const quotation = await prisma.$transaction(async (tx) => {
       // 1. Generate Quotation Number (e.g. QUO-2026-001)
-      const count = await tx.salesQuotation.count();
+      const count = await tx.salesQuotation.count({ where: { companyId } });
       const quotationNumber = `QUO-${new Date().getFullYear()}-${(count + 1).toString().padStart(3, '0')}`;
 
       // 2. Add Quotation to DB
       return await tx.salesQuotation.create({
         data: {
+          companyId,
           quotationNumber,
           date: new Date(data.date),
           validUntil: data.validUntil ? new Date(data.validUntil) : null,
@@ -1771,7 +1809,7 @@ export async function bulkCreateProducts(productsData: any[]) {
         }
 
         // Check for duplicate SKU
-        const existing = await prisma.product.findUnique({ where: { sku } });
+        const existing = await prisma.product.findFirst({ where: { sku } });
         if (existing) {
           // Compare fields to see if update is needed
           const hasChanges = 
@@ -1864,4 +1902,108 @@ export async function bulkCreateProducts(productsData: any[]) {
 export async function bulkCreateCostCenters(data: any[]) {
     // Placeholder for bulk recipe creation
     return { success: true, message: 'Feature coming soon or handled manually' };
+}
+
+export async function getProductFormData() {
+  try {
+    const session = await getSession();
+    const companyId = session?.user?.companyId || 'default';
+    const [units, categories, suppliers] = await Promise.all([
+      prisma.unitOfMeasure.findMany({ where: { companyId } }),
+      prisma.category.findMany({ where: { companyId } }),
+      prisma.supplier.findMany({ where: { companyId } })
+    ]);
+    return { success: true, units, categories, suppliers };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+
+export async function createCreditNote(originalInvoiceId: string) {
+  try {
+    const session = await getSession();
+    const companyId = session?.user?.companyId || 'default';
+    const original = await prisma.salesInvoice.findUnique({
+      where: { id: originalInvoiceId },
+      include: { items: true }
+    });
+    if (!original || original.companyId !== companyId) {
+      throw new Error('Invoice not found');
+    }
+
+    const latestInvoice = await prisma.salesInvoice.findFirst({
+      where: { companyId },
+      orderBy: { createdAt: 'desc' }
+    });
+    let nextNum = 1;
+    if (latestInvoice && latestInvoice.invoiceNumber.startsWith('INV-')) {
+      const numPart = latestInvoice.invoiceNumber.replace('INV-', '');
+      const parsed = parseInt(numPart, 10);
+      if (!isNaN(parsed)) {
+        nextNum = parsed + 1;
+      }
+    } else if (latestInvoice) {
+      nextNum = Math.floor(Math.random() * 10000);
+    }
+    const newNumber = `INV-${nextNum.toString().padStart(6, '0')}`;
+
+    const creditNote = await prisma.salesInvoice.create({
+      data: {
+        companyId,
+        invoiceNumber: newNumber,
+        invoiceType: '381',
+        referenceId: original.id,
+        date: new Date(),
+        customerId: original.customerId,
+        warehouseId: original.warehouseId,
+        totalAmount: original.totalAmount,
+        taxAmount: original.taxAmount,
+        discount: original.discount,
+        netAmount: original.netAmount,
+        status: 'Draft',
+        isTaxInclusive: original.isTaxInclusive,
+        items: {
+          create: original.items.map(item => ({
+            productId: item.productId,
+            unitId: item.unitId,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            total: item.total
+          }))
+        }
+      }
+    });
+
+    revalidatePath('/sales');
+    return { success: true, id: creditNote.id };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function processZatcaInvoiceAction(invoiceId: string) {
+  try {
+    const session = await getSession();
+    if (!session?.user?.companyId) throw new Error('Unauthorized');
+
+    // First ensure the invoice exists
+    const invoice = await prisma.salesInvoice.findUnique({
+      where: { id: invoiceId }
+    });
+
+    if (!invoice) throw new Error('Invoice not found');
+
+    if (!invoice.zatcaXml) {
+      await processZatcaInvoice(invoice.id);
+      const updated = await prisma.salesInvoice.findUnique({
+        where: { id: invoiceId }
+      });
+      return { success: true, xml: updated?.zatcaXml || null, status: updated?.zatcaStatus };
+    }
+
+    return { success: true, xml: invoice.zatcaXml, status: invoice.zatcaStatus };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
 }

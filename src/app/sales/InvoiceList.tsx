@@ -1,8 +1,12 @@
 'use client';
 
 import React, { useState, useTransition } from 'react';
-import { deleteSalesInvoice, updateSalesInvoiceStatus } from './actions';
+import { deleteSalesInvoice, updateSalesInvoiceStatus, createCreditNote } from './actions';
 import { useUser } from '@/components/UserContext';
+import { useRouter } from 'next/navigation';
+import { QRCodeSVG } from 'qrcode.react';
+import { generateZatcaQr } from '@/lib/zatca/qr-generator';
+import PrintInvoiceModal from './PrintInvoiceModal';
 
 const STATUS_OPTIONS = ['Draft', 'Sent', 'Paid', 'Overdue'];
 
@@ -27,22 +31,17 @@ export default function InvoiceList({
   companyProfile: any
 }) {
   const { canAccess } = useUser();
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [printInvoice, setPrintInvoice] = useState<any | null>(null);
   const [isPending, startTransition] = useTransition();
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
   React.useEffect(() => {
     setMounted(true);
-    if (expandedId) {
-      document.body.classList.add('has-expanded-invoice');
-    } else {
-      document.body.classList.remove('has-expanded-invoice');
-    }
-    return () => document.body.classList.remove('has-expanded-invoice');
-  }, [expandedId]);
+  }, []);
 
   const filtered = (invoices || []).filter(i => {
     const s = (searchTerm || '').toLowerCase();
@@ -52,6 +51,22 @@ export default function InvoiceList({
     const matchStatus = filterStatus === 'all' || i.status === filterStatus;
     return matchSearch && matchStatus;
   });
+
+  const handleCreditNote = async (id: string) => {
+    startTransition(async () => {
+      try {
+        const res = await createCreditNote(id);
+        if (res.success) {
+          alert(lang === 'ar' ? 'تم إنشاء الإشعار الدائن كمسودة بنجاح! يمكنك مراجعته وتعديله من القائمة.' : 'Credit note draft created successfully! You can edit it from the list.');
+          router.refresh();
+        } else {
+          alert(res.error || (lang === 'ar' ? 'فشل إنشاء الإشعار الدائن' : 'Failed to create credit note'));
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    });
+  };
 
   const handleDelete = (id: string) => {
     setConfirmDeleteId(null);
@@ -71,7 +86,7 @@ export default function InvoiceList({
   const s = (id: string) => STATUS_STYLES[id] || STATUS_STYLES['Draft'];
 
   return (
-    <div className={`invoice-list-container ${expandedId ? 'has-expanded' : ''}`}>
+    <div className="invoice-list-container">
       {/* Delete Confirmation Modal */}
       {confirmDeleteId && (
         <div className="modal-overlay" style={{ zIndex: 2000 }}>
@@ -125,14 +140,15 @@ export default function InvoiceList({
 
         <div className="table-container">
           <table className="invoice-list-table">
-            <thead className={expandedId ? 'no-print' : ''}>
+            <thead>
               <tr>
                 <th>{lang === 'ar' ? 'الرقم' : 'Number'}</th>
                 <th>{lang === 'ar' ? 'التاريخ' : 'Date'}</th>
                 <th>{lang === 'ar' ? 'العميل' : 'Customer'}</th>
                 <th style={{ textAlign: 'right' }}>{lang === 'ar' ? 'الإجمالي' : 'Net Total'}</th>
                 <th style={{ textAlign: 'center' }}>{lang === 'ar' ? 'الحالة' : 'Status'}</th>
-                <th className="no-print" style={{ width: '120px', textAlign: 'center' }}>
+                <th style={{ textAlign: 'center' }}>{lang === 'ar' ? 'حالة ZATCA' : 'ZATCA Status'}</th>
+                <th className="no-print" style={{ width: '180px', textAlign: 'center' }}>
                   {lang === 'ar' ? 'إجراءات' : 'Actions'}
                 </th>
               </tr>
@@ -140,7 +156,7 @@ export default function InvoiceList({
             <tbody>
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
+                  <td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
                     {lang === 'ar' ? 'لا توجد فواتير مبيعات' : 'No sales invoices found'}
                   </td>
                 </tr>
@@ -153,27 +169,24 @@ export default function InvoiceList({
                 return (
                   <React.Fragment key={inv.id}>
                     <tr 
-                      className={expandedId ? 'no-print' : ''}
                       style={{ 
-                        cursor: 'pointer',
-                        background: expandedId === inv.id ? '#f8fafc' : 'transparent',
                         opacity: isPending ? 0.6 : 1,
                         transition: 'background 0.2s'
                       }}
                     >
-                      <td onClick={() => setExpandedId(expandedId === inv.id ? null : inv.id)}>
+                      <td>
                         <strong style={{ color: '#6366f1' }}>{inv.invoiceNumber}</strong>
                       </td>
-                      <td className="text-sub" onClick={() => setExpandedId(expandedId === inv.id ? null : inv.id)}>
+                      <td className="text-sub">
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                           <span>{mounted ? dateObj.toLocaleDateString() : '...'}</span>
                           <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{mounted ? timeStr : '...'}</span>
                         </div>
                       </td>
-                      <td onClick={() => setExpandedId(expandedId === inv.id ? null : inv.id)}>
+                      <td>
                       <div style={{ fontWeight: 600 }}>{lang === 'ar' && inv.customer.nameAr ? inv.customer.nameAr : inv.customer.name}</div>
                     </td>
-                    <td style={{ textAlign: 'right', fontWeight: 'bold' }} onClick={() => setExpandedId(expandedId === inv.id ? null : inv.id)}>
+                    <td style={{ textAlign: 'right', fontWeight: 'bold' }}>
                       {inv.netAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} SAR
                     </td>
                     <td style={{ textAlign: 'center' }}>
@@ -191,16 +204,25 @@ export default function InvoiceList({
                         {inv.status}
                       </span>
                     </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <span style={{ 
+                        padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600,
+                        background: inv.zatcaStatus === 'Reported' || inv.zatcaStatus === 'Cleared' ? '#dcfce7' : '#f1f5f9',
+                        color: inv.zatcaStatus === 'Reported' || inv.zatcaStatus === 'Cleared' ? '#166534' : '#475569'
+                      }}>
+                        {inv.zatcaStatus || (lang === 'ar' ? 'غير مسجلة' : 'Not Reported')}
+                      </span>
+                    </td>
                     <td className="no-print" style={{ textAlign: 'center' }}>
                       <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
                         <button
                           title={lang === 'ar' ? 'عرض التفاصيل' : 'View Details'}
                           className="action-icon-btn view"
-                          onClick={() => setExpandedId(expandedId === inv.id ? null : inv.id)}
+                          onClick={() => setPrintInvoice(inv)}
                         >
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                         </button>
-                        {canAccess('invoices', 'edit') && (
+                        {canAccess('invoices', 'edit') && inv.zatcaStatus !== 'Reported' && inv.zatcaStatus !== 'Cleared' && (
                           <button
                             title={lang === 'ar' ? 'تعديل الفاتورة' : 'Edit Invoice'}
                             className="action-icon-btn edit"
@@ -212,14 +234,23 @@ export default function InvoiceList({
                           <button
                             title={lang === 'ar' ? 'طباعة الفاتورة' : 'Print Invoice'}
                             className="action-icon-btn print"
-                            onClick={() => {
-                              setExpandedId(inv.id);
-                              setTimeout(() => window.print(), 100);
-                            }}
+                            onClick={() => setPrintInvoice(inv)}
                           >
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                           </button>
-                        {canAccess('invoices', 'delete') && (
+                          <button
+                            title={lang === 'ar' ? 'تحميل PDF' : 'Download PDF'}
+                            className="action-icon-btn pdf"
+                            onClick={() => {
+                              setPrintInvoice(inv);
+                              setTimeout(() => {
+                                import('@/lib/pdf').then(m => m.generatePDF('invoice-print-area', `Invoice-${inv.invoiceNumber}.pdf`));
+                              }, 800);
+                            }}
+                          >
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                          </button>
+                        {canAccess('invoices', 'delete') && inv.zatcaStatus !== 'Reported' && inv.zatcaStatus !== 'Cleared' && (
                           <button
                             title={lang === 'ar' ? 'حذف الفاتورة' : 'Delete Invoice'}
                             className="action-icon-btn delete"
@@ -228,85 +259,50 @@ export default function InvoiceList({
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                           </button>
                         )}
+                        {canAccess('invoices', 'create') && (inv.zatcaStatus === 'Reported' || inv.zatcaStatus === 'Cleared') && (
+                          <button
+                            title={lang === 'ar' ? 'إصدار إشعار دائن (مرتجع)' : 'Issue Credit Note (Return)'}
+                            className="action-icon-btn return"
+                            onClick={() => handleCreditNote(inv.id)}
+                          >
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                          </button>
+                        )}
+                        <button
+                          title={lang === 'ar' ? 'معاينة ZATCA XML' : 'Preview ZATCA XML'}
+                          className="action-icon-btn"
+                          style={{ background: '#f5f3ff', borderColor: '#c4b5fd', color: '#7c3aed' }}
+                          onClick={async () => {
+                            try {
+                              const { processZatcaInvoiceAction } = await import('./actions');
+                              const res = await processZatcaInvoiceAction(inv.id);
+                              if (res.success) {
+                                if (res.xml) {
+                                  const xmlContent = atob(res.xml);
+                                  const blob = new Blob([xmlContent], { type: 'text/xml' });
+                                  const url = URL.createObjectURL(blob);
+                                  const a = document.createElement('a');
+                                  a.href = url;
+                                  a.download = `zatca_invoice_${inv.invoiceNumber}.xml`;
+                                  a.click();
+                                  URL.revokeObjectURL(url);
+                                } else {
+                                  alert(lang === 'ar' ? 'لم يتم توليد XML' : 'XML not generated');
+                                }
+                              } else {
+                                alert(res.error || 'Failed to process ZATCA invoice');
+                              }
+                            } catch (e: any) {
+                              alert(e.message);
+                            }
+                          }}
+                        >
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        </button>
                       </div>
                     </td>
                   </tr>
 
-                  {/* Expandable Details Row */}
-                  {expandedId === inv.id && (
-                    <tr key={`${inv.id}-details`} className="invoice-details-tr">
-                      <td colSpan={6} style={{ padding: 0, background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
-                        <div style={{ padding: '1.25rem 2rem' }}>
-                          {/* Print Header for single invoice */}
-                          <div className="print-report-header invoice-specific-header" style={{ display: 'none' }}>
-                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2rem', borderBottom: '2px solid #333', paddingBottom: '1.5rem' }}>
-                                {companyProfile?.logo && (
-                                   <img src={companyProfile.logo} alt="Logo" style={{ height: '100px', objectFit: 'contain', marginBottom: '1.5rem' }} />
-                                )}
-                                <div style={{ textAlign: 'center' }}>
-                                   <h2 style={{ fontSize: '24px', margin: 0, fontWeight: '800' }}>{lang === 'ar' ? companyProfile?.nameAr : companyProfile?.name}</h2>
-                                   <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '6px', fontSize: '12px', color: '#444' }}>
-                                      {companyProfile?.taxNumber && <span>{lang === 'ar' ? 'الرقم الضريبي:' : 'Tax No:'} {companyProfile.taxNumber}</span>}
-                                      {companyProfile?.email && <span>{companyProfile.email}</span>}
-                                      {companyProfile?.phone && <span>{companyProfile.phone}</span>}
-                                   </div>
-                                </div>
-
-                                <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
-                                   <h1 style={{ fontSize: '26px', color: '#1e293b', margin: 0, letterSpacing: '1px' }}>{lang === 'ar' ? 'فاتورة ضريبية' : 'Tax Invoice'}</h1>
-                                   <p style={{ fontSize: '16px', fontWeight: 'bold', margin: '4px 0' }}>#{inv.invoiceNumber}</p>
-                                   <div style={{ fontSize: '13px', color: '#64748b' }}>
-                                      {lang === 'ar' ? 'التاريخ:' : 'Date:'} {new Date(inv.date).toLocaleDateString()}
-                                   </div>
-                                </div>
-                             </div>
-                             
-                             <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: lang === 'ar' ? 'flex-end' : 'flex-start' }}>
-                                <div style={{ width: '40%', textAlign: lang === 'ar' ? 'right' : 'left' }}>
-                                   <strong style={{ fontSize: '13px', borderBottom: '2px solid #6366f1', paddingBottom: '2px', display: 'inline-block', marginBottom: '8px', color: '#6366f1' }}>
-                                      {lang === 'ar' ? 'العميل:' : 'Bill To:'}
-                                   </strong>
-                                   <div style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b' }}>{lang === 'ar' && inv.customer.nameAr ? inv.customer.nameAr : inv.customer.name}</div>
-                                   <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>{inv.customer.taxNumber ? `${lang === 'ar' ? 'الرقم الضريبي للعميل:' : 'Customer Tax No:'} ${inv.customer.taxNumber}` : ''}</div>
-                                </div>
-                             </div>
-                          </div>
-
-                          <h4 className="no-print" style={{ margin: '0 0 1rem', color: '#1e293b', fontSize: '0.875rem', fontWeight: 700 }}>
-                            {lang === 'ar' ? `تفاصيل الفاتورة: ${inv.invoiceNumber}` : `Invoice Details: ${inv.invoiceNumber}`}
-                          </h4>
-                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                            <thead>
-                              <tr style={{ background: '#e2e8f0' }}>
-                                <th style={{ padding: '0.5rem', textAlign: 'left' }}>{lang === 'ar' ? 'الصنف' : 'Product'}</th>
-                                <th style={{ padding: '0.5rem', textAlign: 'right' }}>{lang === 'ar' ? 'الكمية' : 'Qty'}</th>
-                                <th style={{ padding: '0.5rem', textAlign: 'right' }}>{lang === 'ar' ? 'سعر الوحدة' : 'Unit Price'}</th>
-                                <th style={{ padding: '0.5rem', textAlign: 'right' }}>{lang === 'ar' ? 'الإجمالي' : 'Total'}</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {inv.items.map((item: any, idx: number) => (
-                                <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                  <td style={{ padding: '0.5rem' }}>
-                                    {lang === 'ar' && item.product.nameAr ? item.product.nameAr : item.product.name}
-                                  </td>
-                                  <td style={{ padding: '0.5rem', textAlign: 'right' }}>{item.quantity}</td>
-                                  <td style={{ padding: '0.5rem', textAlign: 'right' }}>{item.unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                                  <td style={{ padding: '0.5rem', textAlign: 'right', fontWeight: 600 }}>{item.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                            <tfoot>
-                              <tr>
-                                <td colSpan={3} style={{ padding: '0.5rem', textAlign: 'right', fontWeight: 700 }}>{lang === 'ar' ? 'الإجمالي الصافي:' : 'Net Total:'}</td>
-                                <td style={{ padding: '0.5rem', textAlign: 'right', fontWeight: 900, color: '#6366f1' }}>{inv.netAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} SAR</td>
-                              </tr>
-                            </tfoot>
-                          </table>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
                 </React.Fragment>
               );
             })}
@@ -314,6 +310,15 @@ export default function InvoiceList({
           </table>
         </div>
       </div>
+
+      {printInvoice && (
+        <PrintInvoiceModal 
+          invoice={printInvoice}
+          companyProfile={companyProfile}
+          lang={lang}
+          onClose={() => setPrintInvoice(null)}
+        />
+      )}
 
       <style jsx>{`
         .invoice-list-container { color: inherit; }
@@ -326,6 +331,10 @@ export default function InvoiceList({
         .action-icon-btn.edit:hover { background: #ca8a04; color: white; }
         .action-icon-btn.print { background: #f0fdf4; border-color: #86efac; color: #166534; }
         .action-icon-btn.print:hover { background: #166534; color: white; }
+        .action-icon-btn.pdf { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+        .action-icon-btn.pdf:hover { background: #1d4ed8; color: white; }
+        .action-icon-btn.return { background: #fdf4ff; border-color: #f5d0fe; color: #a21caf; }
+        .action-icon-btn.return:hover { background: #a21caf; color: white; }
         .action-icon-btn.delete { background: #fff1f2; border-color: #fca5a5; color: #dc2626; }
         .action-icon-btn.delete:hover { background: #dc2626; color: white; }
         .confirm-dialog { background: white; border-radius: 16px; padding: 2.5rem; max-width: 440px; width: 100%; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
@@ -334,11 +343,6 @@ export default function InvoiceList({
         .confirm-actions { display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem; }
         .btn-danger { background: #dc2626; color: white; border: none; padding: 0.625rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
         .btn-danger:hover { background: #b91c1c; }
-        
-        @media print {
-          .invoice-details-tr td { background: white !important; color: black !important; }
-          .invoice-specific-header h2, .invoice-specific-header h1, .invoice-specific-header p { color: black !important; }
-        }
       `}</style>
     </div>
   );

@@ -7,7 +7,7 @@ import { useUser } from '@/components/UserContext';
 import { saveUser, deleteUser } from './actions';
 
 export default function UsersClient({ initialUsers, roles, lang, dict }: { initialUsers: any[], roles: any[], lang: Lang, dict: any }) {
-  const { canAccess } = useUser();
+  const { user: currentUser, canAccess } = useUser();
   const [users, setUsers] = useState(initialUsers || []);
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
@@ -194,6 +194,16 @@ export default function UsersClient({ initialUsers, roles, lang, dict }: { initi
             
             <form onSubmit={handleSubmit} className="user-form" style={{ display: 'flex', flexDirection: 'column', overflowY: 'auto', flex: 1, padding: '1.5rem' }}>
               <div className="form-grid">
+                <div className="form-group">
+                  <label>{lang === 'ar' ? 'معرف الشركة (كود النظام)' : 'Company ID (System Code)'}</label>
+                  <input 
+                    type="text" 
+                    value={currentUser?.companyId || ''}
+                    disabled
+                    className="bg-gray-100 font-mono"
+                    style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)' }}
+                  />
+                </div>
                 <div className="form-group">
                   <label>{lang === 'ar' ? 'اسم المستخدم' : 'Username'}</label>
                   <input 

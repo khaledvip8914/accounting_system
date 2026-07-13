@@ -11,9 +11,10 @@ export default async function InventoryPage(props: {
   searchParams: Promise<{ lang?: string }>;
 }) {
   const session = await getSession();
-  if (!session) {
+  if (!session || !session.user || !session.user.companyId) {
     redirect('/login');
   }
+  const companyId = session.user.companyId;
 
   const searchParams = await props.searchParams;
   const lang = (searchParams.lang as Lang) || 'ar';
@@ -21,6 +22,7 @@ export default async function InventoryPage(props: {
   try {
     const [products, units, costCenters, productionOrders, warehouses, disposalVouchers, suppliers, categories] = await Promise.all([
       prisma.product.findMany({
+        where: { companyId },
         include: { unitRef: true, subUnitRef: true, categoryRef: true },
         orderBy: { sku: 'asc' }
       }),
@@ -28,16 +30,20 @@ export default async function InventoryPage(props: {
       import('../sales/actions').then(m => m.getCostCenters()),
       import('../sales/actions').then(m => m.getProductionOrders()),
       prisma.warehouse.findMany({
+        where: { companyId },
         orderBy: { code: 'asc' }
       }),
       prisma.disposalVoucher.findMany({
+          where: { companyId },
           include: { product: { include: { unitRef: true, subUnitRef: true } }, warehouse: true },
           orderBy: { date: 'desc' }
       }),
       prisma.supplier.findMany({
+        where: { companyId },
         orderBy: { name: 'asc' }
       }),
       prisma.category.findMany({
+        where: { companyId },
         orderBy: { name: 'asc' }
       })
     ]);

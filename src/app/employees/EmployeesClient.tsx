@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import CreateEmployeeModal from './CreateEmployeeModal';
 import CreateFinancialMoveModal from './CreateFinancialMoveModal';
 import { createEmployee, createFinancialMove, deleteFinancialMove, approveFinancialMove, updateFinancialMove } from './actions';
+import { useRouter } from 'next/navigation';
 
 export default function EmployeesClient({ initialEmployees, initialMoves, lang, dict }: { initialEmployees: any[], initialMoves: any[], lang: string, dict: any }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -13,10 +14,18 @@ export default function EmployeesClient({ initialEmployees, initialMoves, lang, 
   const [activeTab, setActiveTab] = useState<'employees' | 'financial' | 'rewards'>('employees');
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [mounted, setMounted] = React.useState(false);
+  const [moves, setMoves] = useState<any[]>(initialMoves || []);
+  const [employees, setEmployees] = useState<any[]>(initialEmployees || []);
+  const router = useRouter();
 
   React.useEffect(() => {
     setMounted(true);
   }, []);
+
+  React.useEffect(() => {
+    setEmployees(initialEmployees || []);
+    setMoves(initialMoves || []);
+  }, [initialEmployees, initialMoves]);
 
   const formatDate = (date: any) => {
     if (!mounted) return new Date(date).toISOString().split('T')[0];
@@ -37,6 +46,15 @@ export default function EmployeesClient({ initialEmployees, initialMoves, lang, 
     if (!res.success) {
       throw new Error(res.error);
     }
+    // Update local state immediately with the returned move data
+    if (res.move) {
+      if (data.id) {
+        setMoves(prev => prev.map(m => m.id === data.id ? { ...m, ...res.move } : m));
+      } else {
+        setMoves(prev => [res.move, ...prev]);
+      }
+    }
+    router.refresh();
   };
 
   const handleDeleteMove = async (id: string) => {
@@ -44,15 +62,19 @@ export default function EmployeesClient({ initialEmployees, initialMoves, lang, 
     try {
       if (window.confirm(lang === 'ar' ? 'هل أنت متأكد من حذف هذه العملية؟' : 'Are you sure you want to delete this transaction?')) {
         setProcessingId(id);
+        // Optimistic update: remove from local state immediately
+        setMoves(prev => prev.filter(m => m.id !== id));
         const res = await deleteFinancialMove({ id });
         if (res.success) {
-          // Success
+          router.refresh();
         } else {
           window.alert(res.error || 'Failed to delete');
+          router.refresh(); // Re-sync to restore if failed
         }
       }
     } catch (err: any) {
       window.alert('Error: ' + err.message);
+      router.refresh();
     } finally {
       setProcessingId(null);
     }
@@ -65,7 +87,8 @@ export default function EmployeesClient({ initialEmployees, initialMoves, lang, 
         setProcessingId(id);
         const res = await approveFinancialMove({ id });
         if (res.success) {
-          // Success
+          setMoves(prev => prev.map(m => m.id === id ? { ...m, status: 'Confirmed' } : m));
+          router.refresh();
         } else {
           window.alert(res.error || 'Failed to approve');
         }
@@ -77,7 +100,7 @@ export default function EmployeesClient({ initialEmployees, initialMoves, lang, 
     }
   };
 
-  const filteredEmployees = (initialEmployees || []).filter(emp => {
+  const filteredEmployees = (employees || []).filter(emp => {
     const term = searchTerm.toLowerCase();
     return (
       emp.name.toLowerCase().includes(term) ||
@@ -87,7 +110,7 @@ export default function EmployeesClient({ initialEmployees, initialMoves, lang, 
     );
   });
 
-  const filteredMoves = (initialMoves || []).filter(move => {
+  const filteredMoves = (moves || []).filter(move => {
     const term = searchTerm.toLowerCase();
     const empName = (move.employee?.name || '').toLowerCase();
     const empNameAr = (move.employee?.nameAr || '').toLowerCase();
@@ -109,19 +132,19 @@ export default function EmployeesClient({ initialEmployees, initialMoves, lang, 
         </div>
         
         <div className="tab-switcher">
-          <button 
+          <button suppressHydrationWarning
             className={`tab-btn ${activeTab === 'employees' ? 'active' : ''}`}
             onClick={() => setActiveTab('employees')}
           >
             {lang === 'ar' ? 'قائمة الموظفين' : 'Employee List'}
           </button>
-          <button 
+          <button suppressHydrationWarning
             className={`tab-btn ${activeTab === 'financial' ? 'active' : ''}`}
             onClick={() => setActiveTab('financial')}
           >
             {lang === 'ar' ? 'السلف والجزاءات' : 'Advances & Penalties'}
           </button>
-          <button 
+          <button suppressHydrationWarning
             className={`tab-btn ${activeTab === 'rewards' ? 'active' : ''}`}
             onClick={() => setActiveTab('rewards')}
           >
@@ -130,15 +153,15 @@ export default function EmployeesClient({ initialEmployees, initialMoves, lang, 
         </div>
 
         {activeTab === 'employees' ? (
-          <button className="btn-primary" onClick={() => setShowModal(true)}>
+          <button suppressHydrationWarning className="btn-primary" onClick={() => setShowModal(true)}>
             {lang === 'ar' ? '+ إضافة موظف جديد' : '+ Add New Employee'}
           </button>
         ) : activeTab === 'financial' ? (
-          <button className="btn-primary" style={{ background: '#3b82f6' }} onClick={() => setShowMoveModal(true)}>
+          <button suppressHydrationWarning className="btn-primary" style={{ background: '#3b82f6' }} onClick={() => setShowMoveModal(true)}>
             {lang === 'ar' ? '+ إضافة سلفة / جزاء' : '+ Add Advance / Penalty'}
           </button>
         ) : (
-          <button className="btn-primary" style={{ background: '#10b881' }} onClick={() => setShowMoveModal(true)}>
+          <button suppressHydrationWarning className="btn-primary" style={{ background: '#10b881' }} onClick={() => setShowMoveModal(true)}>
             {lang === 'ar' ? '+ إضافة مكافأة / بدل' : '+ Add Reward / Allowance'}
           </button>
         )}
@@ -161,7 +184,8 @@ export default function EmployeesClient({ initialEmployees, initialMoves, lang, 
           onSave={handleSaveMove}
           employees={initialEmployees}
           lang={lang}
-          initialData={editingMove || { type: activeTab === 'rewards' ? 'Reward' : 'Advance' }}
+          activeTab={activeTab}
+          initialData={editingMove || { type: activeTab === 'rewards' ? 'Reward' : 'AdvanceDeduction' }}
         />
       )}
 
@@ -218,7 +242,7 @@ export default function EmployeesClient({ initialEmployees, initialMoves, lang, 
         <div className="filter-bar">
           <div className="search-input-wrapper">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <input 
+            <input suppressHydrationWarning
               type="text" 
               placeholder={activeTab === 'employees' 
                 ? (lang === 'ar' ? 'بحث عن موظف (الاسم، الكود، الوظيفة)...' : 'Search employee (Name, Code, Title)...')
@@ -271,8 +295,8 @@ export default function EmployeesClient({ initialEmployees, initialMoves, lang, 
                       </td>
                       <td>
                         <div className="actions">
-                          <button className="icon-btn" title="Edit">✏️</button>
-                          <button className="icon-btn" title="View Documents">📄</button>
+                          <button suppressHydrationWarning className="icon-btn" title="Edit">✏️</button>
+                          <button suppressHydrationWarning className="icon-btn" title="View Documents">📄</button>
                         </div>
                       </td>
                     </tr>
@@ -294,7 +318,10 @@ export default function EmployeesClient({ initialEmployees, initialMoves, lang, 
                 </tr>
               </thead>
               <tbody>
-                {filteredMoves.filter(m => activeTab === 'rewards' ? (m.type === 'Reward' || m.type === 'Allowance') : (m.type === 'Advance' || m.type === 'Penalty')).length === 0 ? (
+                {filteredMoves.filter(m => activeTab === 'rewards' 
+                    ? (['Reward', 'Allowance', 'AdvanceAddition'].includes(m.type)) 
+                    : (['Advance', 'AdvanceDeduction', 'Penalty'].includes(m.type))
+                  ).length === 0 ? (
                   <tr>
                     <td colSpan={7} className="empty-state">
                       {lang === 'ar' ? 'لا توجد عمليات' : 'No transactions found'}
@@ -320,7 +347,7 @@ export default function EmployeesClient({ initialEmployees, initialMoves, lang, 
                       <td className="salary">{move.amount.toLocaleString()} SAR</td>
                       <td>
                         <span className={`status-badge ${move.status.toLowerCase()}`}>
-                          {move.status === 'Approved' ? (lang === 'ar' ? 'معتمد' : 'Approved') : (lang === 'ar' ? 'قيد الانتظار' : 'Pending')}
+                          {move.status === 'Confirmed' ? (lang === 'ar' ? 'معتمد' : 'Confirmed') : (lang === 'ar' ? 'قيد الانتظار' : 'Pending')}
                         </span>
                       </td>
                       <td className="text-sub">{move.reason || '—'}</td>
@@ -330,7 +357,7 @@ export default function EmployeesClient({ initialEmployees, initialMoves, lang, 
                             <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 700 }}>...</span>
                           ) : (
                             <>
-                              {move.status !== 'Approved' && (
+                              {move.status !== 'Confirmed' && (
                                 <span 
                                   className="icon-btn" 
                                   style={{ color: '#10b881', borderColor: '#10b88122', cursor: 'pointer' }} 

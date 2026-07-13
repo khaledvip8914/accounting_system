@@ -101,7 +101,7 @@ export function hasPermission(
   const role = typeof userOrPermissions === 'object' ? userOrPermissions.role : null;
   const username = typeof userOrPermissions === 'object' ? userOrPermissions.username : null;
   
-  if (role === 'Admin' || username === 'khaled-ma' || username === 'admin') return true;
+  if (role === 'Admin' || role === 'SuperAdmin' || username === 'khaled-ma' || username === 'admin') return true;
 
   let perms: any;
   if (typeof userOrPermissions === 'string') {

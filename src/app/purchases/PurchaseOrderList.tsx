@@ -7,13 +7,15 @@ export default function PurchaseOrderList({
   lang,
   onNewOrder,
   onEditOrder,
-  onDeleteOrder
+  onDeleteOrder,
+  onConvertToInvoice
 }: {
   orders: any[];
   lang: string;
   onNewOrder: () => void;
   onEditOrder: (order: any) => void;
   onDeleteOrder: (id: string) => void;
+  onConvertToInvoice?: (order: any) => void;
 }) {
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -65,8 +67,11 @@ export default function PurchaseOrderList({
                 </td>
                 <td style={{ padding: '1rem', textAlign: 'center' }}>
                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                      <button onClick={() => onEditOrder(order)} className="action-btn edit">✏️</button>
-                      <button onClick={() => { if(confirm(lang==='ar'?'هل أنت متأكد؟':'Are you sure?')) onDeleteOrder(order.id) }} className="action-btn delete">🗑️</button>
+                      {order.status !== 'Closed' && order.status !== 'Cancelled' && onConvertToInvoice && (
+                        <button onClick={() => onConvertToInvoice(order)} className="action-btn convert" title={lang === 'ar' ? 'تحويل لفاتورة' : 'Convert to Invoice'}>🔄</button>
+                      )}
+                      <button onClick={() => onEditOrder(order)} className="action-btn edit" title={lang === 'ar' ? 'تعديل' : 'Edit'}>✏️</button>
+                      <button onClick={() => { if(confirm(lang==='ar'?'هل أنت متأكد؟':'Are you sure?')) onDeleteOrder(order.id) }} className="action-btn delete" title={lang === 'ar' ? 'حذف' : 'Delete'}>🗑️</button>
                    </div>
                 </td>
               </tr>
@@ -92,6 +97,7 @@ export default function PurchaseOrderList({
         
         .action-btn { background: none; border: 1px solid #e2e8f0; border-radius: 4px; padding: 4px 8px; cursor: pointer; transition: all 0.2s; }
         .action-btn:hover { background: #f8fafc; }
+        .action-btn.convert:hover { border-color: #10b981; color: #10b981; }
         .action-btn.delete:hover { border-color: #ef4444; }
       `}</style>
     </div>

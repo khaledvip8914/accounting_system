@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { createCustomer, updateCustomer } from './actions';
+import { createCustomer, updateCustomer, createProduct } from './actions';
 import CreateCustomerModal from '@/components/CreateCustomerModal';
+import CreateProductModal from '@/components/CreateProductModal';
+import SearchableSelect from '@/components/SearchableSelect';
 
 type Product = {
   id: string;
@@ -80,6 +82,10 @@ export default function CreateInvoiceModal({
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
   
   const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const [showQuickAddProduct, setShowQuickAddProduct] = useState(false);
+  const [activeItemIndexForQuickAdd, setActiveItemIndexForQuickAdd] = useState<number | null>(null);
+  
+  const [localProducts, setLocalProducts] = useState<Product[]>(products);
 
   const filteredAccounts = useMemo(() => {
     const q = accountSearch.toLowerCase();
@@ -115,7 +121,7 @@ export default function CreateInvoiceModal({
     const item = { ...newItems[index], [field]: value };
     
     if (field === 'productId') {
-      const product = products.find(p => p.id === value);
+      const product = localProducts.find(p => p.id === value);
       if (product) {
         item.unitPrice = product.salePrice;
       }
@@ -145,6 +151,10 @@ export default function CreateInvoiceModal({
 
   const handleQuickAdd = async (data: any) => {
     return createCustomer(data);
+  };
+
+  const handleQuickAddProduct = async (data: any) => {
+    return createProduct(data);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -409,18 +419,39 @@ export default function CreateInvoiceModal({
                     {items.map((item, index) => (
                       <tr key={index}>
                         <td>
-                           <select 
-                             value={item.productId} 
-                             onChange={e => updateItem(index, 'productId', e.target.value)}
-                             required
-                           >
-                             <option value="">{lang === 'ar' ? 'اختر صنفاً...' : 'Select item...'}</option>
-                             {products.map(p => (
-                               <option key={p.id} value={p.id}>
-                                 {p.sku} - {lang === 'ar' && p.nameAr ? p.nameAr : p.name} ({p.stockQuantity})
-                               </option>
-                             ))}
-                           </select>
+                           <div style={{ display: 'flex', gap: '0.5rem' }}>
+                             <div style={{ flex: 1, minWidth: 0 }}>
+                               <SearchableSelect
+                                 options={localProducts}
+                                 value={item.productId}
+                                 onChange={(value) => updateItem(index, 'productId', value)}
+                                 lang={lang}
+                                 placeholder={lang === 'ar' ? 'اختر صنفاً...' : 'Select item...'}
+                               />
+                             </div>
+                             <button 
+                               type="button" 
+                               className="btn-quick-add" 
+                               style={{ flexShrink: 0 }}
+                               onClick={() => { setActiveItemIndexForQuickAdd(index); setShowQuickAddProduct(true); }}
+                               title={lang === 'ar' ? 'إضافة صنف سريع' : 'Quick Add Item'}
+                             >
+                               +
+                             </button>
+                           </div>
+                           {item.productId && (
+                             <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px', fontWeight: 600 }}>
+                               {lang === 'ar' ? 'المخزون الحالي: ' : 'Current Stock: '}
+                               <span style={{ 
+                                 color: (localProducts.find(p => p.id === item.productId)?.stockQuantity || 0) <= 0 ? '#ef4444' : '#059669',
+                                 background: (localProducts.find(p => p.id === item.productId)?.stockQuantity || 0) <= 0 ? '#fee2e2' : '#dcfce7',
+                                 padding: '1px 4px',
+                                 borderRadius: '4px'
+                               }}>
+                                 {localProducts.find(p => p.id === item.productId)?.stockQuantity || 0}
+                               </span>
+                             </div>
+                           )}
                         </td>
                         <td>
                           <input 
@@ -517,6 +548,24 @@ export default function CreateInvoiceModal({
             lang={lang}
             onClose={() => setShowQuickAdd(false)}
             onSave={handleQuickAdd}
+          />
+        )}
+        {showQuickAddProduct && (
+          <CreateProductModal
+            lang={lang}
+            onClose={() => setShowQuickAddProduct(false)}
+            onSave={async (data) => {
+              const res = await handleQuickAddProduct(data);
+              if (res.success && activeItemIndexForQuickAdd !== null) {
+                 // update the item in the list
+                 const product = res.product; // createProduct returns { success: true, product }
+                 if (product) {
+                    setLocalProducts(prev => [...prev, product]);
+                    updateItem(activeItemIndexForQuickAdd, 'productId', product.id);
+                 }
+              }
+              return res;
+            }}
           />
         )}
       </div>

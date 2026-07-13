@@ -176,7 +176,7 @@ export default function LedgerClient({
       
       <div className="ledger-toolbar">
          <div className="search-box">
-             <input 
+             <input suppressHydrationWarning
                 type="text" 
                 placeholder={financialDict.searchPlaceholder} 
                 value={search}
@@ -187,7 +187,7 @@ export default function LedgerClient({
          
          <div className="filter-tabs">
              {['All', 'Posted', 'Draft', 'Reversed'].map(f => (
-               <button 
+               <button suppressHydrationWarning
                   key={f} 
                   className={`filter-btn ${filter === f ? 'active' : ''}`}
                   onClick={() => setFilter(f)}
@@ -198,7 +198,7 @@ export default function LedgerClient({
          </div>
          
          <div className="toolbar-actions">
-            <button className="btn-primary" onClick={() => setShowModal(true)}>
+            <button suppressHydrationWarning className="btn-primary" onClick={() => setShowModal(true)}>
               + {financialDict.newEntry}
             </button>
          </div>
@@ -243,49 +243,47 @@ export default function LedgerClient({
                     <input required type="text" className="form-input" value={editData.description} onChange={e => setEditData({ ...editData, description: e.target.value })} />
                   </div>
                 </div>
-                <div className="voucher-lines">
-                  <table style={{ borderCollapse: 'separate', borderSpacing: '0 0.5rem' }}>
-                    <thead>
-                      <tr style={{ background: 'transparent' }}>
-                        <th style={{ width: '40%' }}>{dict.account}</th>
-                        <th>{dict.debit}</th>
-                        <th>{dict.credit}</th>
-                        <th style={{ width: '40px' }}></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {editData.lines.map((line, idx) => (
-                        <tr key={idx} style={{ background: 'var(--glass-bg)' }}>
-                          <td style={{ position: 'relative' }}>
-                            <SearchableAccountSelect accounts={accounts} selectedId={line.accountId} onSelect={(id) => updateEditLine(idx, 'accountId', id)} dict={dict} lang={lang} />
-                          </td>
-                          <td><input type="number" step="0.01" className="form-input" style={{ textAlign: 'right' }} value={line.debit || ''} onChange={e => updateEditLine(idx, 'debit', e.target.value)} placeholder="0.00" /></td>
-                          <td><input type="number" step="0.01" className="form-input" style={{ textAlign: 'right' }} value={line.credit || ''} onChange={e => updateEditLine(idx, 'credit', e.target.value)} placeholder="0.00" /></td>
-                          <td>
-                            {editData.lines.length > 2 && (
-                              <button type="button" onClick={() => { const l=[...editData.lines]; l.splice(idx,1); setEditData({...editData, lines:l}); }} style={{ background: 'none', border: 'none', color: 'var(--accent-danger)', cursor: 'pointer', fontSize: '1.25rem' }}>×</button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                    <tfoot>
-                      <tr>
-                        <td><button type="button" onClick={() => setEditData({ ...editData, lines: [...editData.lines, { accountId: '', debit: 0, credit: 0 }] })} className="btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.875rem' }}>{dict.addLine}</button></td>
-                        <td style={{ textAlign: 'right', padding: '1rem', fontWeight: 'bold' }}>{totalEditDebit.toFixed(2)}</td>
-                        <td style={{ textAlign: 'right', padding: '1rem', fontWeight: 'bold' }}>{totalEditCredit.toFixed(2)}</td>
-                        <td></td>
-                      </tr>
-                    </tfoot>
-                  </table>
+                <div className="voucher-lines" style={{ padding: '0 1rem' }}>
+                  <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem', fontWeight: 'bold', color: '#475569', fontSize: '0.9rem', padding: '0 0.5rem' }}>
+                    <div style={{ flex: '6' }}>{dict.account}</div>
+                    <div style={{ flex: '2', textAlign: 'center' }}>{dict.debit}</div>
+                    <div style={{ flex: '2', textAlign: 'center' }}>{dict.credit}</div>
+                    <div style={{ width: '40px' }}></div>
+                  </div>
+                  {editData.lines.map((line, idx) => (
+                    <div key={idx} style={{ display: 'flex', gap: '1rem', marginBottom: '0.75rem', alignItems: 'center' }}>
+                      <div style={{ flex: '6' }}>
+                        <SearchableAccountSelect accounts={accounts} selectedId={line.accountId} onSelect={(id) => updateEditLine(idx, 'accountId', id)} dict={dict} lang={lang} />
+                      </div>
+                      <div style={{ flex: '2' }}>
+                        <input type="number" step="0.01" className="form-input" style={{ width: '100%', textAlign: 'right' }} value={line.debit || ''} onChange={e => updateEditLine(idx, 'debit', e.target.value)} placeholder="0.00" />
+                      </div>
+                      <div style={{ flex: '2' }}>
+                        <input type="number" step="0.01" className="form-input" style={{ width: '100%', textAlign: 'right' }} value={line.credit || ''} onChange={e => updateEditLine(idx, 'credit', e.target.value)} placeholder="0.00" />
+                      </div>
+                      <div style={{ width: '40px', display: 'flex', justifyContent: 'center' }}>
+                        {editData.lines.length > 2 && (
+                          <button type="button" onClick={() => { const l=[...editData.lines]; l.splice(idx,1); setEditData({...editData, lines:l}); }} style={{ background: 'none', border: 'none', color: 'var(--accent-danger)', cursor: 'pointer', fontSize: '1.5rem', padding: '0' }}>×</button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e2e8f0', alignItems: 'center' }}>
+                    <div style={{ flex: '6' }}>
+                      <button type="button" onClick={() => setEditData({ ...editData, lines: [...editData.lines, { accountId: '', debit: 0, credit: 0 }] })} className="btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.875rem' }}>{dict.addLine}</button>
+                    </div>
+                    <div style={{ flex: '2', textAlign: 'center', fontWeight: 'bold', fontSize: '1.1rem' }}>{totalEditDebit.toFixed(2)}</div>
+                    <div style={{ flex: '2', textAlign: 'center', fontWeight: 'bold', fontSize: '1.1rem' }}>{totalEditCredit.toFixed(2)}</div>
+                    <div style={{ width: '40px' }}></div>
+                  </div>
                 </div>
                 {!isEditBalanced && totalEditDebit > 0 && (
                   <div style={{ color: 'var(--accent-danger)', fontSize: '0.875rem', textAlign: 'center', marginTop: '1rem' }}>{dict.unbalanced}</div>
                 )}
               </div>
-              <div className="modal-footer">
-                <button type="button" className="btn-secondary" onClick={() => setEditVoucher(null)}>{dict.cancel}</button>
-                <button type="submit" className="btn-primary" disabled={isPending || !isEditBalanced}>
+              <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2rem', marginBottom: '1.5rem', padding: '0 3rem' }}>
+                <button type="button" className="btn-secondary" style={{ padding: '0.625rem 1.5rem', background: '#f8fafc', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }} onClick={() => setEditVoucher(null)}>{dict.cancel}</button>
+                <button type="submit" className="btn-primary" disabled={isPending || !isEditBalanced} style={{ padding: '0.625rem 2rem', borderRadius: '8px', fontWeight: 600 }}>
                   {isPending ? dict.saving : (lang === 'ar' ? 'حفظ التعديلات' : 'Save Changes')}
                 </button>
               </div>
@@ -365,13 +363,13 @@ export default function LedgerClient({
                       </td>
                       <td className="no-print">
                         <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
-                          <button title={lang === 'ar' ? 'عرض' : 'Expand'} className="action-icon-btn view" onClick={() => setExpandedId(isExpanded ? null : v.id)}>
+                          <button suppressHydrationWarning title={lang === 'ar' ? 'عرض' : 'Expand'} className="action-icon-btn view" onClick={() => setExpandedId(isExpanded ? null : v.id)}>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                           </button>
-                          <button title={lang === 'ar' ? 'تعديل' : 'Edit'} className="action-icon-btn edit" onClick={() => openEdit(v)}>
+                          <button suppressHydrationWarning title={lang === 'ar' ? 'تعديل' : 'Edit'} className="action-icon-btn edit" onClick={() => openEdit(v)}>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                           </button>
-                          <button title={lang === 'ar' ? 'حذف' : 'Delete'} className="action-icon-btn delete" onClick={() => setConfirmDeleteId(v.id)}>
+                          <button suppressHydrationWarning title={lang === 'ar' ? 'حذف' : 'Delete'} className="action-icon-btn delete" onClick={() => setConfirmDeleteId(v.id)}>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                           </button>
                         </div>
@@ -437,51 +435,43 @@ export default function LedgerClient({
                   </div>
                 </div>
 
-                <div className="voucher-lines" style={{ marginBottom: '1rem' }}>
-                  <table style={{ borderCollapse: 'separate', borderSpacing: '0 0.5rem' }}>
-                    <thead>
-                      <tr style={{ background: 'transparent' }}>
-                        <th style={{ width: '40%' }}>{dict.account}</th>
-                        <th>{dict.debit}</th>
-                        <th>{dict.credit}</th>
-                        <th style={{ width: '40px' }}></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {voucherData.lines.map((line, idx) => (
-                        <tr key={idx} style={{ background: 'var(--glass-bg)' }}>
-                          <td style={{ position: 'relative' }}>
-                            <SearchableAccountSelect 
-                              accounts={accounts} 
-                              selectedId={line.accountId} 
-                              onSelect={(id) => updateLine(idx, 'accountId', id)}
-                              dict={dict}
-                              lang={lang}
-                            />
-                          </td>
-                          <td>
-                            <input type="number" step="0.01" className="form-input" style={{ textAlign: 'right' }} value={line.debit || ''} onChange={e => updateLine(idx, 'debit', e.target.value)} placeholder="0.00" />
-                          </td>
-                          <td>
-                            <input type="number" step="0.01" className="form-input" style={{ textAlign: 'right' }} value={line.credit || ''} onChange={e => updateLine(idx, 'credit', e.target.value)} placeholder="0.00" />
-                          </td>
-                          <td>
-                            <button type="button" onClick={() => handleRemoveLine(idx)} style={{ background: 'none', border: 'none', color: 'var(--accent-danger)', cursor: 'pointer' }}>×</button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                    <tfoot>
-                      <tr>
-                        <td colSpan={1}>
-                          <button type="button" onClick={handleAddLine} className="btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.875rem' }}>{dict.addLine}</button>
-                        </td>
-                        <td style={{ textAlign: 'right', padding: '1rem', fontWeight: 'bold' }}>{totalLinesDebit.toFixed(2)}</td>
-                        <td style={{ textAlign: 'right', padding: '1rem', fontWeight: 'bold' }}>{totalLinesCredit.toFixed(2)}</td>
-                        <td></td>
-                      </tr>
-                    </tfoot>
-                  </table>
+                <div className="voucher-lines" style={{ marginBottom: '1rem', padding: '0 1rem' }}>
+                  <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem', fontWeight: 'bold', color: '#475569', fontSize: '0.9rem', padding: '0 0.5rem' }}>
+                    <div style={{ flex: '6' }}>{dict.account}</div>
+                    <div style={{ flex: '2', textAlign: 'center' }}>{dict.debit}</div>
+                    <div style={{ flex: '2', textAlign: 'center' }}>{dict.credit}</div>
+                    <div style={{ width: '40px' }}></div>
+                  </div>
+                  {voucherData.lines.map((line, idx) => (
+                    <div key={idx} style={{ display: 'flex', gap: '1rem', marginBottom: '0.75rem', alignItems: 'center' }}>
+                      <div style={{ flex: '6' }}>
+                        <SearchableAccountSelect 
+                          accounts={accounts} 
+                          selectedId={line.accountId} 
+                          onSelect={(id) => updateLine(idx, 'accountId', id)}
+                          dict={dict}
+                          lang={lang}
+                        />
+                      </div>
+                      <div style={{ flex: '2' }}>
+                        <input type="number" step="0.01" className="form-input" style={{ width: '100%', textAlign: 'right' }} value={line.debit || ''} onChange={e => updateLine(idx, 'debit', e.target.value)} placeholder="0.00" />
+                      </div>
+                      <div style={{ flex: '2' }}>
+                        <input type="number" step="0.01" className="form-input" style={{ width: '100%', textAlign: 'right' }} value={line.credit || ''} onChange={e => updateLine(idx, 'credit', e.target.value)} placeholder="0.00" />
+                      </div>
+                      <div style={{ width: '40px', display: 'flex', justifyContent: 'center' }}>
+                        <button type="button" onClick={() => handleRemoveLine(idx)} style={{ background: 'none', border: 'none', color: 'var(--accent-danger)', cursor: 'pointer', fontSize: '1.5rem', padding: '0' }}>×</button>
+                      </div>
+                    </div>
+                  ))}
+                  <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e2e8f0', alignItems: 'center' }}>
+                    <div style={{ flex: '6' }}>
+                      <button type="button" onClick={handleAddLine} className="btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.875rem' }}>{dict.addLine}</button>
+                    </div>
+                    <div style={{ flex: '2', textAlign: 'center', fontWeight: 'bold', fontSize: '1.1rem' }}>{totalLinesDebit.toFixed(2)}</div>
+                    <div style={{ flex: '2', textAlign: 'center', fontWeight: 'bold', fontSize: '1.1rem' }}>{totalLinesCredit.toFixed(2)}</div>
+                    <div style={{ width: '40px' }}></div>
+                  </div>
                 </div>
 
                 {!isBalanced && totalLinesDebit > 0 && (
@@ -490,9 +480,9 @@ export default function LedgerClient({
                   </div>
                 )}
               </div>
-              <div className="modal-footer">
-                <button type="button" className="btn-secondary" onClick={() => setShowModal(false)}>{dict.cancel}</button>
-                <button type="submit" className="btn-primary" disabled={isPending || !isBalanced}>{isPending ? dict.saving : dict.postEntry}</button>
+              <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2rem', marginBottom: '1.5rem', padding: '0 3rem' }}>
+                <button type="button" className="btn-secondary" style={{ padding: '0.625rem 1.5rem', background: '#f8fafc', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }} onClick={() => setShowModal(false)}>{dict.cancel}</button>
+                <button type="submit" className="btn-primary" disabled={isPending || !isBalanced} style={{ padding: '0.625rem 2rem', borderRadius: '8px', fontWeight: 600 }}>{isPending ? dict.saving : dict.postEntry}</button>
               </div>
             </form>
           </div>

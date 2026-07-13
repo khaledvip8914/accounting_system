@@ -6,62 +6,78 @@ import { cookies } from 'next/headers';
 import { getSession } from '@/lib/auth';
 import { hasPermission } from '@/lib/permissions';
 
+async function getCompanyId() {
+  const session = await getSession();
+  if (!session || !session.user || !session.user.companyId) {
+    throw new Error('Unauthorized or Session Expired');
+  }
+  return session.user.companyId;
+}
+
 export async function getAccounts() {
-  const allAccounts = await prisma.account.findMany({
-    orderBy: { code: 'asc' },
-    include: {
-      entries: true
-    }
-  });
+  try {
+    const companyId = await getCompanyId();
+    const allAccounts = await prisma.account.findMany({
+      where: { companyId },
+      orderBy: { code: 'asc' },
+      include: {
+        entries: true
+      }
+    });
 
-  const accountMap = new Map();
-  allAccounts.forEach((acc: any) => {
-    // Calculate balance
-    const totalDebit = acc.entries.reduce((sum: number, e: any) => sum + e.debit, 0);
-    const totalCredit = acc.entries.reduce((sum: number, e: any) => sum + e.credit, 0);
-    
-    let balance = 0;
-    if (['Asset', 'Expense'].includes(acc.type)) {
-      balance = totalDebit - totalCredit;
-    } else {
-      balance = totalCredit - totalDebit;
-    }
+    const accountMap = new Map();
+    allAccounts.forEach((acc: any) => {
+      // Calculate balance
+      const totalDebit = acc.entries.reduce((sum: number, e: any) => sum + e.debit, 0);
+      const totalCredit = acc.entries.reduce((sum: number, e: any) => sum + e.credit, 0);
+      
+      let balance = 0;
+      if (['Asset', 'Expense'].includes(acc.type)) {
+        balance = totalDebit - totalCredit;
+      } else {
+        balance = totalCredit - totalDebit;
+      }
 
-    acc.balance = balance;
-    acc.totalDebit = totalDebit;
-    acc.totalCredit = totalCredit;
-    acc.children = [];
-    accountMap.set(acc.id, acc);
-  });
+      acc.balance = balance;
+      acc.totalDebit = totalDebit;
+      acc.totalCredit = totalCredit;
+      acc.children = [];
+      accountMap.set(acc.id, acc);
+    });
 
-  const roots: any[] = [];
-  allAccounts.forEach((acc: any) => {
-    if (acc.parentId) {
-      const parent = accountMap.get(acc.parentId);
-      if (parent) {
-        parent.children.push(acc);
+    const roots: any[] = [];
+    allAccounts.forEach((acc: any) => {
+      if (acc.parentId) {
+        const parent = accountMap.get(acc.parentId);
+        if (parent) {
+          parent.children.push(acc);
+        } else {
+          roots.push(acc);
+        }
       } else {
         roots.push(acc);
       }
-    } else {
-      roots.push(acc);
-    }
-  });
+    });
 
-  return roots;
+    return roots;
+  } catch (error) {
+    console.error('getAccounts error:', error);
+    return [];
+  }
 }
 
-export async function createAccount(data: { code: string; name: string; nameAr?: string; type: string; nature?: string; description?: string; parentId?: string }) {
+export async function createAccount(data: { code: string; name: string; nameAr?: string; type: string; nature: string; description?: string; parentId?: string }) {
   try {
+    const companyId = await getCompanyId();
     const session = await getSession();
-    const perms = session?.user?.permissions;
     
-    if (!hasPermission(perms, 'accounting', 'create')) {
+    if (!hasPermission(session?.user, 'accounting', 'create')) {
       throw new Error('غير مصرح لك بإدارة الحسابات');
     }
 
     await prisma.account.create({
       data: {
+        companyId, // Force companyId
         code: data.code,
         name: data.name,
         nameAr: data.nameAr || null,
@@ -85,12 +101,13 @@ export async function updateAccount(id: string, data: { code: string; name: stri
     const session = await getSession();
     const perms = session?.user?.permissions;
     
-    if (!hasPermission(perms, 'accounting', 'edit')) {
+    if (!hasPermission(session?.user, 'accounting', 'edit')) {
       throw new Error('غير مصرح لك بإدارة الحسابات');
     }
 
+    const companyId = await getCompanyId();
     await prisma.account.update({
-      where: { id },
+      where: { id, companyId }, // Secure where clause
       data: {
         code: data.code,
         name: data.name,
@@ -143,33 +160,30 @@ export async function deleteAccount(id: string) {
 
     const primaryVoucherCount = await prisma.transactionVoucher.count({ where: { primaryAccountId: id } });
     const relatedVoucherCount = await prisma.transactionVoucher.count({ where: { relatedAccountId: id } });
-    if (primaryVoucherCount > 0 || relatedVoucherCount > 0) {
-        return { success: false, error: lang === 'ar' ? 'لا يمكن حذف حساب مرتبط بسندات صرف أو قبض.' : 'Cannot delete an account linked to transaction vouchers (receipts/payments).' };
-    }
-    
-    const childrenCount = await prisma.account.count({ where: { parentId: id } });
+    const companyId = await getCompanyId();
+    // Ensure the account belongs to the company
+    const existing = await prisma.account.findFirst({
+      where: { id, companyId }
+    });
+    if (!existing) throw new Error('Account not found');
+
+    // Check for children
+    const childrenCount = await prisma.account.count({
+      where: { parentId: id }
+    });
     if (childrenCount > 0) {
-      return { success: false, error: lang === 'ar' ? 'لا يمكن حذف حساب أب يحتوي على حسابات فرعية.' : 'Cannot delete a parent account that contains sub-accounts.' };
+      throw new Error('Cannot delete account with sub-accounts');
     }
-    
+
+    // Check for journal entries - Removed duplicate check
+
+
     await prisma.account.delete({ where: { id } });
-    
     revalidatePath('/accounts');
-    revalidatePath('/ledger');
     return { success: true };
   } catch (error: any) {
-    console.error('Failed to delete account:', error);
-    return { success: false, error: error.message || 'Failed to delete account.' };
+    return { success: false, error: error.message };
   }
-}
-
-export async function authorizeDBDeleteAllAccounts() {
-   // A quick utility for the user to reset so they can get the new Arabic Accounts without clicking 32 times
-   await prisma.journalEntry.deleteMany({});
-   await prisma.account.deleteMany({});
-   revalidatePath('/accounts');
-   revalidatePath('/ledger');
-   return { success: true };
 }
 
 export async function seedProfessionalAccounts() {
@@ -182,32 +196,34 @@ export async function seedProfessionalAccounts() {
       return { success: false, error: 'غير مصرح لك بإدارة الحسابات' };
     }
 
-    const currentCount = await prisma.account.count();
+    const companyId = await getCompanyId();
+
+    const currentCount = await prisma.account.count({ where: { companyId } });
     if (currentCount > 0) {
       return { success: false, error: 'Accounts already exist. Cannot auto-generate over existing accounts.' };
     }
 
     // 1. Top-Level Roots
-    const assetRoot = await prisma.account.create({ data: { code: '1', name: 'Assets', nameAr: 'الأصول', type: 'Asset', nature: 'Debit', description: 'كافة ممتلكات المنشأة ومواردها الاقتصادية' } });
-    const liabilityRoot = await prisma.account.create({ data: { code: '2', name: 'Liabilities', nameAr: 'الخصوم', type: 'Liability', nature: 'Credit', description: 'الالتزامات والديون المستحقة على المنشأة تجاه الغير' } });
-    const equityRoot = await prisma.account.create({ data: { code: '3', name: 'Equity', nameAr: 'حقوق الملكية', type: 'Equity', nature: 'Credit', description: 'حقوق الملاك في صافي أصول المنشأة بعد خصم الخصوم' } });
-    const revenueRoot = await prisma.account.create({ data: { code: '4', name: 'Revenue', nameAr: 'الإيرادات', type: 'Revenue', nature: 'Credit', description: 'كافة التدفقات النقدية الداخلة للمنشأة الناتجة عن نشاطها' } });
-    const expenseRoot = await prisma.account.create({ data: { code: '5', name: 'Expenses', nameAr: 'المصروفات', type: 'Expense', nature: 'Debit', description: 'كافة التكاليف التي تتحملها المنشأة في سبيل تحقيق الإيراد' } });
+    const assetRoot = await prisma.account.create({ data: { companyId, code: '1', name: 'Assets', nameAr: 'الأصول', type: 'Asset', nature: 'Debit', description: 'كافة ممتلكات المنشأة ومواردها الاقتصادية' } });
+    const liabilityRoot = await prisma.account.create({ data: { companyId, code: '2', name: 'Liabilities', nameAr: 'الخصوم', type: 'Liability', nature: 'Credit', description: 'الالتزامات والديون المستحقة على المنشأة تجاه الغير' } });
+    const equityRoot = await prisma.account.create({ data: { companyId, code: '3', name: 'Equity', nameAr: 'حقوق الملكية', type: 'Equity', nature: 'Credit', description: 'حقوق الملاك في صافي أصول المنشأة بعد خصم الخصوم' } });
+    const revenueRoot = await prisma.account.create({ data: { companyId, code: '4', name: 'Revenue', nameAr: 'الإيرادات', type: 'Revenue', nature: 'Credit', description: 'كافة التدفقات النقدية الداخلة للمنشأة الناتجة عن نشاطها' } });
+    const expenseRoot = await prisma.account.create({ data: { companyId, code: '5', name: 'Expenses', nameAr: 'المصروفات', type: 'Expense', nature: 'Debit', description: 'كافة التكاليف التي تتحملها المنشأة في سبيل تحقيق الإيراد' } });
 
     // 2. Asset Sub-Categories
     const currentAssets = await prisma.account.create({ 
-      data: { code: '11', name: 'Current Assets', nameAr: 'الأصول المتداولة', type: 'Asset', parentId: assetRoot.id, nature: 'Debit', description: 'الأصول التي يمكن تحويلها إلى نقد خلال سنة مالية واحدة' } 
+      data: { companyId, code: '11', name: 'Current Assets', nameAr: 'الأصول المتداولة', type: 'Asset', parentId: assetRoot.id, nature: 'Debit', description: 'الأصول التي يمكن تحويلها إلى نقد خلال سنة مالية واحدة' } 
     });
     const fixedAssets = await prisma.account.create({ 
-      data: { code: '12', name: 'Fixed Assets', nameAr: 'الأصول الثابتة', type: 'Asset', parentId: assetRoot.id, nature: 'Debit', description: 'الأصول طويلة الأجل المستخدمة في تشغيل النشاط وغير معدة للبيع' } 
+      data: { companyId, code: '12', name: 'Fixed Assets', nameAr: 'الأصول الثابتة', type: 'Asset', parentId: assetRoot.id, nature: 'Debit', description: 'الأصول طويلة الأجل المستخدمة في تشغيل النشاط وغير معدة للبيع' } 
     });
 
     // 3. Equity Sub-Categories (3xxx)
-    const capParent = await prisma.account.create({ data: { code: '31', name: 'Capital', nameAr: 'رأس المال', type: 'Equity', parentId: equityRoot.id, nature: 'Credit', description: 'رأس مال المنشأة المخصص من الملاك' } });
-    const reservesParent = await prisma.account.create({ data: { code: '32', name: 'Reserves', nameAr: 'الاحتياطيات', type: 'Equity', parentId: equityRoot.id, nature: 'Credit', description: 'المبالغ المحتجزة من الأرباح لمواجهة ظروف مستقبلية' } });
-    const partnersParent = await prisma.account.create({ data: { code: '33', name: 'Partners Current Accounts', nameAr: 'جاري الشركاء / الملاك', type: 'Equity', parentId: equityRoot.id, nature: 'Credit', description: 'حسابات متابعة المسحوبات والإيداعات الشخصية للملاك' } });
-    const reParent = await prisma.account.create({ data: { code: '34', name: 'Retained Earnings (or Losses)', nameAr: 'الأرباح المبقاة (أو الخسائر)', type: 'Equity', parentId: equityRoot.id, nature: 'Credit', description: 'صافي أرباح السنوات السابقة التي لم يتم توزيعها' } });
-    const treasuryParent = await prisma.account.create({ data: { code: '35', name: 'Treasury Shares', nameAr: 'أسهم الخزانة', type: 'Equity', parentId: equityRoot.id, nature: 'Debit', description: 'أسهم تشتريها الشركة من السوق وتقلل من حقوق الملكية' } });
+    const capParent = await prisma.account.create({ data: { companyId, code: '31', name: 'Capital', nameAr: 'رأس المال', type: 'Equity', parentId: equityRoot.id, nature: 'Credit', description: 'رأس مال المنشأة المخصص من الملاك' } });
+    const reservesParent = await prisma.account.create({ data: { companyId, code: '32', name: 'Reserves', nameAr: 'الاحتياطيات', type: 'Equity', parentId: equityRoot.id, nature: 'Credit', description: 'المبالغ المحتجزة من الأرباح لمواجهة ظروف مستقبلية' } });
+    const partnersParent = await prisma.account.create({ data: { companyId, code: '33', name: 'Partners Current Accounts', nameAr: 'جاري الشركاء / الملاك', type: 'Equity', parentId: equityRoot.id, nature: 'Credit', description: 'حسابات متابعة المسحوبات والإيداعات الشخصية للملاك' } });
+    const reParent = await prisma.account.create({ data: { companyId, code: '34', name: 'Retained Earnings (or Losses)', nameAr: 'الأرباح المبقاة (أو الخسائر)', type: 'Equity', parentId: equityRoot.id, nature: 'Credit', description: 'صافي أرباح السنوات السابقة التي لم يتم توزيعها' } });
+    const treasuryParent = await prisma.account.create({ data: { companyId, code: '35', name: 'Treasury Shares', nameAr: 'أسهم الخزانة', type: 'Equity', parentId: equityRoot.id, nature: 'Debit', description: 'أسهم تشتريها الشركة من السوق وتقلل من حقوق الملكية' } });
 
     const professionalCOA = [
       { code: '1100', name: 'Cash on Hand', nameAr: 'النقدية بالصندوق', type: 'Asset', parentId: currentAssets.id, nature: 'Debit', description: 'النقد الموجود فعلياً في خزينة الشركة' },
@@ -217,6 +233,7 @@ export async function seedProfessionalAccounts() {
       { code: '1135', name: 'Advances to Employees', nameAr: 'سلف الموظفين', type: 'Asset', parentId: currentAssets.id, nature: 'Debit', description: 'قيمة السلف والعهد الشخصية الممنوحة للموظفين' },
       { code: '1140', name: 'Inventory Asset', nameAr: 'المخزون', type: 'Asset', parentId: currentAssets.id, nature: 'Debit', description: 'قيمة البضائع والمواد المخزنة القابلة للبيع' },
       { code: '1150', name: 'VAT Receivable (Input Tax)', nameAr: 'ضريبة القيمة المضافة المدفوعة', type: 'Asset', parentId: currentAssets.id, nature: 'Debit', description: 'ضريبة القيمة المضافة التي تم دفعها للموردين والقابلة للاسترداد' },
+      { code: '1151', name: 'Employee Penalties Receivable', nameAr: 'ذمم جزاءات الموظفين', type: 'Asset', parentId: currentAssets.id, nature: 'Debit', description: 'مستحقات جزاءات على الموظفين لم يتم استقطاعها بعد' },
       
       // Fixed Assets (12xx)
       { code: '1200', name: 'Machinery & Equipment', nameAr: 'آلات ومعدات', type: 'Asset', parentId: fixedAssets.id, nature: 'Debit', description: 'قيمة الأصول الثابتة من آلات ومعدات ووسائل إنتاج' },
@@ -227,6 +244,7 @@ export async function seedProfessionalAccounts() {
       // Liabilities (2xxx)
       { code: '2000', name: 'Accounts Payable', nameAr: 'حسابات الموردين (ذمم)', type: 'Liability', parentId: liabilityRoot.id, nature: 'Credit', description: 'الالتزامات المالية للموردين مقابل مشتريات بضائع أو خدمات آجلة' },
       { code: '2100', name: 'Accrued Salaries', nameAr: 'رواتب مستحقة', type: 'Liability', parentId: liabilityRoot.id, nature: 'Credit', description: 'إجمالي الرواتب والأجور التي استحقت للموظفين ولم تُصرف بعد' },
+      { code: '2110', name: 'Employee Penalties Fund', nameAr: 'صندوق جزاءات الموظفين', type: 'Liability', parentId: liabilityRoot.id, nature: 'Credit', description: 'مخصصات وجزاءات الموظفين المجمعة لاستخدامها في أغراض اجتماعية' },
       { code: '2120', name: 'VAT Payable (Output Tax)', nameAr: 'ضريبة القيمة المضافة المحصلة', type: 'Liability', parentId: liabilityRoot.id, nature: 'Credit', description: 'ضريبة القيمة المضافة التي تم تحصيلها من العملاء ولَم تُورد للدولة بعد' },
       { code: '2300', name: 'Income Tax Payable', nameAr: 'ضريبة الدخل المستحقة', type: 'Liability', parentId: liabilityRoot.id, nature: 'Credit', description: 'المبالغ المخصصة لتغطية مستحقات ضريبة الدخل والزكاة' },
       
@@ -257,7 +275,7 @@ export async function seedProfessionalAccounts() {
     ];
 
     await prisma.account.createMany({
-      data: professionalCOA
+      data: professionalCOA.map(acc => ({ ...acc, companyId }))
     });
 
     revalidatePath('/accounts');

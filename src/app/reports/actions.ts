@@ -1,11 +1,21 @@
 'use server';
 
 import { prisma } from '@/lib/db';
-import { revalidatePath } from 'next/cache';
+import { getSession } from '@/lib/auth';
+
+async function getCompanyId() {
+  const session = await getSession();
+  if (!session || !session.user || !session.user.companyId) {
+    throw new Error('Unauthorized');
+  }
+  return session.user.companyId;
+}
 
 export async function getTrialBalance() {
   try {
+    const companyId = await getCompanyId();
     const accounts = await prisma.account.findMany({
+      where: { companyId },
       include: {
         entries: {
           select: { debit: true, credit: true }
@@ -31,8 +41,10 @@ export async function getTrialBalance() {
 
 export async function getProfitLoss() {
   try {
+    const companyId = await getCompanyId();
     const accounts = await prisma.account.findMany({
       where: {
+        companyId,
         OR: [
           { code: { startsWith: '4' } }, // Revenue
           { code: { startsWith: '5' } }, // Expenses
@@ -80,8 +92,10 @@ export async function getProfitLoss() {
 
 export async function getBalanceSheet() {
   try {
+    const companyId = await getCompanyId();
     const accounts = await prisma.account.findMany({
       where: {
+        companyId,
         OR: [
           { code: { startsWith: '1' } }, // Assets
           { code: { startsWith: '2' } }, // Liabilities
@@ -120,7 +134,7 @@ export async function getBalanceSheet() {
       }
     });
 
-    // Handle Net Income in Equity if needed
+    // Handle Net Income in Equity
     const pl = await getProfitLoss();
     equity.push({ name: 'Net Income / (Loss)', nameAr: 'صافي الربح / (الخسارة)', balance: pl.netIncome });
     totalEquity += pl.netIncome;
@@ -141,8 +155,10 @@ export async function getBalanceSheet() {
 
 export async function getSalesReport(startDate: string, endDate: string) {
   try {
+    const companyId = await getCompanyId();
     const invoices = await prisma.salesInvoice.findMany({
       where: {
+        companyId,
         date: {
           gte: new Date(startDate),
           lte: new Date(endDate)
@@ -162,8 +178,10 @@ export async function getSalesReport(startDate: string, endDate: string) {
 
 export async function getPurchaseReport(startDate: string, endDate: string) {
   try {
+    const companyId = await getCompanyId();
     const invoices = await prisma.purchaseInvoice.findMany({
       where: {
+        companyId,
         date: {
           gte: new Date(startDate),
           lte: new Date(endDate)
@@ -183,8 +201,10 @@ export async function getPurchaseReport(startDate: string, endDate: string) {
 
 export async function getReturnsReport(startDate: string, endDate: string) {
   try {
+    const companyId = await getCompanyId();
     const salesReturns = await prisma.salesInvoice.findMany({
       where: {
+        companyId,
         status: 'Returned',
         date: { gte: new Date(startDate), lte: new Date(endDate) }
       },
@@ -193,6 +213,7 @@ export async function getReturnsReport(startDate: string, endDate: string) {
 
     const purchaseReturns = await prisma.purchaseInvoice.findMany({
       where: {
+        companyId,
         status: 'Returned',
         date: { gte: new Date(startDate), lte: new Date(endDate) }
       },
@@ -204,3 +225,4 @@ export async function getReturnsReport(startDate: string, endDate: string) {
     return { success: false, error: error.message };
   }
 }
+

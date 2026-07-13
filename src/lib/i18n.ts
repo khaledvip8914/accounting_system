@@ -1,7 +1,7 @@
 export const dictionaries = {
   en: {
     sidebar: {
-      brand: 'NexAccount',
+      brand: 'QaydX',
       dashboard: 'Dashboard',
       financialMgmt: 'Financial Management',
       sales: 'Sales',
@@ -165,7 +165,7 @@ export const dictionaries = {
   },
   ar: {
     sidebar: {
-      brand: 'نكس أكاونت',
+      brand: 'قيد إكس',
       dashboard: 'لوحة التحكم',
       financialMgmt: 'الإدارة المالية',
       sales: 'المبيعات',

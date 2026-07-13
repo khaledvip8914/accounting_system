@@ -65,24 +65,14 @@ export default function CreatePurchaseOrderModal({
       unit: i.product?.unit,
       supplierId: i.product?.supplierId,
       total: i.total
-    })) || (products.filter(p => p.stockQuantity <= 0).map(p => ({
-      productId: p.id,
-      sku: p.sku,
-      name: p.name,
-      nameAr: p.nameAr,
-      quantity: Math.max(1, (p.reorderPoint || 1)),
-      unitPrice: p.costPrice || 0,
-      unitId: p.unitId,
-      unit: p.unit,
-      supplierId: p.supplierId,
-      total: Math.max(1, (p.reorderPoint || 1)) * (p.costPrice || 0)
-    })))
+    })) || []
   });
 
   const [isSaving, setIsSaving] = useState(false);
-  const [autoImportType, setAutoImportType] = useState<'out' | 'low' | 'both'>('out');
+  const [autoImportType, setAutoImportType] = useState<'out' | 'low' | 'both' | ''>('');
 
-  const populateItems = (type: 'out' | 'low' | 'both') => {
+  const populateItems = (type: 'out' | 'low' | 'both' | '') => {
+    if (!type) return;
     const newItems = products.filter(p => {
         if (type === 'out') return p.stockQuantity <= 0;
         if (type === 'low') return p.stockQuantity > 0 && p.stockQuantity <= (p.reorderPoint || 0);
@@ -214,16 +204,21 @@ export default function CreatePurchaseOrderModal({
                   <select 
                     value={autoImportType} 
                     onChange={e => {
-                        const type = e.target.value as 'out' | 'low' | 'both';
+                        const type = e.target.value as 'out' | 'low' | 'both' | '';
                         setAutoImportType(type);
-                        if (confirm(lang === 'ar' ? 'هل أنت متأكد؟ سيتم استبدال القائمة الحالية.' : 'Are you sure? Current list will be replaced.')) {
-                           populateItems(type);
+                        if (!type) return;
+
+                        if (formData.items.length > 0) {
+                           if (confirm(lang === 'ar' ? 'هل أنت متأكد؟ سيتم استبدال القائمة الحالية.' : 'Are you sure? Current list will be replaced.')) {
+                              populateItems(type);
+                           }
                         } else {
-                           // User chose not to update list.
+                           populateItems(type);
                         }
                     }}
                     style={{ padding: '0.4rem', borderRadius: '6px', border: '1px solid #7dd3fc', background: 'white', outline: 'none' }}
                   >
+                     <option value="">{lang === 'ar' ? '--- اختر النوع ---' : '--- Select Type ---'}</option>
                      <option value="out">{lang === 'ar' ? 'المنتجات التي نفدت (رصيد 0 أو أقل)' : 'Out of Stock (0 qty)'}</option>
                      <option value="low">{lang === 'ar' ? 'المنتجات التي أوشكت على النفاذ' : 'Low Stock Products'}</option>
                      <option value="both">{lang === 'ar' ? 'كلاهما معاً' : 'Both (Out & Low Stock)'}</option>

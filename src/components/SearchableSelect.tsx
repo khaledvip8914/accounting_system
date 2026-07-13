@@ -6,7 +6,7 @@ interface Option {
   id: string;
   sku: string;
   name: string;
-  nameAr?: string;
+  nameAr?: string | null;
   [key: string]: any;
 }
 
@@ -88,9 +88,25 @@ export default function SearchableSelect({ options, value, onChange, placeholder
                   key={o.id} 
                   className={`option-item ${value === o.id ? 'selected' : ''}`}
                   onClick={() => handleSelect(o.id)}
+                  style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
                 >
-                  <div className="option-sku">{o.sku}</div>
-                  <div className="option-name">{lang === 'ar' ? (o.nameAr || o.name) : o.name}</div>
+                  <div>
+                    <div className="option-sku">{o.sku}</div>
+                    <div className="option-name">{lang === 'ar' ? (o.nameAr || o.name) : o.name}</div>
+                  </div>
+                  {o.stockQuantity !== undefined && (
+                    <div className="option-stock" style={{ 
+                      fontSize: '0.7rem', 
+                      fontWeight: 'bold', 
+                      padding: '2px 6px', 
+                      borderRadius: '4px', 
+                      background: o.stockQuantity <= (o.reorderPoint || 0) ? '#fee2e2' : '#dcfce7',
+                      color: o.stockQuantity <= (o.reorderPoint || 0) ? '#991b1b' : '#166534',
+                      border: '1px solid currentColor'
+                    }}>
+                      {o.stockQuantity}
+                    </div>
+                  )}
                 </div>
               ))
             ) : (

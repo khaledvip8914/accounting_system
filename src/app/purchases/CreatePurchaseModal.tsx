@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
-import { createSupplier } from './actions';
+import { useState, useMemo, useRef } from 'react';
+import { createSupplier, uploadAttachmentBase64 } from './actions';
+import { createWarehouse } from '../warehouses/actions';
 import CreateSupplierModal from '@/components/CreateSupplierModal';
+import CreateWarehouseModal from '@/components/CreateWarehouseModal';
 import SearchableSelect from '@/components/SearchableSelect';
 
 type Account = { id: string; code: string; name: string; nameAr: string | null; type: string };
@@ -40,6 +42,7 @@ export default function CreatePurchaseModal({
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
   
   const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const [showQuickAddWarehouse, setShowQuickAddWarehouse] = useState(false);
   
   const [items, setItems] = useState<any[]>(
     invoiceToEdit && invoiceToEdit.items ? invoiceToEdit.items.map((i: any) => ({
@@ -53,7 +56,12 @@ export default function CreatePurchaseModal({
   
   const [discount, setDiscount] = useState(invoiceToEdit?.discount || 0);
   const [notes, setNotes] = useState('');
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+  const [attachmentUrl, setAttachmentUrl] = useState(invoiceToEdit?.attachmentUrl || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Filter accounts for searchable dropdown
   const filteredAccounts = useMemo(() => {
@@ -105,6 +113,14 @@ export default function CreatePurchaseModal({
     return createSupplier(data);
   };
 
+  const handleQuickAddWarehouse = async (data: any) => {
+    const res = await createWarehouse(data);
+    if (res.success && res.warehouse) {
+      setSelectedWarehouseId(res.warehouse.id);
+    }
+    return res;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSupplierId || !selectedWarehouseId || items.some(i => !i.productId)) {
@@ -118,7 +134,71 @@ export default function CreatePurchaseModal({
 
     setIsSubmitting(true);
     try {
+      let finalAttachmentUrl = attachmentUrl;
+
+      if (attachmentFile) {
+        const compressImage = (file: File): Promise<string> => {
+          return new Promise((resolve, reject) => {
+            const url = URL.createObjectURL(file);
+            const img = new Image();
+            img.onload = () => {
+              URL.revokeObjectURL(url);
+              const canvas = document.createElement('canvas');
+              let width = img.width;
+              let height = img.height;
+              const maxDim = 1200; // max width or height
+
+              if (width > height) {
+                if (width > maxDim) {
+                  height = Math.round((height * maxDim) / width);
+                  width = maxDim;
+                }
+              } else {
+                if (height > maxDim) {
+                  width = Math.round((width * maxDim) / height);
+                  height = maxDim;
+                }
+              }
+
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              if (!ctx) return reject(new Error('Canvas not supported'));
+              
+              ctx.drawImage(img, 0, 0, width, height);
+              // Compress to JPEG with 0.7 quality
+              const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+              resolve(dataUrl);
+            };
+            img.onerror = () => {
+              URL.revokeObjectURL(url);
+              // If it's a PDF or unrecognized, fallback to standard FileReader
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result as string);
+              reader.onerror = () => reject(new Error('Failed to read file'));
+              reader.readAsDataURL(file);
+            };
+            img.src = url;
+          });
+        };
+
+        const base64String = await compressImage(attachmentFile);
+        
+        const uploadData = await uploadAttachmentBase64({
+          name: attachmentFile.name.replace(/\.[^/.]+$/, "") + ".jpg", // Force jpg extension if compressed
+          base64: base64String
+        });
+        if (uploadData.success) {
+          finalAttachmentUrl = uploadData.url;
+        } else {
+          alert((lang === 'ar' ? 'فشل رفع المرفق: ' : 'Failed to upload attachment: ') + uploadData.error);
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
       await onSave({
+        orderId: invoiceToEdit?.orderId,
         supplierId: selectedSupplierId,
         warehouseId: selectedWarehouseId,
         isTaxInclusive,
@@ -126,15 +206,16 @@ export default function CreatePurchaseModal({
         items,
         discount,
         notes,
+        attachmentUrl: finalAttachmentUrl,
         ...totals,
         status: paymentType === 'paid' ? 'Paid' : 'Partially Paid',
         paymentType,
         paymentAccountId: paymentType === 'paid' ? paymentAccountId : null,
       });
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert('Error saving purchase');
+      alert((lang === 'ar' ? 'خطأ في حفظ الفاتورة: ' : 'Error saving purchase: ') + (error?.message || error));
     } finally {
       setIsSubmitting(false);
     }
@@ -205,12 +286,22 @@ export default function CreatePurchaseModal({
 
             <div className="form-group">
               <label>{lang === 'ar' ? 'المستودع (وجهة التوريد)' : 'Warehouse (Destination)'} <span className="required">*</span></label>
-              <select value={selectedWarehouseId} onChange={e => setSelectedWarehouseId(e.target.value)} required>
-                <option value="">{lang === 'ar' ? '--- اختر المستودع ---' : '--- Select Warehouse ---'}</option>
-                {warehouses.map(w => (
-                  <option key={w.id} value={w.id}>{w.code} — {lang === 'ar' && w.nameAr ? w.nameAr : w.name}</option>
-                ))}
-              </select>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <select value={selectedWarehouseId} onChange={e => setSelectedWarehouseId(e.target.value)} required style={{ flex: 1 }}>
+                  <option value="">{lang === 'ar' ? '--- اختر المستودع ---' : '--- Select Warehouse ---'}</option>
+                  {warehouses.map(w => (
+                    <option key={w.id} value={w.id}>{w.code} — {lang === 'ar' && w.nameAr ? w.nameAr : w.name}</option>
+                  ))}
+                </select>
+                <button 
+                  type="button" 
+                  className="btn-quick-add" 
+                  onClick={() => setShowQuickAddWarehouse(true)}
+                  title={lang === 'ar' ? 'إضافة مستودع سريع' : 'Quick Add Warehouse'}
+                >
+                  +
+                </button>
+              </div>
             </div>
           </div>
 
@@ -372,6 +463,19 @@ export default function CreatePurchaseModal({
                           lang={lang}
                           placeholder={lang === 'ar' ? 'اختر صنفاً...' : 'Select item...'}
                         />
+                        {item.productId && (
+                          <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px', fontWeight: 600 }}>
+                            {lang === 'ar' ? 'المخزون الحالي: ' : 'Current Stock: '}
+                            <span style={{ 
+                              color: (products.find(p => p.id === item.productId)?.stockQuantity || 0) <= (products.find(p => p.id === item.productId)?.reorderPoint || 0) ? '#ef4444' : '#059669',
+                              background: (products.find(p => p.id === item.productId)?.stockQuantity || 0) <= (products.find(p => p.id === item.productId)?.reorderPoint || 0) ? '#fee2e2' : '#dcfce7',
+                              padding: '1px 4px',
+                              borderRadius: '4px'
+                            }}>
+                              {products.find(p => p.id === item.productId)?.stockQuantity || 0}
+                            </span>
+                          </div>
+                        )}
                       </td>
                       <td>
                         <select value={item.unitId || ''} onChange={e => updateItem(index, 'unitId', e.target.value)} required>
@@ -409,6 +513,69 @@ export default function CreatePurchaseModal({
                 onChange={e => setNotes(e.target.value)}
                 placeholder={lang === 'ar' ? 'أي ملاحظات خاصة بالأمر...' : 'Any special notes...'}
               />
+              
+              <div style={{ marginTop: '1rem' }}>
+                <label style={{ display: 'block', fontWeight: 600, fontSize: '0.875rem', color: '#374151', marginBottom: '0.4rem' }}>
+                  {lang === 'ar' ? 'إرفاق صورة الفاتورة' : 'Attach Invoice Image'}
+                </label>
+                
+                {!attachmentFile && !attachmentUrl ? (
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button 
+                      type="button" 
+                      onClick={() => cameraInputRef.current?.click()}
+                      style={{ flex: 1, padding: '0.75rem', background: '#eff6ff', color: '#2563eb', border: '1.5px dashed #93c5fd', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.2s' }}
+                    >
+                      📷 {lang === 'ar' ? 'تصوير الفاتورة' : 'Camera'}
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => fileInputRef.current?.click()}
+                      style={{ flex: 1, padding: '0.75rem', background: '#f8fafc', color: '#475569', border: '1.5px dashed #cbd5e1', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'all 0.2s' }}
+                    >
+                      📁 {lang === 'ar' ? 'استوديو / ملفات' : 'Gallery / Files'}
+                    </button>
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      capture="environment"
+                      ref={cameraInputRef}
+                      onChange={e => setAttachmentFile(e.target.files?.[0] || null)}
+                      style={{ display: 'none' }}
+                    />
+                    <input 
+                      type="file" 
+                      accept="image/*,application/pdf"
+                      ref={fileInputRef}
+                      onChange={e => setAttachmentFile(e.target.files?.[0] || null)}
+                      style={{ display: 'none' }}
+                    />
+                  </div>
+                ) : (
+                  <div style={{ padding: '0.75rem', background: '#ecfdf5', border: '1.5px solid #a7f3d0', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', overflow: 'hidden' }}>
+                      <span style={{ fontSize: '1.25rem' }}>✅</span>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ color: '#065f46', fontSize: '0.875rem', fontWeight: 700, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', maxWidth: '180px' }}>
+                          {attachmentFile ? attachmentFile.name : (lang === 'ar' ? 'يوجد مرفق محفوظ' : 'Attachment saved')}
+                        </span>
+                        {attachmentUrl && !attachmentFile && (
+                          <a href={attachmentUrl} target="_blank" rel="noreferrer" style={{ color: '#059669', fontSize: '0.75rem', textDecoration: 'underline' }}>
+                            {lang === 'ar' ? 'عرض المرفق' : 'View attachment'}
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                    <button 
+                      type="button" 
+                      onClick={() => { setAttachmentFile(null); setAttachmentUrl(''); if (cameraInputRef.current) cameraInputRef.current.value = ''; if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                      style={{ color: '#ef4444', background: '#fee2e2', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700, padding: '0.4rem 0.75rem' }}
+                    >
+                      {lang === 'ar' ? 'إزالة' : 'Remove'}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="totals-summary">
@@ -466,6 +633,14 @@ export default function CreatePurchaseModal({
             lang={lang}
             onClose={() => setShowQuickAdd(false)}
             onSave={handleQuickAdd}
+          />
+        )}
+
+        {showQuickAddWarehouse && (
+          <CreateWarehouseModal
+            lang={lang}
+            onClose={() => setShowQuickAddWarehouse(false)}
+            onSave={handleQuickAddWarehouse}
           />
         )}
       </div>

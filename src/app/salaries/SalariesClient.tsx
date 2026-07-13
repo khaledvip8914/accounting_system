@@ -220,6 +220,19 @@ export default function SalariesClient({ lang }: { lang: string }) {
         .approve-btn { background: #10b881; color: white; border: none; padding: 0.5rem 1.25rem; border-radius: 8px; font-weight: 800; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
         .approve-btn:hover { background: #059669; transform: translateY(-1px); }
         .success-icon { font-size: 1.25rem; }
+        
+        .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        
+        @media (max-width: 768px) {
+          .salaries-page { padding: 1rem; }
+          .page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+          .header-actions { flex-direction: column; align-items: stretch; width: 100%; }
+          .period-selector { width: 100%; justify-content: space-between; }
+          .period-selector select { flex: 1; }
+          .bulk-btn { width: 100%; }
+          .stats-strip { flex-direction: column; gap: 1rem; }
+          .mini-stat { padding: 1rem; }
+        }
       `}</style>
     </div>
   );

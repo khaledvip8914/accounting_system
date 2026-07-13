@@ -7,9 +7,10 @@ import { redirect } from 'next/navigation';
 
 export default async function EmployeesPage() {
   const session = await getSession();
-  if (!session) {
+  if (!session || !session.user || !session.user.companyId) {
     redirect('/login');
   }
+  const companyId = session.user.companyId;
 
   const cookieStore = await cookies();
   const lang = cookieStore.get('NX_LANG')?.value || 'en';
@@ -17,10 +18,12 @@ export default async function EmployeesPage() {
   const dict = getDictionary(lang);
 
   const employees = await prisma.employee.findMany({
+    where: { companyId },
     orderBy: { createdAt: 'desc' }
   });
 
   const financialMoves = await prisma.employeeFinancialMove.findMany({
+    where: { companyId },
     orderBy: { date: 'desc' },
     include: { employee: true }
   });

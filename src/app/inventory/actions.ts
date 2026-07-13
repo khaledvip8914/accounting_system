@@ -1,10 +1,27 @@
 'use server';
 
 import { prisma } from '@/lib/db';
+import { getSession } from '@/lib/auth';
+
+async function getAuthContext() {
+  const session = await getSession();
+  if (!session || !session.user || !session.user.companyId) {
+    throw new Error('Unauthorized');
+  }
+  return {
+    companyId: session.user.companyId,
+    permissions: session.user,
+    role: session.user.role
+  };
+}
 
 export async function getItemCard(productId: string, startDate?: string, endDate?: string) {
   try {
-    const where: any = { productId };
+    const { companyId } = await getAuthContext();
+    const where: any = { 
+      productId,
+      product: { companyId }
+    };
     if (startDate || endDate) {
       where.date = {};
       if (startDate) {
@@ -35,7 +52,9 @@ export async function getItemCard(productId: string, startDate?: string, endDate
 
 export async function getDisposalVouchers() {
   try {
+    const { companyId } = await getAuthContext();
     return await prisma.disposalVoucher.findMany({
+      where: { companyId },
       include: {
         product: { include: { unitRef: true, subUnitRef: true } },
         warehouse: true
@@ -50,14 +69,16 @@ export async function getDisposalVouchers() {
 
 export async function createDisposalVoucher(data: { productId: string, quantity: number, reason: string, date: string, warehouseId: string, unitId?: string, notes?: string }) {
   try {
+    const { companyId } = await getAuthContext();
+
     const res = await prisma.$transaction(async (tx) => {
       // 1. Generate voucher number
-      const count = await tx.disposalVoucher.count();
+      const count = await tx.disposalVoucher.count({ where: { companyId } });
       const voucherNumber = `DISP-${(count + 1).toString().padStart(4, '0')}`;
 
       // 2. Update Product stock
       await tx.product.update({
-        where: { id: data.productId },
+        where: { id: data.productId, companyId },
         data: { stockQuantity: { decrement: data.quantity } }
       });
 
@@ -75,6 +96,7 @@ export async function createDisposalVoucher(data: { productId: string, quantity:
       // 4. Create Voucher
       const voucher = await tx.disposalVoucher.create({
           data: {
+              companyId,
               voucherNumber,
               productId: data.productId,
               warehouseId: data.warehouseId,
@@ -89,6 +111,7 @@ export async function createDisposalVoucher(data: { productId: string, quantity:
       // 5. Create Inventory Log
       await tx.inventoryLog.create({
         data: {
+          companyId,
           productId: data.productId,
           warehouseId: data.warehouseId,
           type: 'Disposal',
@@ -110,13 +133,15 @@ export async function createDisposalVoucher(data: { productId: string, quantity:
 
 export async function deleteDisposalVoucher(id: string) {
     try {
+        const { companyId } = await getAuthContext();
+
         await prisma.$transaction(async (tx) => {
-            const v = await tx.disposalVoucher.findUnique({ where: { id } });
+            const v = await tx.disposalVoucher.findFirst({ where: { id, companyId } });
             if (!v) throw new Error("Voucher not found");
 
             // Reverse stock
             await tx.product.update({
-                where: { id: v.productId },
+                where: { id: v.productId, companyId },
                 data: { stockQuantity: { increment: v.quantity } }
             });
             const ws = await tx.warehouseStock.findUnique({
@@ -131,7 +156,7 @@ export async function deleteDisposalVoucher(id: string) {
 
             // Remove associated log
             await tx.inventoryLog.deleteMany({
-                where: { referenceId: v.voucherNumber, type: 'Disposal' }
+                where: { companyId, referenceId: v.voucherNumber, type: 'Disposal' }
             });
 
             // Delete Voucher
@@ -143,8 +168,6 @@ export async function deleteDisposalVoucher(id: string) {
     }
 }
 
-// Simple update (usually mostly notes/reason/date if allowed)
-// For simplicity, we'll implement a full reversal/re-apply if quantity changes
 export async function updateDisposalVoucher(id: string, data: any) {
     try {
         await deleteDisposalVoucher(id);

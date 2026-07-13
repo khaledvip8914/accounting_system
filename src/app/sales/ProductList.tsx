@@ -196,23 +196,79 @@ export default function ProductList({ products, units, warehouses, suppliers, ca
     return val || 'N/A';
   };
 
-  const handleExport = () => {
-    const dataToExport = products.map(p => ({
-       'SKU': p.sku,
-       'Name (AR)': p.nameAr || '',
-       'Name (EN)': p.name || '',
-       'Classification': p.classification,
-       'Category': p.category || '',
-       'Cost': p.costPrice,
-       'Price': p.salePrice,
-       'Stock': p.stockQuantity,
-       'Unit': lang === 'ar' ? (p.unitRef?.nameAr || p.unit) : (p.unitRef?.name || p.unit)
-    }));
-    const ws = XLSX.utils.json_to_sheet(dataToExport);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Products");
-    XLSX.writeFile(wb, "Accounting_Products.xlsx");
+  const handleExport = async () => {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Products');
+    
+    // Add reference sheets for dropdowns (hidden)
+    const unitSheet = workbook.addWorksheet('Units (Helper)', { state: 'hidden' });
+    const catSheet = workbook.addWorksheet('Cats (Helper)', { state: 'hidden' });
+
+    // 1. Setup Headers to match the Template exactly
+    sheet.columns = [
+      { header: 'SKU', key: 'sku', width: 15 },
+      { header: 'Name (AR)', key: 'nameAr', width: 25 },
+      { header: 'Name (EN)', key: 'nameEn', width: 25 },
+      { header: 'Category', key: 'cat', width: 20 },
+      { header: 'Classification', key: 'classification', width: 20 },
+      { header: 'Cost', key: 'cost', width: 10 },
+      { header: 'Price', key: 'price', width: 10 },
+      { header: 'Stock', key: 'stock', width: 10 },
+      { header: 'Unit', key: 'unit', width: 15 },
+      { header: 'Sub-Units in Main', key: 'unitQty', width: 18 },
+      { header: 'SubUnit', key: 'subUnit', width: 15 },
+      { header: 'Calories', key: 'kcal', width: 12 }
+    ];
+
+    // 2. Prepare Reference Data
+    const unitList = units.map(u => lang === 'ar' ? (u.nameAr || u.name) : u.name);
+    unitList.forEach((u, i) => unitSheet.getCell(i + 1, 1).value = u);
+
+    const categoryList = categories.map(c => lang === 'ar' ? (c.nameAr || c.name) : c.name);
+    categoryList.forEach((c, i) => catSheet.getCell(i + 1, 1).value = c);
+
+    const classificationList = ['"Raw Material,Semi-finished,Finished Product"'];
+
+    // 3. Map current data to the template structure
+    products.forEach(p => {
+      sheet.addRow({
+        sku: p.sku,
+        nameAr: p.nameAr || '',
+        nameEn: p.name || '',
+        cat: lang === 'ar' ? (p.categoryRef?.nameAr || p.category) : (p.categoryRef?.name || p.category),
+        classification: p.classification,
+        cost: p.costPrice,
+        price: p.salePrice,
+        stock: p.stockQuantity,
+        unit: lang === 'ar' ? (p.unitRef?.nameAr || p.unit) : (p.unitRef?.name || p.unit),
+        unitQty: p.unitQuantity || 1,
+        subUnit: lang === 'ar' ? (p.subUnitRef?.nameAr || '') : (p.subUnitRef?.name || ''),
+        kcal: p.caloriesPer100g || 0
+      });
+    });
+
+    // 4. Apply Data Validations to all rows (current + extra for expansion)
+    const unitRange = `'Units (Helper)'!$A$1:$A$${unitList.length || 1}`;
+    const catRange = `'Cats (Helper)'!$A$1:$A$${categoryList.length || 1}`;
+    
+    const rowCount = products.length + 100; // Allow room for more entries
+    for (let i = 2; i <= rowCount; i++) {
+        sheet.getCell(`E${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: classificationList };
+        sheet.getCell(`I${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [unitRange] };
+        sheet.getCell(`K${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [unitRange] };
+        sheet.getCell(`D${i}`).dataValidation = { type: 'list', allowBlank: true, formulae: [catRange] };
+    }
+
+    // 5. Style Header
+    sheet.getRow(1).font = { bold: true };
+    sheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E0E0' } };
+
+    // 6. Generate and Save
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    saveAs(blob, "Accounting_Products_Export_v2.xlsx");
   };
+
 
   const handleDownloadTemplate = async () => {
     const workbook = new ExcelJS.Workbook();
@@ -293,7 +349,10 @@ export default function ProductList({ products, units, warehouses, suppliers, ca
            // Helper to get value from multiple possible header keys
            const getVal = (keys: string[]) => {
              for (const k of keys) {
-               if (item[k] !== undefined) return item[k];
+               if (item[k] !== undefined) {
+                 const val = item[k];
+                 return (typeof val === 'string') ? val.trim() : val;
+               }
              }
              return undefined;
            };

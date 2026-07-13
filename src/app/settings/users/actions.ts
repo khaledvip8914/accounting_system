@@ -7,9 +7,23 @@ import { getSession } from '@/lib/auth';
 import { hasPermission } from '@/lib/permissions';
 import { sendVerificationEmail } from '@/lib/mail';
 
+async function getAuthContext() {
+  const session = await getSession();
+  if (!session || !session.user || !session.user.companyId) {
+    throw new Error('Unauthorized');
+  }
+  return {
+    companyId: session.user.companyId,
+    permissions: session.user
+  };
+}
+
 export async function getUsers() {
   try {
+    const { companyId } = await getAuthContext();
     return await prisma.user.findMany({
+      where: { companyId },
+      include: { roleRef: true },
       orderBy: { createdAt: 'desc' }
     });
   } catch (error) {
@@ -20,28 +34,31 @@ export async function getUsers() {
 
 export async function saveUser(data: any) {
   try {
-    const session = await getSession();
-    // Temporary bypass to restore access
-    const isAuthorized = true; 
+    const { companyId, permissions } = await getAuthContext();
     
-    if (!isAuthorized) {
+    if (!hasPermission(permissions, 'users', 'edit')) {
       throw new Error('غير مصرح لك بإدارة المستخدمين');
     }
 
     const { id, password, ...rest } = data;
-    
+
     let hashedPassword = undefined;
     if (password && password.trim() !== '') {
       hashedPassword = await bcrypt.hash(password, 10);
     }
 
     if (id) {
-      // Update
-      const updateData: any = { ...rest };
+      // Update: ensure user belongs to same company
+      const existingUser = await prisma.user.findFirst({
+        where: { id, companyId }
+      });
+      if (!existingUser) throw new Error('User not found or unauthorized');
+
+      const updateData: any = { ...rest, companyId }; // Force current companyId
       if (hashedPassword) updateData.password = hashedPassword;
       
       const user = await prisma.user.update({
-        where: { id },
+        where: { id, companyId },
         data: updateData
       });
       revalidatePath('/settings/users');
@@ -57,6 +74,7 @@ export async function saveUser(data: any) {
       const user = await prisma.user.create({
         data: {
           ...rest,
+          companyId, // Force current companyId
           password: hashedPassword,
           verificationToken
         }
@@ -69,7 +87,6 @@ export async function saveUser(data: any) {
 
       if (user.email && smtpUser && smtpPass) {
         try {
-          // Set a timeout for email sending to prevent hanging the whole action
           const mailResult = await Promise.race([
             sendVerificationEmail(user.email, verificationToken, user.name || user.username),
             new Promise<{success: boolean, error: string}>((_, reject) => 
@@ -103,22 +120,23 @@ export async function saveUser(data: any) {
 
 export async function deleteUser(id: string) {
   try {
-    const session = await getSession();
-    // Temporary bypass to restore access
-    const isAuthorized = true;
-    
-    if (!isAuthorized) {
-      throw new Error('غير مصرح لك بإدارة المستخدمين');
+    const { companyId, permissions } = await getAuthContext();
+
+    if (!hasPermission(permissions, 'users', 'delete')) {
+      throw new Error('Unauthorized');
     }
 
-    // Prevent self-deletion if we could detect current user, 
-    // but for now just prevent deleting the last admin if needed.
-    const user = await prisma.user.findUnique({ where: { id } });
-    if (user?.username === 'admin') {
+    // Prevent self-deletion and check companyId
+    const user = await prisma.user.findFirst({ 
+      where: { id, companyId } 
+    });
+    
+    if (!user) throw new Error('User not found in your company');
+    if (user.username === 'admin') {
       throw new Error('Cannot delete main administrator');
     }
 
-    await prisma.user.delete({ where: { id } });
+    await prisma.user.delete({ where: { id, companyId } });
     revalidatePath('/settings/users');
     return { success: true };
   } catch (error: any) {

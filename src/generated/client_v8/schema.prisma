@@ -9,14 +9,60 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Company {
+  id                 String    @id @default("default")
+  name               String
+  nameAr             String?
+  phone              String?
+  email              String?
+  subscriptionStatus String    @default("Active") // Active, Suspended, Expired
+  subscriptionEndsAt DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  // Relations
+  customers              Customer[]
+  suppliers              Supplier[]
+  warehouses             Warehouse[]
+  products               Product[]
+  categories             Category[]
+  salesInvoices          SalesInvoice[]
+  purchaseInvoices       PurchaseInvoice[]
+  stockTransfers         StockTransfer[]
+  inventoryLogs          InventoryLog[]
+  accounts               Account[]
+  journalVouchers        JournalVoucher[]
+  transactionVouchers    TransactionVoucher[]
+  companyProfiles        CompanyProfile[]
+  salesQuotations        SalesQuotation[]
+  unitOfMeasures         UnitOfMeasure[]
+  costCenters            CostCenter[]
+  productionOrders       ProductionOrder[]
+  users                  User[]
+  roles                  Role[]
+  employees              Employee[]
+  disposalVouchers       DisposalVoucher[]
+  purchaseOrders         PurchaseOrder[]
+  warehouseStocks        WarehouseStock[]
+  employeeFinancialMoves EmployeeFinancialMove[]
+  salaryPayments         SalaryPayment[]
+}
+
 model Customer {
+  companyId          String           @default("default")
+  company            Company          @relation(fields: [companyId], references: [id])
   id                 String           @id @default(cuid())
-  code               String           @unique
+  code               String
   name               String
   nameAr             String?
   email              String?
   phone              String?
   address            String?
+  streetName         String?
+  buildingNumber     String?
+  city               String?
+  district           String?
+  postalCode         String?
   taxNumber          String?
   commercialRegistry String?
   balance            Float            @default(0)
@@ -24,11 +70,15 @@ model Customer {
   updatedAt          DateTime         @updatedAt
   invoices           SalesInvoice[]
   quotations         SalesQuotation[]
+
+  @@unique([companyId, code])
 }
 
 model Supplier {
+  companyId          String              @default("default")
+  company            Company             @relation(fields: [companyId], references: [id])
   id                 String              @id @default(cuid())
-  code               String              @unique
+  code               String
   name               String
   nameAr             String?
   email              String?
@@ -43,11 +93,15 @@ model Supplier {
   purchaseOrders     PurchaseOrder[]
   purchaseOrderItems PurchaseOrderItem[]
   products           Product[]           @relation("ProductSupplier")
+
+  @@unique([companyId, code])
 }
 
 model Warehouse {
+  companyId        String            @default("default")
+  company          Company           @relation(fields: [companyId], references: [id])
   id               String            @id @default(cuid())
-  code             String            @unique
+  code             String
   name             String
   nameAr           String?
   location         String?
@@ -63,9 +117,13 @@ model Warehouse {
   stockItems       WarehouseStock[]
   disposalVouchers DisposalVoucher[]
   purchaseOrders   PurchaseOrder[]
+
+  @@unique([companyId, code])
 }
 
 model WarehouseStock {
+  companyId   String    @default("default")
+  company     Company   @relation(fields: [companyId], references: [id])
   id          String    @id @default(cuid())
   warehouseId String
   productId   String
@@ -77,8 +135,10 @@ model WarehouseStock {
 }
 
 model Product {
+  companyId          String                @default("default")
+  company            Company               @relation(fields: [companyId], references: [id])
   id                 String                @id @default(cuid())
-  sku                String                @unique
+  sku                String
   name               String
   nameAr             String?
   description        String?
@@ -88,6 +148,7 @@ model Product {
   classification     String                @default("Finished Product")
   unit               String                @default("pc")
   unitId             String?
+  taxCategory        String                @default("S")
   costPrice          Float                 @default(0)
   salePrice          Float                 @default(0)
   stockQuantity      Float                 @default(0)
@@ -114,42 +175,68 @@ model Product {
   purchaseOrderItems PurchaseOrderItem[]
   supplierId         String?
   supplier           Supplier?             @relation("ProductSupplier", fields: [supplierId], references: [id])
+
+  @@unique([companyId, sku])
 }
 
 model Category {
+  companyId String    @default("default")
+  company   Company   @relation(fields: [companyId], references: [id])
   id        String    @id @default(cuid())
-  name      String    @unique
+  name      String
   nameAr    String?
   products  Product[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+
+  @@unique([companyId, name])
 }
 
 model SalesInvoice {
-  id               String          @id @default(cuid())
-  invoiceNumber    String          @unique
+  companyId        String   @default("default")
+  company          Company  @relation(fields: [companyId], references: [id])
+  id               String   @id @default(cuid())
+  invoiceNumber    String
   date             DateTime
   customerId       String
   warehouseId      String?
   totalAmount      Float
-  taxAmount        Float           @default(0)
-  discount         Float           @default(0)
+  taxAmount        Float    @default(0)
+  discount         Float    @default(0)
   netAmount        Float
   status           String
-  isTaxInclusive   Boolean         @default(false)
+  isTaxInclusive   Boolean  @default(false)
   journalVoucherId String?
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-  items            InvoiceItem[]
-  journalVoucher   JournalVoucher? @relation(fields: [journalVoucherId], references: [id])
-  warehouse        Warehouse?      @relation(fields: [warehouseId], references: [id])
-  customer         Customer        @relation(fields: [customerId], references: [id])
-  quotation        SalesQuotation? @relation("QuotationToInvoice")
+  invoiceType      String   @default("388") // 388: Invoice, 381: Credit Note, 383: Debit Note
+  referenceId      String? // References the original invoice if it's a Credit/Debit Note
+
+  // ZATCA Invoice Fields
+  zatcaUuid               String?
+  zatcaInvoiceHash        String?   @db.Text
+  zatcaPreviousHash       String?   @db.Text
+  zatcaCryptographicStamp String?   @db.Text
+  zatcaQrCode             String?   @db.Text
+  zatcaStatus             String    @default("Pending") // Pending, Reported, Cleared, Failed
+  zatcaXml                String?   @db.Text
+  zatcaErrorLogs          String?   @db.Text
+  zatcaReportedAt         DateTime?
+
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  items          InvoiceItem[]
+  journalVoucher JournalVoucher? @relation(fields: [journalVoucherId], references: [id])
+  warehouse      Warehouse?      @relation(fields: [warehouseId], references: [id])
+  customer       Customer        @relation(fields: [customerId], references: [id])
+  quotation      SalesQuotation? @relation("QuotationToInvoice")
+
+  @@unique([companyId, invoiceNumber])
 }
 
 model PurchaseInvoice {
+  companyId        String          @default("default")
+  company          Company         @relation(fields: [companyId], references: [id])
   id               String          @id @default(cuid())
-  invoiceNumber    String          @unique
+  invoiceNumber    String
   date             DateTime
   supplierId       String
   warehouseId      String?
@@ -160,12 +247,15 @@ model PurchaseInvoice {
   status           String
   isTaxInclusive   Boolean         @default(false)
   journalVoucherId String?
+  attachmentUrl    String?
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
   journalVoucher   JournalVoucher? @relation(fields: [journalVoucherId], references: [id])
   warehouse        Warehouse?      @relation(fields: [warehouseId], references: [id])
   supplier         Supplier        @relation(fields: [supplierId], references: [id])
   items            PurchaseItem[]
+
+  @@unique([companyId, invoiceNumber])
 }
 
 model InvoiceItem {
@@ -193,8 +283,10 @@ model PurchaseItem {
 }
 
 model StockTransfer {
+  companyId       String              @default("default")
+  company         Company             @relation(fields: [companyId], references: [id])
   id              String              @id @default(cuid())
-  transferNumber  String              @unique
+  transferNumber  String
   date            DateTime            @default(now())
   fromWarehouseId String
   toWarehouseId   String
@@ -204,6 +296,8 @@ model StockTransfer {
   toWarehouse     Warehouse           @relation("ToWarehouse", fields: [toWarehouseId], references: [id])
   fromWarehouse   Warehouse           @relation("FromWarehouse", fields: [fromWarehouseId], references: [id])
   items           StockTransferItem[]
+
+  @@unique([companyId, transferNumber])
 }
 
 model StockTransferItem {
@@ -216,6 +310,8 @@ model StockTransferItem {
 }
 
 model InventoryLog {
+  companyId   String     @default("default")
+  company     Company    @relation(fields: [companyId], references: [id])
   id          String     @id @default(cuid())
   productId   String
   warehouseId String?
@@ -231,8 +327,10 @@ model InventoryLog {
 }
 
 model Account {
+  companyId       String               @default("default")
+  company         Company              @relation(fields: [companyId], references: [id])
   id              String               @id @default(cuid())
-  code            String               @unique
+  code            String
   name            String
   nameAr          String?
   type            String
@@ -246,20 +344,27 @@ model Account {
   entries         JournalEntry[]
   primaryVouchers TransactionVoucher[] @relation("PrimaryAccount")
   relatedVouchers TransactionVoucher[] @relation("RelatedAccount")
+
+  @@unique([companyId, code])
 }
 
 model JournalVoucher {
-  id                 String              @id @default(cuid())
-  reference          String              @unique
-  date               DateTime
-  description        String
-  status             String              @default("Draft")
-  createdAt          DateTime            @default(now())
-  entries            JournalEntry[]
-  purchaseInvoices   PurchaseInvoice[]
-  invoices           SalesInvoice[]
-  transactionVoucher TransactionVoucher?
-  salaryPayments     SalaryPayment[]
+  companyId              String                  @default("default")
+  company                Company                 @relation(fields: [companyId], references: [id])
+  id                     String                  @id @default(cuid())
+  reference              String
+  date                   DateTime
+  description            String
+  status                 String                  @default("Draft")
+  createdAt              DateTime                @default(now())
+  entries                JournalEntry[]
+  purchaseInvoices       PurchaseInvoice[]
+  invoices               SalesInvoice[]
+  transactionVoucher     TransactionVoucher?
+  salaryPayments         SalaryPayment[]
+  employeeFinancialMoves EmployeeFinancialMove[]
+
+  @@unique([companyId, reference])
 }
 
 model JournalEntry {
@@ -277,8 +382,10 @@ model JournalEntry {
 }
 
 model TransactionVoucher {
+  companyId        String          @default("default")
+  company          Company         @relation(fields: [companyId], references: [id])
   id               String          @id @default(cuid())
-  voucherNumber    String          @unique
+  voucherNumber    String
   type             String
   date             DateTime
   amount           Float
@@ -291,31 +398,47 @@ model TransactionVoucher {
   primaryAccount   Account         @relation("PrimaryAccount", fields: [primaryAccountId], references: [id])
   relatedAccount   Account         @relation("RelatedAccount", fields: [relatedAccountId], references: [id])
   journalVoucher   JournalVoucher? @relation(fields: [journalVoucherId], references: [id])
+
+  @@unique([companyId, voucherNumber])
 }
 
 model CompanyProfile {
-  id                  String   @id @default("default")
-  name                String   @default("My Company")
-  nameAr              String?  @default("شركتي")
+  companyId           String  @default("default")
+  company             Company @relation(fields: [companyId], references: [id])
+  id                  String  @id @default("default")
+  name                String  @default("My Company")
+  nameAr              String? @default("شركتي")
   email               String?
   phone               String?
   logo                String?
-  currency            String   @default("SAR")
+  currency            String  @default("SAR")
   taxNumber           String?
   streetName          String?
   buildingNumber      String?
   city                String?
   district            String?
   postalCode          String?
-  country             String   @default("SA")
-  taxSupplyDateType   String   @default("issue")
-  separateTaxAccounts Boolean  @default(false)
-  updatedAt           DateTime @updatedAt
+  country             String  @default("SA")
+  taxSupplyDateType   String  @default("issue")
+  separateTaxAccounts Boolean @default(false)
+
+  // ZATCA Integration Fields
+  zatcaEnvironment      String  @default("Sandbox") // Sandbox, Simulation, Production
+  zatcaPrivateKey       String? @db.Text
+  zatcaPublicKey        String? @db.Text
+  zatcaCsid             String? @db.Text
+  zatcaSecret           String?
+  zatcaComplianceStatus String  @default("Not Onboarded") // Not Onboarded, CSID Issued, Production Ready
+  apiToken              String? @unique
+
+  updatedAt DateTime @updatedAt
 }
 
 model SalesQuotation {
+  companyId            String          @default("default")
+  company              Company         @relation(fields: [companyId], references: [id])
   id                   String          @id @default(cuid())
-  quotationNumber      String          @unique
+  quotationNumber      String
   date                 DateTime
   validUntil           DateTime?
   customerId           String
@@ -333,6 +456,8 @@ model SalesQuotation {
   convertedTo          SalesInvoice?   @relation("QuotationToInvoice", fields: [convertedToInvoiceId], references: [id])
   customer             Customer        @relation(fields: [customerId], references: [id])
   warehouse            Warehouse?      @relation(fields: [warehouseId], references: [id])
+
+  @@unique([companyId, quotationNumber])
 }
 
 model QuotationItem {
@@ -347,8 +472,10 @@ model QuotationItem {
 }
 
 model UnitOfMeasure {
+  companyId        String                @default("default")
+  company          Company               @relation(fields: [companyId], references: [id])
   id               String                @id @default(cuid())
-  name             String                @unique
+  name             String
   nameAr           String?
   parentUnitId     String?
   conversionFactor Float?                @default(1)
@@ -358,11 +485,15 @@ model UnitOfMeasure {
   poItems          ProductionOrderItem[] @relation("POItemUnit")
   parentUnit       UnitOfMeasure?        @relation("UnitConversions", fields: [parentUnitId], references: [id])
   childUnits       UnitOfMeasure[]       @relation("UnitConversions")
+
+  @@unique([companyId, name])
 }
 
 model CostCenter {
+  companyId    String           @default("default")
+  company      Company          @relation(fields: [companyId], references: [id])
   id           String           @id @default(cuid())
-  code         String           @unique
+  code         String
   name         String
   nameAr       String?
   description  String?
@@ -373,6 +504,8 @@ model CostCenter {
   updatedAt    DateTime         @updatedAt
   product      Product?         @relation(fields: [productId], references: [id])
   items        CostCenterItem[]
+
+  @@unique([companyId, code])
 }
 
 model CostCenterItem {
@@ -389,8 +522,10 @@ model CostCenterItem {
 }
 
 model ProductionOrder {
+  companyId   String                @default("default")
+  company     Company               @relation(fields: [companyId], references: [id])
   id          String                @id @default(cuid())
-  orderNumber String                @unique
+  orderNumber String
   date        DateTime              @default(now())
   productId   String
   quantity    Float                 @default(0)
@@ -402,6 +537,8 @@ model ProductionOrder {
   warehouse   Warehouse             @relation(fields: [warehouseId], references: [id])
   product     Product               @relation("FinishedProduct", fields: [productId], references: [id])
   items       ProductionOrderItem[]
+
+  @@unique([companyId, orderNumber])
 }
 
 model ProductionOrderItem {
@@ -418,11 +555,15 @@ model ProductionOrderItem {
 }
 
 model User {
+  companyId         String    @default("default")
+  company           Company   @relation(fields: [companyId], references: [id])
   id                String    @id @default(cuid())
   username          String    @unique
   email             String?   @unique
   emailVerified     DateTime?
   verificationToken String?
+  resetToken        String?
+  resetTokenExpiry  DateTime?
   password          String
   name              String?
   role              String    @default("Employee")
@@ -434,8 +575,10 @@ model User {
 }
 
 model Role {
+  companyId   String   @default("default")
+  company     Company  @relation(fields: [companyId], references: [id])
   id          String   @id @default(cuid())
-  name        String   @unique
+  name        String
   permissions String   @default("{}") // Stores JSON string of permissions
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -443,8 +586,10 @@ model Role {
 }
 
 model Employee {
+  companyId      String                  @default("default")
+  company        Company                 @relation(fields: [companyId], references: [id])
   id             String                  @id @default(cuid())
-  code           String                  @unique
+  code           String
   name           String
   nameAr         String?
   jobTitle       String?
@@ -462,21 +607,29 @@ model Employee {
   updatedAt      DateTime                @updatedAt
   financialMoves EmployeeFinancialMove[]
   salaryPayments SalaryPayment[]
+
+  @@unique([companyId, code])
 }
 
 model EmployeeFinancialMove {
-  id         String   @id @default(cuid())
-  employeeId String
-  type       String // Advance, Penalty, Reward, Allowance
-  amount     Float
-  date       DateTime @default(now())
-  reason     String?
-  status     String   @default("Confirmed")
-  createdAt  DateTime @default(now())
-  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  companyId        String          @default("default")
+  company          Company         @relation(fields: [companyId], references: [id])
+  id               String          @id @default(cuid())
+  employeeId       String
+  type             String // Advance, Penalty, Reward, Allowance
+  amount           Float
+  date             DateTime        @default(now())
+  reason           String?
+  status           String          @default("Confirmed")
+  journalVoucherId String?         @unique
+  createdAt        DateTime        @default(now())
+  employee         Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  journalVoucher   JournalVoucher? @relation(fields: [journalVoucherId], references: [id])
 }
 
 model SalaryPayment {
+  companyId        String          @default("default")
+  company          Company         @relation(fields: [companyId], references: [id])
   id               String          @id @default(cuid())
   employeeId       String
   month            Int
@@ -498,8 +651,10 @@ model SalaryPayment {
 }
 
 model DisposalVoucher {
+  companyId     String    @default("default")
+  company       Company   @relation(fields: [companyId], references: [id])
   id            String    @id @default(cuid())
-  voucherNumber String    @unique
+  voucherNumber String
   date          DateTime  @default(now())
   productId     String
   warehouseId   String
@@ -512,11 +667,15 @@ model DisposalVoucher {
   updatedAt     DateTime  @updatedAt
   product       Product   @relation(fields: [productId], references: [id])
   warehouse     Warehouse @relation(fields: [warehouseId], references: [id])
+
+  @@unique([companyId, voucherNumber])
 }
 
 model PurchaseOrder {
+  companyId      String              @default("default")
+  company        Company             @relation(fields: [companyId], references: [id])
   id             String              @id @default(cuid())
-  orderNumber    String              @unique
+  orderNumber    String
   date           DateTime            @default(now())
   supplierId     String?
   warehouseId    String?
@@ -532,6 +691,8 @@ model PurchaseOrder {
   warehouse      Warehouse?          @relation(fields: [warehouseId], references: [id])
   supplier       Supplier?           @relation(fields: [supplierId], references: [id])
   items          PurchaseOrderItem[]
+
+  @@unique([companyId, orderNumber])
 }
 
 model PurchaseOrderItem {
