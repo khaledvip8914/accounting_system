@@ -4,6 +4,7 @@ import { prisma } from '../../lib/db';
 import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/auth';
 import { hasPermission } from '@/lib/permissions';
+import { getActiveBranch } from '@/lib/branch';
 
 async function getAuthContext() {
   const session = await getSession();
@@ -27,8 +28,13 @@ export async function getAccounts() {
 
 export async function getJournalVouchers() {
   const { companyId } = await getAuthContext();
+  const branchId = await getActiveBranch();
+  const whereClause: any = { companyId };
+  if (branchId) {
+    whereClause.branchId = branchId;
+  }
   return await prisma.journalVoucher.findMany({
-    where: { companyId },
+    where: whereClause,
     include: {
       entries: {
         include: { account: true }
@@ -40,10 +46,15 @@ export async function getJournalVouchers() {
 
 export async function getJournalEntries() {
   const { companyId } = await getAuthContext();
+  const branchId = await getActiveBranch();
+  
+  const whereClause: any = { account: { companyId } };
+  if (branchId) {
+    whereClause.journalVoucher = { branchId };
+  }
+  
   return await prisma.journalEntry.findMany({
-    where: { 
-      account: { companyId }
-    },
+    where: whereClause,
     include: { 
       account: true,
       journalVoucher: true

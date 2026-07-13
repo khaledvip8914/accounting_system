@@ -3,6 +3,7 @@ import InventoryClient from './InventoryClient';
 import { Lang } from '@/lib/i18n';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import { getActiveBranch } from '@/lib/branch';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,10 +20,13 @@ export default async function InventoryPage(props: {
   const searchParams = await props.searchParams;
   const lang = (searchParams.lang as Lang) || 'ar';
   
+  const branchId = await getActiveBranch();
+  const whereClause: any = { companyId, branchId: branchId || null };
+
   try {
-    const [products, units, costCenters, productionOrders, warehouses, disposalVouchers, suppliers, categories] = await Promise.all([
+    const [products, units, costCenters, productionOrders, warehouses, disposalVouchers, suppliers, categories, warehouseStocks] = await Promise.all([
       prisma.product.findMany({
-        where: { companyId },
+        where: whereClause,
         include: { unitRef: true, subUnitRef: true, categoryRef: true },
         orderBy: { sku: 'asc' }
       }),
@@ -30,11 +34,11 @@ export default async function InventoryPage(props: {
       import('../sales/actions').then(m => m.getCostCenters()),
       import('../sales/actions').then(m => m.getProductionOrders()),
       prisma.warehouse.findMany({
-        where: { companyId },
+        where: whereClause,
         orderBy: { code: 'asc' }
       }),
       prisma.disposalVoucher.findMany({
-          where: { companyId },
+          where: whereClause,
           include: { product: { include: { unitRef: true, subUnitRef: true } }, warehouse: true },
           orderBy: { date: 'desc' }
       }),
@@ -43,10 +47,19 @@ export default async function InventoryPage(props: {
         orderBy: { name: 'asc' }
       }),
       prisma.category.findMany({
-        where: { companyId },
+        where: whereClause,
         orderBy: { name: 'asc' }
+      }),
+      prisma.warehouseStock.findMany({
+        where: branchId ? { warehouse: { companyId, branchId } } : { warehouse: { companyId } }
       })
     ]);
+
+    // Recalculate product stock based on the branch
+    products.forEach(p => {
+      const pStocks = warehouseStocks.filter(ws => ws.productId === p.id);
+      p.stockQuantity = pStocks.reduce((sum, ws) => sum + ws.quantity, 0);
+    });
 
     return (
       <InventoryClient 

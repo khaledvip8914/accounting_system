@@ -19,6 +19,7 @@ export default function SalesClient({
   initialProducts,
   initialWarehouses,
   initialAccounts,
+  initialCurrencies,
   initialUnits,
   initialCostCenters,
   initialProductionOrders,
@@ -31,6 +32,7 @@ export default function SalesClient({
   initialProducts: any[],
   initialWarehouses: any[],
   initialAccounts: any[],
+  initialCurrencies: any[],
   initialUnits: any[],
   initialCostCenters: any[],
   initialProductionOrders: any[],
@@ -213,6 +215,7 @@ export default function SalesClient({
           products={initialProducts}
           warehouses={initialWarehouses}
           accounts={initialAccounts}
+          currencies={initialCurrencies}
           lang={lang}
           onClose={() => { setShowNewInvoice(false); setEditingInvoice(null); }}
           onSave={handleInvoiceSave}

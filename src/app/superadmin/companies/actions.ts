@@ -24,7 +24,8 @@ export async function getCompanies() {
       users: {
         orderBy: { createdAt: 'asc' },
         take: 1
-      }
+      },
+      subscriptionPlan: true
     },
     orderBy: { createdAt: 'desc' }
   })
@@ -56,6 +57,7 @@ export async function createCompany(data: any) {
         email: data.companyEmail || data.email || null,
         subscriptionStatus: data.subscriptionStatus || 'Active',
         subscriptionEndsAt: subscriptionEndsAt,
+        subscriptionPlanId: data.subscriptionPlanId || null,
       }
     })
 
@@ -112,6 +114,7 @@ export async function updateCompany(id: string, data: any) {
         email: data.companyEmail || null,
         subscriptionStatus: data.subscriptionStatus,
         subscriptionEndsAt: data.subscriptionEndsAt ? new Date(data.subscriptionEndsAt) : null,
+        subscriptionPlanId: data.subscriptionPlanId || null,
       }
     })
 

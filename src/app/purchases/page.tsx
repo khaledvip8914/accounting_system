@@ -4,6 +4,8 @@ import { Lang } from '@/lib/i18n';
 import { getCompanyProfile } from '../settings/actions';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import { requireFeature } from '@/lib/subscription';
+import { getActiveBranch } from '@/lib/branch';
 
 export default async function PurchasesPage(props: {
   params: Promise<any>;
@@ -15,13 +17,18 @@ export default async function PurchasesPage(props: {
   }
   const companyId = session.user.companyId;
 
+  await requireFeature(companyId, 'hasSalesAndPurchases');
+
   const searchParams = await props.searchParams;
   const lang = (searchParams.lang as Lang) || 'ar';
   
+  const branchId = await getActiveBranch();
+  const whereClause: any = { companyId, branchId: branchId || null };
+
   try {
-    const [invoices, suppliers, products, accounts, companyProfile, warehouses, units, purchaseOrders] = await Promise.all([
+    const [invoices, suppliers, products, accounts, companyProfile, warehouses, units, purchaseOrders, currencies, warehouseStocks] = await Promise.all([
       prisma.purchaseInvoice.findMany({
-        where: { companyId },
+        where: whereClause,
         include: { supplier: true, items: { include: { product: true } } },
         orderBy: { createdAt: 'desc' }
       }),
@@ -30,7 +37,7 @@ export default async function PurchasesPage(props: {
         orderBy: { name: 'asc' }
       }),
       prisma.product.findMany({
-        where: { companyId },
+        where: whereClause,
         include: { unitRef: true, subUnitRef: true, supplier: true },
         orderBy: { sku: 'asc' }
       }),
@@ -40,14 +47,26 @@ export default async function PurchasesPage(props: {
         orderBy: { code: 'asc' }
       }),
       getCompanyProfile(),
-      prisma.warehouse.findMany({ where: { companyId }, orderBy: { code: 'asc' } }),
+      prisma.warehouse.findMany({ where: whereClause, orderBy: { code: 'asc' } }),
       prisma.unitOfMeasure.findMany({ where: { companyId }, orderBy: { name: 'asc' } }),
       prisma.purchaseOrder.findMany({
-        where: { companyId },
+        where: whereClause,
         include: { supplier: true, items: { include: { product: true } } },
         orderBy: { date: 'desc' }
+      }),
+      prisma.currency.findMany({
+        where: { companyId },
+        orderBy: { isDefault: 'desc' }
+      }),
+      prisma.warehouseStock.findMany({
+        where: branchId ? { warehouse: { companyId, branchId } } : { warehouse: { companyId } }
       })
     ]);
+
+    products.forEach(p => {
+      const pStocks = warehouseStocks.filter(ws => ws.productId === p.id);
+      p.stockQuantity = pStocks.reduce((sum, ws) => sum + ws.quantity, 0);
+    });
 
     return (
       <PurchasesClient 
@@ -60,6 +79,7 @@ export default async function PurchasesPage(props: {
         companyProfile={companyProfile}
         initialUnits={units}
         initialPurchaseOrders={purchaseOrders}
+        initialCurrencies={currencies}
       />
     );
   } catch (err: any) {

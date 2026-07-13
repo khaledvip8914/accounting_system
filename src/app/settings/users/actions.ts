@@ -67,6 +67,23 @@ export async function saveUser(data: any) {
       // Create
       if (!password) throw new Error('Password is required for new users');
       if (!rest.email) throw new Error('Email is required for verification');
+
+      // Check user limit
+      const companyInfo = await prisma.company.findUnique({
+        where: { id: companyId },
+        include: {
+          subscriptionPlan: true,
+          _count: {
+            select: { users: true }
+          }
+        }
+      });
+
+      if (companyInfo?.subscriptionPlan) {
+        if (companyInfo._count.users >= companyInfo.subscriptionPlan.maxUsers) {
+          throw new Error(`عذراً، لقد وصلت للحد الأقصى المسموح به للمستخدمين (${companyInfo.subscriptionPlan.maxUsers}) في باقتك الحالية.`);
+        }
+      }
       
       const hashedPassword = await bcrypt.hash(password, 10);
       const verificationToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);

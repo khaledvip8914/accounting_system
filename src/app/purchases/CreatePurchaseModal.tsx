@@ -9,6 +9,15 @@ import SearchableSelect from '@/components/SearchableSelect';
 
 type Account = { id: string; code: string; name: string; nameAr: string | null; type: string };
 
+type Currency = {
+  id: string;
+  code: string;
+  name: string;
+  nameAr: string | null;
+  exchangeRate: number;
+  isDefault: boolean;
+};
+
 export default function CreatePurchaseModal({
   invoiceToEdit,
   suppliers,
@@ -26,6 +35,7 @@ export default function CreatePurchaseModal({
   accounts: Account[],
   warehouses: any[],
   inventoryUnits: any[],
+  currencies?: Currency[],
   onClose: () => void,
   lang: string,
   onSave: (data: any) => Promise<void>
@@ -40,6 +50,12 @@ export default function CreatePurchaseModal({
   const [paymentAccountId, setPaymentAccountId] = useState('');
   const [accountSearch, setAccountSearch] = useState('');
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
+  
+  const defaultCurrency = currencies?.find(c => c.isDefault)?.code || 'SAR';
+  const defaultExchangeRate = currencies?.find(c => c.isDefault)?.exchangeRate || 1.0;
+
+  const [currency, setCurrency] = useState(invoiceToEdit?.currency || defaultCurrency);
+  const [exchangeRate, setExchangeRate] = useState<number>(invoiceToEdit?.exchangeRate || defaultExchangeRate);
   
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [showQuickAddWarehouse, setShowQuickAddWarehouse] = useState(false);
@@ -203,6 +219,8 @@ export default function CreatePurchaseModal({
         warehouseId: selectedWarehouseId,
         isTaxInclusive,
         date: invoiceDate,
+        currency,
+        exchangeRate,
         items,
         discount,
         notes,
@@ -310,6 +328,40 @@ export default function CreatePurchaseModal({
               <label>{lang === 'ar' ? 'تاريخ الفاتورة' : 'Purchase Date'} <span className="required">*</span></label>
               <input type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} required />
             </div>
+
+            <div className="form-group">
+              <label>{lang === 'ar' ? 'العملة' : 'Currency'}</label>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <select 
+                  value={currency} 
+                  onChange={e => {
+                    const selectedCurr = currencies?.find(c => c.code === e.target.value);
+                    setCurrency(e.target.value);
+                    if (selectedCurr) setExchangeRate(selectedCurr.exchangeRate);
+                  }}
+                  required
+                >
+                  {currencies?.map(c => (
+                    <option key={c.id} value={c.code}>
+                      {c.code} - {lang === 'ar' && c.nameAr ? c.nameAr : c.name}
+                    </option>
+                  )) || <option value="SAR">SAR - Saudi Riyal</option>}
+                </select>
+              </div>
+            </div>
+
+            {exchangeRate !== 1 && (
+              <div className="form-group">
+                <label>{lang === 'ar' ? 'سعر الصرف (مقابل العملة الأساسية)' : 'Exchange Rate'}</label>
+                <input 
+                  type="number" 
+                  step="0.000001"
+                  value={exchangeRate} 
+                  onChange={e => setExchangeRate(parseFloat(e.target.value) || 1)} 
+                  required
+                />
+              </div>
+            )}
 
             <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '1.8rem' }}>
               <input 
@@ -491,7 +543,7 @@ export default function CreatePurchaseModal({
                       <td>
                         <input type="number" step="0.01" min="0" value={item.unitPrice} onChange={e => updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)} />
                       </td>
-                      <td style={{ textAlign: 'right', fontWeight: 700 }}>{item.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                      <td style={{ textAlign: 'right', fontWeight: 700 }}>{item.total.toLocaleString(undefined, { minimumFractionDigits: 2 })} {currency}</td>
                       <td>
                         {items.length > 1 && (
                           <button type="button" className="btn-remove" onClick={() => removeItem(index)}>&times;</button>
@@ -595,7 +647,14 @@ export default function CreatePurchaseModal({
               </div>
               <div className="total-row net-total" style={{ color: '#047857' }}>
                 <span>{lang === 'ar' ? 'الإجمالي الصافي' : 'Net Total'}</span>
-                <span>{totals.netAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} SAR</span>
+                <div style={{ textAlign: 'right' }}>
+                  <div>{totals.netAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} {currency}</div>
+                  {exchangeRate !== 1 && (
+                    <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'normal', marginTop: '4px' }}>
+                      {lang === 'ar' ? 'يعادل' : 'Equals'} {(totals.netAmount * exchangeRate).toLocaleString(undefined, { minimumFractionDigits: 2 })} {currencies?.find(c=>c.isDefault)?.code || 'SAR'}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Payment Summary */}
@@ -603,12 +662,12 @@ export default function CreatePurchaseModal({
                 {paymentType === 'credit' ? (
                   <>
                     <span>📋 {lang === 'ar' ? 'سيُضاف لذمم المورد' : 'Added to Supplier Payable'}</span>
-                    <span style={{ fontWeight: 700 }}>{totals.netAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} SAR</span>
+                    <span style={{ fontWeight: 700 }}>{totals.netAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} {currency}</span>
                   </>
                 ) : (
                   <>
                     <span>💵 {lang === 'ar' ? 'سيُخصم من' : 'Paid from'}: {selectedAccount ? `${selectedAccount.code} — ${lang === 'ar' && selectedAccount.nameAr ? selectedAccount.nameAr : selectedAccount.name}` : '—'}</span>
-                    <span style={{ fontWeight: 700 }}>{totals.netAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} SAR</span>
+                    <span style={{ fontWeight: 700 }}>{totals.netAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} {currency}</span>
                   </>
                 )}
               </div>

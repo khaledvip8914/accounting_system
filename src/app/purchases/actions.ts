@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/auth';
 import { hasPermission } from '@/lib/permissions';
+import { getActiveBranch } from '@/lib/branch';
 import { syncProductCostCascading } from '../sales/actions';
 import { getUnitWeightInGramsServer } from '@/lib/inventory-helpers';
 import { writeFile, mkdir } from 'fs/promises';
@@ -63,6 +64,8 @@ export async function createPurchaseInvoice(data: {
   isTaxInclusive?: boolean;
   attachmentUrl?: string | null;
   orderId?: string | null;
+  currency?: string;
+  exchangeRate?: number;
 }) {
   try {
     const { companyId, permissions } = await getAuthContext();
@@ -75,10 +78,13 @@ export async function createPurchaseInvoice(data: {
       const count = await tx.purchaseInvoice.count({ where: { companyId } });
       const invoiceNumber = `PUR-${new Date().getFullYear()}-${(count + 1).toString().padStart(3, '0')}`;
 
+      const branchId = await getActiveBranch();
+
       // 2. Add Purchase Invoice to DB
       const invoice = await tx.purchaseInvoice.create({
         data: {
           companyId,
+          branchId,
           invoiceNumber,
           date: new Date(data.date),
           supplierId: data.supplierId,
@@ -90,6 +96,8 @@ export async function createPurchaseInvoice(data: {
           warehouseId: data.warehouseId || null, 
           isTaxInclusive: data.isTaxInclusive,
           attachmentUrl: data.attachmentUrl || null,
+          currency: data.currency || 'SAR',
+          exchangeRate: data.exchangeRate || 1.0,
           items: {
             create: (data.items || []).map((i: any) => ({
               productId: i.productId,
@@ -230,6 +238,7 @@ export async function createPurchaseInvoice(data: {
         const gv = await tx.journalVoucher.create({
           data: {
             companyId,
+            branchId,
             reference: `JVP-${invoiceNumber}`,
             date: new Date(data.date),
             description: `Purchase Invoice ${invoiceNumber} - ${data.paymentType === 'paid' ? 'Cash Purchase' : 'Credit Purchase'}`,
@@ -337,6 +346,8 @@ export async function updatePurchaseInvoice(invoiceId: string, data: any) {
         warehouseId: data.warehouseId,
         journalVoucherId: null,
         attachmentUrl: data.attachmentUrl !== undefined ? data.attachmentUrl : null,
+        currency: data.currency || 'SAR',
+        exchangeRate: data.exchangeRate || 1.0,
         items: {
           create: data.items.map((i: any) => ({
             productId: i.productId,
@@ -743,6 +754,8 @@ export async function createPurchaseOrder(data: {
   notes?: string;
   warehouseId?: string;
   isTaxInclusive?: boolean;
+  currency?: string;
+  exchangeRate?: number;
 }) {
   try {
     const { companyId, permissions } = await getAuthContext();
@@ -756,6 +769,7 @@ export async function createPurchaseOrder(data: {
     const order = await prisma.purchaseOrder.create({
       data: {
         companyId,
+        branchId: (await getActiveBranch()) || null,
         orderNumber,
         date: new Date(data.date),
         supplierId: data.supplierId || null,
@@ -767,6 +781,8 @@ export async function createPurchaseOrder(data: {
         warehouseId: data.warehouseId || null,
         isTaxInclusive: data.isTaxInclusive,
         notes: data.notes,
+        currency: data.currency || 'SAR',
+        exchangeRate: data.exchangeRate || 1.0,
         items: {
           create: (data.items || []).map((i: any) => ({
             productId: i.productId,
@@ -810,6 +826,8 @@ export async function updatePurchaseOrder(orderId: string, data: any) {
           status: data.status,
           warehouseId: data.warehouseId || null,
           notes: data.notes,
+          currency: data.currency || 'SAR',
+          exchangeRate: data.exchangeRate || 1.0,
           items: {
             create: (data.items || []).map((i: any) => ({
               productId: i.productId,

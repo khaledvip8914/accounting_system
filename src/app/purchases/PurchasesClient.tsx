@@ -18,6 +18,7 @@ export default function PurchasesClient({
   initialWarehouses,
   initialUnits,
   initialPurchaseOrders,
+  initialCurrencies,
   companyProfile
 }: {
   lang: string,
@@ -28,6 +29,7 @@ export default function PurchasesClient({
   initialWarehouses: any[],
   initialUnits: any[],
   initialPurchaseOrders: any[],
+  initialCurrencies: any[],
   companyProfile: any
 }) {
   const [activeTab, setActiveTab] = useState('invoices');
@@ -211,6 +213,7 @@ export default function PurchasesClient({
           accounts={initialAccounts}
           warehouses={initialWarehouses}
           inventoryUnits={initialUnits}
+          currencies={initialCurrencies}
           lang={lang}
           onClose={() => { setShowNewPurchase(false); setEditingInvoice(null); }}
           onSave={handlePurchaseSave}
@@ -223,6 +226,7 @@ export default function PurchasesClient({
           suppliers={initialSuppliers}
           products={initialProducts}
           warehouses={initialWarehouses}
+          currencies={initialCurrencies}
           lang={lang}
           onClose={() => { setShowNewOrder(false); setEditingOrder(null); }}
           onSave={handleOrderSave}

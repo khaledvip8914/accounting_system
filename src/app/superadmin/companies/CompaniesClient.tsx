@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createCompany, updateCompany, resendWelcomeEmail } from './actions'
 
-export default function CompaniesClient({ initialCompanies }: { initialCompanies: any[] }) {
+export default function CompaniesClient({ initialCompanies, subscriptionPlans = [] }: { initialCompanies: any[], subscriptionPlans?: any[] }) {
   const [companies, setCompanies] = useState(initialCompanies)
   const [searchQuery, setSearchQuery] = useState('')
   const [sendingEmailId, setSendingEmailId] = useState<string | null>(null)
@@ -33,6 +33,7 @@ export default function CompaniesClient({ initialCompanies }: { initialCompanies
     subscriptionStatus: 'Active',
     subscriptionDays: 30,
     subscriptionEndsAt: '',
+    subscriptionPlanId: subscriptionPlans.length > 0 ? subscriptionPlans[0].id : '',
     sendEmail: true
   })
 
@@ -54,7 +55,8 @@ export default function CompaniesClient({ initialCompanies }: { initialCompanies
           email: formData.email,
           password: formData.password,
           subscriptionStatus: formData.subscriptionStatus,
-          subscriptionEndsAt: endsAt
+          subscriptionEndsAt: endsAt,
+          subscriptionPlanId: formData.subscriptionPlanId || undefined
         })
 
         if (!res.success) throw new Error(res.error)
@@ -65,7 +67,8 @@ export default function CompaniesClient({ initialCompanies }: { initialCompanies
         }
         const res = await createCompany({
           ...formData,
-          subscriptionEndsAt: formData.subscriptionDays > 0 ? endsAt.toISOString() : null
+          subscriptionEndsAt: formData.subscriptionDays > 0 ? endsAt.toISOString() : null,
+          subscriptionPlanId: formData.subscriptionPlanId || undefined
         })
         if (!res.success) throw new Error(res.error)
       }
@@ -118,6 +121,7 @@ export default function CompaniesClient({ initialCompanies }: { initialCompanies
       subscriptionDays: days,
       subscriptionEndsAt: c.subscriptionEndsAt ? new Date(new Date(c.subscriptionEndsAt).getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split('T')[0] : '',
       subscriptionStatus: c.subscriptionStatus,
+      subscriptionPlanId: c.subscriptionPlanId || (subscriptionPlans.length > 0 ? subscriptionPlans[0].id : ''),
       sendEmail: false
     })
     setIsModalOpen(true)
@@ -136,6 +140,7 @@ export default function CompaniesClient({ initialCompanies }: { initialCompanies
       subscriptionStatus: 'Active',
       subscriptionDays: 30,
       subscriptionEndsAt: '',
+      subscriptionPlanId: subscriptionPlans.length > 0 ? subscriptionPlans[0].id : '',
       sendEmail: true
     })
     setIsModalOpen(true)
@@ -202,6 +207,7 @@ export default function CompaniesClient({ initialCompanies }: { initialCompanies
                   <th className="p-6">البريد الإلكتروني</th>
                   <th className="p-6">رقم الجوال</th>
                   <th className="p-6">المستخدم / المرور</th>
+                  <th className="p-6">الباقة</th>
                   <th className="p-6">تاريخ الانتهاء</th>
                   <th className="p-6">الحالة</th>
                   <th className="p-6 text-center">الإجراءات</th>
@@ -246,6 +252,11 @@ export default function CompaniesClient({ initialCompanies }: { initialCompanies
                         <span className="text-white font-bold">{c.users?.[0]?.username || '---'}</span>
                         <span className="text-xs text-yellow-500/70" title="كلمة المرور مشفرة لغايات أمنية">*** (مشفرة)</span>
                       </div>
+                    </td>
+                    <td className="p-6">
+                      <span className="px-3 py-1 bg-[#111] rounded border border-yellow-500/30 text-xs text-yellow-500 font-bold">
+                        {c.subscriptionPlan?.nameAr || c.subscriptionPlan?.name || '---'}
+                      </span>
                     </td>
                     <td className="p-6">
                       <div className="text-sm">
@@ -447,6 +458,19 @@ export default function CompaniesClient({ initialCompanies }: { initialCompanies
                       >
                         <option value="Active">نشط (متاح للدخول)</option>
                         <option value="Suspended">موقوف (محظور من الدخول)</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label>باقة الاشتراك <span className="required">*</span></label>
+                      <select 
+                        value={formData.subscriptionPlanId} 
+                        onChange={e => setFormData({...formData, subscriptionPlanId: e.target.value})}
+                      >
+                        <option value="" disabled>اختر الباقة</option>
+                        {subscriptionPlans.map(plan => (
+                          <option key={plan.id} value={plan.id}>{plan.nameAr || plan.name}</option>
+                        ))}
                       </select>
                     </div>
                   </div>

@@ -42,7 +42,8 @@ export default function CreatePurchaseOrderModal({
   orderToEdit?: any;
   suppliers: any[];
   products: Product[];
-  warehouses: any[];
+  warehouses: any[],
+  currencies?: any[],
   lang: string;
   onClose: () => void;
   onSave: (data: any) => Promise<void>;
@@ -67,6 +68,12 @@ export default function CreatePurchaseOrderModal({
       total: i.total
     })) || []
   });
+
+  const defaultCurrency = currencies?.find((c: any) => c.isDefault)?.code || 'SAR';
+  const defaultExchangeRate = currencies?.find((c: any) => c.isDefault)?.exchangeRate || 1.0;
+
+  const [currency, setCurrency] = useState(orderToEdit?.currency || defaultCurrency);
+  const [exchangeRate, setExchangeRate] = useState<number>(orderToEdit?.exchangeRate || defaultExchangeRate);
 
   const [isSaving, setIsSaving] = useState(false);
   const [autoImportType, setAutoImportType] = useState<'out' | 'low' | 'both' | ''>('');
@@ -147,7 +154,9 @@ export default function CreatePurchaseOrderModal({
         subtotal,
         taxAmount,
         discount: 0,
-        netAmount
+        netAmount,
+        currency,
+        exchangeRate
       });
     } finally {
       setIsSaving(false);
@@ -195,7 +204,35 @@ export default function CreatePurchaseOrderModal({
                    <option value="Closed">{lang === 'ar' ? 'مغلق' : 'Closed'}</option>
                    <option value="Cancelled">{lang === 'ar' ? 'ملغي' : 'Cancelled'}</option>
                 </select>
+                 <div className="form-group">
+                <label>{lang === 'ar' ? 'العملة' : 'Currency'}</label>
+                <select 
+                  value={currency} 
+                  onChange={e => {
+                    const selectedCurr = currencies?.find((c: any) => c.code === e.target.value);
+                    setCurrency(e.target.value);
+                    if (selectedCurr) setExchangeRate(selectedCurr.exchangeRate);
+                  }}
+                >
+                  {currencies?.map((c: any) => (
+                    <option key={c.id} value={c.code}>
+                      {c.code} - {lang === 'ar' && c.nameAr ? c.nameAr : c.name}
+                    </option>
+                  ))}
+                </select>
               </div>
+              {exchangeRate !== 1 && (
+                <div className="form-group">
+                  <label>{lang === 'ar' ? 'سعر الصرف' : 'Exchange Rate'}</label>
+                  <input 
+                    type="number" 
+                    step="0.000001"
+                    value={exchangeRate} 
+                    onChange={e => setExchangeRate(parseFloat(e.target.value) || 1)} 
+                  />
+                </div>
+              )}
+           </div>
            </div>
 
            {!orderToEdit && (
@@ -276,7 +313,7 @@ export default function CreatePurchaseOrderModal({
                              {suppliers.map(s => <option key={s.id} value={s.id}>{lang === 'ar' ? s.nameAr || s.name : s.name}</option>)}
                           </select>
                       </td>
-                      <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: '600' }}>{(Number(item.total) || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                      <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: '600' }}>{(Number(item.total) || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} {currency}</td>
                       <td style={{ padding: '0.75rem', textAlign: 'center' }}>
                          <button onClick={() => removeItem(idx)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>🗑️</button>
                       </td>
@@ -296,7 +333,14 @@ export default function CreatePurchaseOrderModal({
               </div>
               <div style={{ display: 'flex', gap: '2rem', fontSize: '1.25rem', borderTop: '2px solid #e2e8f0', paddingTop: '0.5rem' }}>
                  <span style={{ fontWeight: 'bold' }}>{lang === 'ar' ? 'الإجمالي الكلي:' : 'Grand Total:'}</span>
-                 <span style={{ fontWeight: 'bold', color: '#059669' }}>{netAmount.toLocaleString()} SAR</span>
+                 <div style={{ textAlign: 'right' }}>
+                   <span style={{ fontWeight: 'bold', color: '#059669' }}>{netAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} {currency}</span>
+                   {exchangeRate !== 1 && (
+                      <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'normal', marginTop: '4px' }}>
+                        {lang === 'ar' ? 'يعادل' : 'Equals'} {(netAmount * exchangeRate).toLocaleString(undefined, { minimumFractionDigits: 2 })} {currencies?.find((c: any)=>c.isDefault)?.code || 'SAR'}
+                      </div>
+                   )}
+                 </div>
               </div>
            </div>
 

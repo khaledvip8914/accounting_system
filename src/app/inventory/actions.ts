@@ -70,6 +70,8 @@ export async function getDisposalVouchers() {
 export async function createDisposalVoucher(data: { productId: string, quantity: number, reason: string, date: string, warehouseId: string, unitId?: string, notes?: string }) {
   try {
     const { companyId } = await getAuthContext();
+    const { getActiveBranch } = await import('@/lib/branch');
+    const branchId = await getActiveBranch();
 
     const res = await prisma.$transaction(async (tx) => {
       // 1. Generate voucher number
@@ -97,6 +99,7 @@ export async function createDisposalVoucher(data: { productId: string, quantity:
       const voucher = await tx.disposalVoucher.create({
           data: {
               companyId,
+              branchId: branchId || null,
               voucherNumber,
               productId: data.productId,
               warehouseId: data.warehouseId,

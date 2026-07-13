@@ -4,6 +4,7 @@ import { getDictionary } from '../lib/i18n';
 import { getSession } from '../lib/auth';
 import { redirect } from 'next/navigation';
 import WelcomePopup from '../components/WelcomePopup';
+import { getActiveBranch } from '../lib/branch';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,16 +19,29 @@ export default async function Home({ searchParams }: { searchParams: { welcome?:
   const lang = cookieStore.get('NX_LANG')?.value || 'en';
   const dict = getDictionary(lang).dashboard;
 
+  const branchId = await getActiveBranch();
+  const whereClause: any = { companyId };
+  if (branchId) {
+    whereClause.branchId = branchId;
+  }
+
   const invoices = await prisma.salesInvoice.findMany({
-    where: { companyId },
+    where: whereClause,
     orderBy: { createdAt: 'desc' },
     take: 5
   });
 
+  const accountsWhere: any = { companyId };
+  // Journal entries are tied to journal vouchers, which have branchId
+  // For accounts, we just get entries from the specific branch if selected
+  const entriesWhere: any = branchId ? { journalVoucher: { branchId } } : {};
+
   const accounts = await prisma.account.findMany({
-    where: { companyId },
+    where: accountsWhere,
     include: {
-      entries: true
+      entries: {
+        where: entriesWhere
+      }
     }
   });
 
@@ -55,7 +69,7 @@ export default async function Home({ searchParams }: { searchParams: { welcome?:
 
   // Recent journal vouchers
   const recentJV = await prisma.journalVoucher.findMany({
-    where: { companyId },
+    where: whereClause,
     orderBy: { createdAt: 'desc' },
     take: 4,
     include: { entries: { include: { account: true } } }

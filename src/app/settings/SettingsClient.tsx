@@ -10,18 +10,20 @@ interface SettingsClientProps {
   dict: any;
   companyId: string;
   zatcaStatus: string;
+  hasZatcaPhase2: boolean;
 }
 
-export default function SettingsClient({ lang, dict, companyId, zatcaStatus }: SettingsClientProps) {
+export default function SettingsClient({ lang, dict, companyId, zatcaStatus, hasZatcaPhase2 }: SettingsClientProps) {
   const [isZatcaModalOpen, setIsZatcaModalOpen] = useState(false);
 
   const settingsCategories = [
     { id: 'general', href: '/settings/general', label: dict.settings.general, icon: '⚙️' },
     { id: 'financialYears', href: '/settings/financial-years', label: dict.settings.financialYears, icon: '📅' },
+    { id: 'branches', href: '/settings/branches', label: lang === 'ar' ? 'إدارة الفروع' : 'Branches Management', icon: '🏢' },
     { id: 'analysisDimensions', href: '/settings/analysis-dimensions', label: dict.settings.analysisDimensions, icon: '📐' },
     { id: 'theme', href: '/settings/theme', label: lang === 'ar' ? 'الأشكال' : 'Theme', icon: '🎨' },
     { id: 'subscription', href: '/settings/subscription', label: dict.settings.subscription, icon: '💳' },
-    { id: 'zatca', href: '#', action: 'modal', label: dict.settings.zatca, icon: '🔗' },
+    ...(hasZatcaPhase2 ? [{ id: 'zatca', href: '#', action: 'modal', label: dict.settings.zatca, icon: '🔗' }] : []),
     { id: 'currencies', href: '/settings/currencies', label: dict.settings.currencies, icon: '💱' },
     { id: 'taxes', href: '/settings/taxes', label: dict.settings.taxes, icon: '⚖️' },
     { id: 'payroll', href: '/settings/payroll', label: dict.settings.payroll, icon: '💸' },

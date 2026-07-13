@@ -144,7 +144,7 @@ export default function SearchableSelect({ options, value, onChange, placeholder
         .search-input { width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0; outline: none; font-size: 0.85rem; }
         .search-input:focus { border-color: #3b82f6; }
         
-        .options-list { max-height: 250px; overflow-y: auto; }
+        .options-list { max-height: 350px; overflow-y: auto; }
         .option-item { 
           padding: 10px 15px; cursor: pointer; display: flex; flex-direction: column; 
           transition: background 0.1s; border-bottom: 1px solid #f8fafc;

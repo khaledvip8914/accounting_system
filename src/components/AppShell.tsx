@@ -14,9 +14,11 @@ interface AppShellProps {
   user: any;
   lang: string;
   subscriptionEndsAt?: string | null;
+  subscriptionPlan?: any;
+  branches?: any[];
 }
 
-export default function AppShell({ children, dict, user, lang, subscriptionEndsAt }: AppShellProps) {
+export default function AppShell({ children, dict, user, lang, subscriptionEndsAt, subscriptionPlan, branches = [] }: AppShellProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -34,6 +36,25 @@ export default function AppShell({ children, dict, user, lang, subscriptionEndsA
 
   // Permissions check helper
   const canAccess = (module: any) => {
+    // Feature flag checks based on subscription plan
+    if (subscriptionPlan) {
+      if (module === 'sales' || module === 'purchases') {
+         if (!subscriptionPlan.hasSalesAndPurchases) return false;
+      }
+      if (module === 'bankReconciliation') {
+         if (!subscriptionPlan.hasBankReconciliation) return false;
+      }
+      if (module === 'fixedAssets') {
+         if (!subscriptionPlan.hasFixedAssets) return false;
+      }
+      if (module === 'multiCurrency') {
+         if (!subscriptionPlan.hasMultiCurrency) return false;
+      }
+      if (module === 'advancedReports') {
+         if (!subscriptionPlan.hasAdvancedReports) return false;
+      }
+    }
+
     // Admins and SuperAdmins have access to everything
     if (user.role === 'Admin' || user.role === 'SuperAdmin') return true;
     return hasPermission(user.roleRef?.permissions || user.permissions, module, 'view');
@@ -109,12 +130,38 @@ export default function AppShell({ children, dict, user, lang, subscriptionEndsA
             {dict.sidebar.dashboard}
           </Link>
           {canAccess('accounting') && (
-            <Link href="/financial" className={`nav-item ${pathname.startsWith('/financial') ? 'active' : ''}`}>
+            <Link href="/financial" className={`nav-item ${pathname === '/financial' || (pathname.startsWith('/financial') && !pathname.includes('fixed-assets') && !pathname.includes('bank-reconciliation')) ? 'active' : ''}`}>
               <span className="nav-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M3 15h6"></path><path d="M3 18h6"></path></svg>
               </span>
               {dict.sidebar.financialMgmt}
             </Link>
+          )}
+
+          {canAccess('fixedAssets') && (
+            <Link href="/financial/fixed-assets" className={`nav-item ${pathname.startsWith('/financial/fixed-assets') ? 'active' : ''}`}>
+              <span className="nav-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+              </span>
+              {lang === 'ar' ? 'الأصول الثابتة' : 'Fixed Assets'}
+            </Link>
+          )}
+
+          {canAccess('bankReconciliation') && (
+            <>
+              <Link href="/financial/bank-accounts" className={`nav-item ${pathname.startsWith('/financial/bank-accounts') ? 'active' : ''}`}>
+                <span className="nav-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="8" width="18" height="12" rx="2"></rect><line x1="3" y1="12" x2="21" y2="12"></line></svg>
+                </span>
+                {lang === 'ar' ? 'الحسابات البنكية' : 'Bank Accounts'}
+              </Link>
+              <Link href="/financial/bank-reconciliation" className={`nav-item ${pathname.startsWith('/financial/bank-reconciliation') ? 'active' : ''}`}>
+                <span className="nav-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                </span>
+                {lang === 'ar' ? 'التسوية البنكية' : 'Bank Reconciliation'}
+              </Link>
+            </>
           )}
 
           {(canAccess('quotations') || canAccess('invoices')) && (
@@ -181,6 +228,24 @@ export default function AppShell({ children, dict, user, lang, subscriptionEndsA
               {dict.sidebar.reports}
             </Link>
           )}
+
+          {user.role === 'SuperAdmin' && (
+            <>
+              <div className="nav-label">System Administration</div>
+              <Link href="/superadmin/companies" className={`nav-item ${pathname.startsWith('/superadmin/companies') ? 'active' : ''}`}>
+                <span className="nav-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                </span>
+                {lang === 'ar' ? 'إدارة الشركات' : 'Companies'}
+              </Link>
+              <Link href="/superadmin/packages" className={`nav-item ${pathname.startsWith('/superadmin/packages') ? 'active' : ''}`}>
+                <span className="nav-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                </span>
+                {lang === 'ar' ? 'إدارة الباقات' : 'Packages'}
+              </Link>
+            </>
+          )}
         </nav>
         
         <div className="nav-footer">
@@ -220,6 +285,24 @@ export default function AppShell({ children, dict, user, lang, subscriptionEndsA
           </div>
           
           <div className="header-actions">
+            {branches.length > 0 && (
+              <div className="branch-switcher" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-secondary)', padding: '0.25rem 0.75rem', borderRadius: '8px' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+                <select 
+                  style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}
+                  onChange={(e) => {
+                    document.cookie = `NX_BRANCH=${e.target.value}; path=/; max-age=31536000`;
+                    window.location.reload();
+                  }}
+                  defaultValue={typeof document !== 'undefined' ? (document.cookie.split('; ').find(row => row.startsWith('NX_BRANCH='))?.split('=')[1] || '') : ''}
+                >
+                  <option value="">{lang === 'ar' ? 'كل الفروع' : 'All Branches'}</option>
+                  {branches.map(b => (
+                    <option key={b.id} value={b.id}>{lang === 'ar' ? (b.nameAr || b.name) : b.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             <LanguageSwitcher currentLang={lang} />
             
             <div className="notifications-wrapper" ref={notificationsRef} style={{ position: 'relative' }}>

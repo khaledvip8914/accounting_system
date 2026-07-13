@@ -51,13 +51,21 @@ export default async function RootLayout({
   const isAuthenticated = !!user;
 
   let subscriptionEndsAt = null;
-  if (isAuthenticated && user.companyId && user.companyId !== 'default') {
+  let subscriptionPlan = null;
+  let branches: any[] = [];
+  if (isAuthenticated && user.companyId) {
     const company = await prisma.company.findUnique({
       where: { id: user.companyId },
-      select: { subscriptionEndsAt: true }
+      select: { subscriptionEndsAt: true, subscriptionPlan: true, branches: true }
     });
     if (company?.subscriptionEndsAt) {
       subscriptionEndsAt = company.subscriptionEndsAt.toISOString();
+    }
+    if (company?.subscriptionPlan) {
+      subscriptionPlan = company.subscriptionPlan;
+    }
+    if (company?.branches) {
+      branches = company.branches;
     }
   }
 
@@ -90,7 +98,7 @@ export default async function RootLayout({
                 {children}
               </div>
             ) : (
-              <AppShell dict={dict} user={user} lang={lang} subscriptionEndsAt={subscriptionEndsAt}>
+              <AppShell dict={dict} user={user} lang={lang} subscriptionEndsAt={subscriptionEndsAt} subscriptionPlan={subscriptionPlan} branches={branches}>
                 {children}
               </AppShell>
             )}

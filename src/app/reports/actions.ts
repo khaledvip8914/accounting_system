@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/db';
 import { getSession } from '@/lib/auth';
+import { getActiveBranch } from '@/lib/branch';
 
 async function getCompanyId() {
   const session = await getSession();
@@ -14,10 +15,14 @@ async function getCompanyId() {
 export async function getTrialBalance() {
   try {
     const companyId = await getCompanyId();
+    const branchId = await getActiveBranch();
+    const entriesWhere: any = branchId ? { journalVoucher: { branchId } } : {};
+
     const accounts = await prisma.account.findMany({
       where: { companyId },
       include: {
         entries: {
+          where: entriesWhere,
           select: { debit: true, credit: true }
         }
       }
@@ -42,6 +47,9 @@ export async function getTrialBalance() {
 export async function getProfitLoss() {
   try {
     const companyId = await getCompanyId();
+    const branchId = await getActiveBranch();
+    const entriesWhere: any = branchId ? { journalVoucher: { branchId } } : {};
+
     const accounts = await prisma.account.findMany({
       where: {
         companyId,
@@ -52,6 +60,7 @@ export async function getProfitLoss() {
       },
       include: {
         entries: {
+          where: entriesWhere,
           select: { debit: true, credit: true }
         }
       }
@@ -93,6 +102,9 @@ export async function getProfitLoss() {
 export async function getBalanceSheet() {
   try {
     const companyId = await getCompanyId();
+    const branchId = await getActiveBranch();
+    const entriesWhere: any = branchId ? { journalVoucher: { branchId } } : {};
+
     const accounts = await prisma.account.findMany({
       where: {
         companyId,
@@ -104,6 +116,7 @@ export async function getBalanceSheet() {
       },
       include: {
         entries: {
+          where: entriesWhere,
           select: { debit: true, credit: true }
         }
       }
@@ -156,14 +169,18 @@ export async function getBalanceSheet() {
 export async function getSalesReport(startDate: string, endDate: string) {
   try {
     const companyId = await getCompanyId();
+    const branchId = await getActiveBranch();
+    const whereClause: any = {
+      companyId,
+      date: {
+        gte: new Date(startDate),
+        lte: new Date(endDate)
+      }
+    };
+    if (branchId) whereClause.branchId = branchId;
+
     const invoices = await prisma.salesInvoice.findMany({
-      where: {
-        companyId,
-        date: {
-          gte: new Date(startDate),
-          lte: new Date(endDate)
-        }
-      },
+      where: whereClause,
       include: {
         customer: true
       },
@@ -179,14 +196,18 @@ export async function getSalesReport(startDate: string, endDate: string) {
 export async function getPurchaseReport(startDate: string, endDate: string) {
   try {
     const companyId = await getCompanyId();
+    const branchId = await getActiveBranch();
+    const whereClause: any = {
+      companyId,
+      date: {
+        gte: new Date(startDate),
+        lte: new Date(endDate)
+      }
+    };
+    if (branchId) whereClause.branchId = branchId;
+
     const invoices = await prisma.purchaseInvoice.findMany({
-      where: {
-        companyId,
-        date: {
-          gte: new Date(startDate),
-          lte: new Date(endDate)
-        }
-      },
+      where: whereClause,
       include: {
         supplier: true
       },
@@ -202,21 +223,26 @@ export async function getPurchaseReport(startDate: string, endDate: string) {
 export async function getReturnsReport(startDate: string, endDate: string) {
   try {
     const companyId = await getCompanyId();
+    const branchId = await getActiveBranch();
+    const salesWhere: any = {
+      companyId,
+      status: 'Returned',
+      date: { gte: new Date(startDate), lte: new Date(endDate) }
+    };
+    const purchaseWhere: any = { ...salesWhere };
+    
+    if (branchId) {
+      salesWhere.branchId = branchId;
+      purchaseWhere.branchId = branchId;
+    }
+
     const salesReturns = await prisma.salesInvoice.findMany({
-      where: {
-        companyId,
-        status: 'Returned',
-        date: { gte: new Date(startDate), lte: new Date(endDate) }
-      },
+      where: salesWhere,
       include: { customer: true }
     });
 
     const purchaseReturns = await prisma.purchaseInvoice.findMany({
-      where: {
-        companyId,
-        status: 'Returned',
-        date: { gte: new Date(startDate), lte: new Date(endDate) }
-      },
+      where: purchaseWhere,
       include: { supplier: true }
     });
 

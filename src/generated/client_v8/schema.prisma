@@ -10,15 +10,17 @@ datasource db {
 }
 
 model Company {
-  id                 String    @id @default("default")
+  id                 String            @id @default("default")
   name               String
   nameAr             String?
   phone              String?
   email              String?
-  subscriptionStatus String    @default("Active") // Active, Suspended, Expired
+  subscriptionStatus String            @default("Active") // Active, Suspended, Expired
   subscriptionEndsAt DateTime?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  subscriptionPlanId String?
+  subscriptionPlan   SubscriptionPlan? @relation(fields: [subscriptionPlanId], references: [id])
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
 
   // Relations
   customers              Customer[]
@@ -46,6 +48,67 @@ model Company {
   warehouseStocks        WarehouseStock[]
   employeeFinancialMoves EmployeeFinancialMove[]
   salaryPayments         SalaryPayment[]
+  currencies             Currency[]
+  fixedAssets            FixedAsset[]
+  bankAccounts           BankAccount[]
+  bankReconciliations    BankReconciliation[]
+  branches               Branch[]
+}
+
+model Branch {
+  id                 String   @id @default(cuid())
+  companyId          String   @default("default")
+  company            Company  @relation(fields: [companyId], references: [id])
+  name               String
+  nameAr             String?
+  isMain             Boolean  @default(false)
+  address            String?
+  taxNumber          String?
+  commercialRegistry String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  users               User[]
+  warehouses          Warehouse[]
+  salesInvoices       SalesInvoice[]
+  purchaseInvoices    PurchaseInvoice[]
+  salesQuotations     SalesQuotation[]
+  purchaseOrders      PurchaseOrder[]
+  journalVouchers     JournalVoucher[]
+  transactionVouchers TransactionVoucher[]
+  employees           Employee[]
+  salaryPayments      SalaryPayment[]
+  products            Product[]
+  categories          Category[]
+  units               UnitOfMeasure[]
+  costCenters         CostCenter[]
+  productionOrders    ProductionOrder[]
+  disposalVouchers    DisposalVoucher[]
+}
+
+model SubscriptionPlan {
+  id     String  @id @default(cuid())
+  name   String // Basic, Professional, Advanced
+  nameAr String? // الأساسية، الاحترافية، المتقدمة
+  price  Float   @default(0)
+
+  // Limits
+  maxBranches Int @default(1)
+  maxUsers    Int @default(1)
+
+  // Features (Access flags)
+  hasZatcaPhase2        Boolean @default(false)
+  hasSalesAndPurchases  Boolean @default(false)
+  hasBankReconciliation Boolean @default(false)
+  hasUserPermissions    Boolean @default(false)
+  hasFixedAssets        Boolean @default(false)
+  hasMultiCurrency      Boolean @default(false)
+  hasAdvancedReports    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  companies Company[]
 }
 
 model Customer {
@@ -107,6 +170,8 @@ model Warehouse {
   location         String?
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
+  branchId         String?
+  branch           Branch?           @relation(fields: [branchId], references: [id])
   inventoryLogs    InventoryLog[]
   productionOrders ProductionOrder[]
   purchases        PurchaseInvoice[]
@@ -175,6 +240,8 @@ model Product {
   purchaseOrderItems PurchaseOrderItem[]
   supplierId         String?
   supplier           Supplier?             @relation("ProductSupplier", fields: [supplierId], references: [id])
+  branchId           String?
+  branch             Branch?               @relation(fields: [branchId], references: [id])
 
   @@unique([companyId, sku])
 }
@@ -186,10 +253,12 @@ model Category {
   name      String
   nameAr    String?
   products  Product[]
+  branchId  String?
+  branch    Branch?   @relation(fields: [branchId], references: [id])
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  @@unique([companyId, name])
+  @@unique([companyId, branchId, name])
 }
 
 model SalesInvoice {
@@ -200,6 +269,8 @@ model SalesInvoice {
   date             DateTime
   customerId       String
   warehouseId      String?
+  branchId         String?
+  branch           Branch?  @relation(fields: [branchId], references: [id])
   totalAmount      Float
   taxAmount        Float    @default(0)
   discount         Float    @default(0)
@@ -209,6 +280,8 @@ model SalesInvoice {
   journalVoucherId String?
   invoiceType      String   @default("388") // 388: Invoice, 381: Credit Note, 383: Debit Note
   referenceId      String? // References the original invoice if it's a Credit/Debit Note
+  currency         String?  @default("SAR")
+  exchangeRate     Float    @default(1.0)
 
   // ZATCA Invoice Fields
   zatcaUuid               String?
@@ -238,8 +311,10 @@ model PurchaseInvoice {
   id               String          @id @default(cuid())
   invoiceNumber    String
   date             DateTime
-  supplierId       String
+  supplierId       String?
   warehouseId      String?
+  branchId         String?
+  branch           Branch?         @relation(fields: [branchId], references: [id])
   totalAmount      Float
   taxAmount        Float           @default(0)
   discount         Float           @default(0)
@@ -248,11 +323,13 @@ model PurchaseInvoice {
   isTaxInclusive   Boolean         @default(false)
   journalVoucherId String?
   attachmentUrl    String?
+  currency         String?         @default("SAR")
+  exchangeRate     Float           @default(1.0)
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
   journalVoucher   JournalVoucher? @relation(fields: [journalVoucherId], references: [id])
   warehouse        Warehouse?      @relation(fields: [warehouseId], references: [id])
-  supplier         Supplier        @relation(fields: [supplierId], references: [id])
+  supplier         Supplier?       @relation(fields: [supplierId], references: [id])
   items            PurchaseItem[]
 
   @@unique([companyId, invoiceNumber])
@@ -341,6 +418,7 @@ model Account {
   updatedAt       DateTime             @updatedAt
   parent          Account?             @relation("AccountHierarchy", fields: [parentId], references: [id])
   children        Account[]            @relation("AccountHierarchy")
+  bankAccounts    BankAccount[]
   entries         JournalEntry[]
   primaryVouchers TransactionVoucher[] @relation("PrimaryAccount")
   relatedVouchers TransactionVoucher[] @relation("RelatedAccount")
@@ -356,6 +434,8 @@ model JournalVoucher {
   date                   DateTime
   description            String
   status                 String                  @default("Draft")
+  branchId               String?
+  branch                 Branch?                 @relation(fields: [branchId], references: [id])
   createdAt              DateTime                @default(now())
   entries                JournalEntry[]
   purchaseInvoices       PurchaseInvoice[]
@@ -363,6 +443,9 @@ model JournalVoucher {
   transactionVoucher     TransactionVoucher?
   salaryPayments         SalaryPayment[]
   employeeFinancialMoves EmployeeFinancialMove[]
+  depreciationSchedules  DepreciationSchedule[]
+  currency               String?                 @default("SAR")
+  exchangeRate           Float                   @default(1.0)
 
   @@unique([companyId, reference])
 }
@@ -393,6 +476,10 @@ model TransactionVoucher {
   primaryAccountId String
   relatedAccountId String
   journalVoucherId String?         @unique
+  branchId         String?
+  branch           Branch?         @relation(fields: [branchId], references: [id])
+  currency         String?         @default("SAR")
+  exchangeRate     Float           @default(1.0)
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
   primaryAccount   Account         @relation("PrimaryAccount", fields: [primaryAccountId], references: [id])
@@ -449,7 +536,11 @@ model SalesQuotation {
   netAmount            Float
   status               String          @default("Draft")
   isTaxInclusive       Boolean         @default(false)
+  branchId             String?
+  branch               Branch?         @relation(fields: [branchId], references: [id])
   convertedToInvoiceId String?         @unique
+  currency             String?         @default("SAR")
+  exchangeRate         Float           @default(1.0)
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt
   items                QuotationItem[]
@@ -485,8 +576,10 @@ model UnitOfMeasure {
   poItems          ProductionOrderItem[] @relation("POItemUnit")
   parentUnit       UnitOfMeasure?        @relation("UnitConversions", fields: [parentUnitId], references: [id])
   childUnits       UnitOfMeasure[]       @relation("UnitConversions")
+  branchId         String?
+  branch           Branch?               @relation(fields: [branchId], references: [id])
 
-  @@unique([companyId, name])
+  @@unique([companyId, branchId, name])
 }
 
 model CostCenter {
@@ -504,8 +597,10 @@ model CostCenter {
   updatedAt    DateTime         @updatedAt
   product      Product?         @relation(fields: [productId], references: [id])
   items        CostCenterItem[]
+  branchId     String?
+  branch       Branch?          @relation(fields: [branchId], references: [id])
 
-  @@unique([companyId, code])
+  @@unique([companyId, branchId, code])
 }
 
 model CostCenterItem {
@@ -537,8 +632,10 @@ model ProductionOrder {
   warehouse   Warehouse             @relation(fields: [warehouseId], references: [id])
   product     Product               @relation("FinishedProduct", fields: [productId], references: [id])
   items       ProductionOrderItem[]
+  branchId    String?
+  branch      Branch?               @relation(fields: [branchId], references: [id])
 
-  @@unique([companyId, orderNumber])
+  @@unique([companyId, branchId, orderNumber])
 }
 
 model ProductionOrderItem {
@@ -572,6 +669,8 @@ model User {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   permissions       String?
+  branchId          String?
+  branch            Branch?   @relation(fields: [branchId], references: [id])
 }
 
 model Role {
@@ -603,6 +702,8 @@ model Employee {
   phone          String?
   email          String?
   address        String?
+  branchId       String?
+  branch         Branch?                 @relation(fields: [branchId], references: [id])
   createdAt      DateTime                @default(now())
   updatedAt      DateTime                @updatedAt
   financialMoves EmployeeFinancialMove[]
@@ -622,6 +723,7 @@ model EmployeeFinancialMove {
   reason           String?
   status           String          @default("Confirmed")
   journalVoucherId String?         @unique
+  branchId         String?
   createdAt        DateTime        @default(now())
   employee         Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   journalVoucher   JournalVoucher? @relation(fields: [journalVoucherId], references: [id])
@@ -642,6 +744,8 @@ model SalaryPayment {
   netSalary        Float
   status           String          @default("Pending") // Pending, Approved
   journalVoucherId String?         @unique
+  branchId         String?
+  branch           Branch?         @relation(fields: [branchId], references: [id])
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
   employee         Employee        @relation(fields: [employeeId], references: [id])
@@ -667,8 +771,10 @@ model DisposalVoucher {
   updatedAt     DateTime  @updatedAt
   product       Product   @relation(fields: [productId], references: [id])
   warehouse     Warehouse @relation(fields: [warehouseId], references: [id])
+  branchId      String?
+  branch        Branch?   @relation(fields: [branchId], references: [id])
 
-  @@unique([companyId, voucherNumber])
+  @@unique([companyId, branchId, voucherNumber])
 }
 
 model PurchaseOrder {
@@ -686,6 +792,10 @@ model PurchaseOrder {
   status         String              @default("Pending") // Pending, Ordered, Closed, Cancelled
   isTaxInclusive Boolean             @default(false)
   notes          String?
+  currency       String?             @default("SAR")
+  exchangeRate   Float               @default(1.0)
+  branchId       String?
+  branch         Branch?             @relation(fields: [branchId], references: [id])
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
   warehouse      Warehouse?          @relation(fields: [warehouseId], references: [id])
@@ -707,4 +817,122 @@ model PurchaseOrderItem {
   product    Product       @relation(fields: [productId], references: [id])
   supplier   Supplier?     @relation(fields: [supplierId], references: [id])
   order      PurchaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Currency {
+  companyId    String   @default("default")
+  company      Company  @relation(fields: [companyId], references: [id])
+  id           String   @id @default(cuid())
+  code         String // e.g. USD, EUR
+  name         String // US Dollar
+  nameAr       String?
+  exchangeRate Float    @default(1.0)
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([companyId, code])
+}
+
+model FixedAsset {
+  companyId               String   @default("default")
+  company                 Company  @relation(fields: [companyId], references: [id])
+  id                      String   @id @default(cuid())
+  code                    String
+  name                    String
+  nameAr                  String?
+  description             String?
+  purchaseDate            DateTime
+  purchasePrice           Float
+  salvageValue            Float    @default(0)
+  usefulLifeYears         Float
+  depreciationMethod      String   @default("Straight Line") // Straight Line, Declining Balance
+  accumulatedDepreciation Float    @default(0)
+  netBookValue            Float
+  status                  String   @default("Active") // Active, Disposed, Sold
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  depreciationSchedules DepreciationSchedule[]
+
+  @@unique([companyId, code])
+}
+
+model DepreciationSchedule {
+  id               String   @id @default(cuid())
+  assetId          String
+  date             DateTime
+  amount           Float
+  accumulatedTotal Float
+  journalVoucherId String?  @unique
+  createdAt        DateTime @default(now())
+
+  asset          FixedAsset      @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  journalVoucher JournalVoucher? @relation(fields: [journalVoucherId], references: [id])
+}
+
+model BankAccount {
+  companyId       String   @default("default")
+  company         Company  @relation(fields: [companyId], references: [id])
+  id              String   @id @default(cuid())
+  accountNumber   String
+  bankName        String
+  bankNameAr      String?
+  currency        String   @default("SAR")
+  initialBalance  Float    @default(0)
+  currentBalance  Float    @default(0)
+  linkedAccountId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  linkedAccount   Account?             @relation(fields: [linkedAccountId], references: [id])
+  statements      BankStatement[]
+  reconciliations BankReconciliation[]
+
+  @@unique([companyId, accountNumber])
+}
+
+model BankStatement {
+  id            String   @id @default(cuid())
+  bankAccountId String
+  date          DateTime
+  description   String
+  reference     String?
+  withdrawal    Float    @default(0)
+  deposit       Float    @default(0)
+  balance       Float
+  isReconciled  Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  bankAccount         BankAccount              @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
+  reconciliationItems BankReconciliationItem[]
+}
+
+model BankReconciliation {
+  companyId        String   @default("default")
+  company          Company  @relation(fields: [companyId], references: [id])
+  id               String   @id @default(cuid())
+  bankAccountId    String
+  statementDate    DateTime
+  statementBalance Float
+  systemBalance    Float
+  difference       Float
+  status           String   @default("Draft") // Draft, Completed
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  bankAccount BankAccount              @relation(fields: [bankAccountId], references: [id])
+  items       BankReconciliationItem[]
+}
+
+model BankReconciliationItem {
+  id               String  @id @default(cuid())
+  reconciliationId String
+  bankStatementId  String?
+  systemVoucherId  String? // Can be JournalVoucher or TransactionVoucher ID
+  status           String  @default("Matched") // Matched, Missing in System, Missing in Bank
+  notes            String?
+
+  reconciliation BankReconciliation @relation(fields: [reconciliationId], references: [id], onDelete: Cascade)
+  bankStatement  BankStatement?     @relation(fields: [bankStatementId], references: [id])
 }

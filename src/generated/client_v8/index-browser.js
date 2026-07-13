@@ -125,6 +125,38 @@ exports.Prisma.CompanyScalarFieldEnum = {
   email: 'email',
   subscriptionStatus: 'subscriptionStatus',
   subscriptionEndsAt: 'subscriptionEndsAt',
+  subscriptionPlanId: 'subscriptionPlanId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.BranchScalarFieldEnum = {
+  id: 'id',
+  companyId: 'companyId',
+  name: 'name',
+  nameAr: 'nameAr',
+  isMain: 'isMain',
+  address: 'address',
+  taxNumber: 'taxNumber',
+  commercialRegistry: 'commercialRegistry',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.SubscriptionPlanScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  nameAr: 'nameAr',
+  price: 'price',
+  maxBranches: 'maxBranches',
+  maxUsers: 'maxUsers',
+  hasZatcaPhase2: 'hasZatcaPhase2',
+  hasSalesAndPurchases: 'hasSalesAndPurchases',
+  hasBankReconciliation: 'hasBankReconciliation',
+  hasUserPermissions: 'hasUserPermissions',
+  hasFixedAssets: 'hasFixedAssets',
+  hasMultiCurrency: 'hasMultiCurrency',
+  hasAdvancedReports: 'hasAdvancedReports',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -174,7 +206,8 @@ exports.Prisma.WarehouseScalarFieldEnum = {
   nameAr: 'nameAr',
   location: 'location',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  branchId: 'branchId'
 };
 
 exports.Prisma.WarehouseStockScalarFieldEnum = {
@@ -208,7 +241,8 @@ exports.Prisma.ProductScalarFieldEnum = {
   updatedAt: 'updatedAt',
   unitQuantity: 'unitQuantity',
   subUnitId: 'subUnitId',
-  supplierId: 'supplierId'
+  supplierId: 'supplierId',
+  branchId: 'branchId'
 };
 
 exports.Prisma.CategoryScalarFieldEnum = {
@@ -216,6 +250,7 @@ exports.Prisma.CategoryScalarFieldEnum = {
   id: 'id',
   name: 'name',
   nameAr: 'nameAr',
+  branchId: 'branchId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -227,6 +262,7 @@ exports.Prisma.SalesInvoiceScalarFieldEnum = {
   date: 'date',
   customerId: 'customerId',
   warehouseId: 'warehouseId',
+  branchId: 'branchId',
   totalAmount: 'totalAmount',
   taxAmount: 'taxAmount',
   discount: 'discount',
@@ -236,6 +272,8 @@ exports.Prisma.SalesInvoiceScalarFieldEnum = {
   journalVoucherId: 'journalVoucherId',
   invoiceType: 'invoiceType',
   referenceId: 'referenceId',
+  currency: 'currency',
+  exchangeRate: 'exchangeRate',
   zatcaUuid: 'zatcaUuid',
   zatcaInvoiceHash: 'zatcaInvoiceHash',
   zatcaPreviousHash: 'zatcaPreviousHash',
@@ -256,6 +294,7 @@ exports.Prisma.PurchaseInvoiceScalarFieldEnum = {
   date: 'date',
   supplierId: 'supplierId',
   warehouseId: 'warehouseId',
+  branchId: 'branchId',
   totalAmount: 'totalAmount',
   taxAmount: 'taxAmount',
   discount: 'discount',
@@ -264,6 +303,8 @@ exports.Prisma.PurchaseInvoiceScalarFieldEnum = {
   isTaxInclusive: 'isTaxInclusive',
   journalVoucherId: 'journalVoucherId',
   attachmentUrl: 'attachmentUrl',
+  currency: 'currency',
+  exchangeRate: 'exchangeRate',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -342,7 +383,10 @@ exports.Prisma.JournalVoucherScalarFieldEnum = {
   date: 'date',
   description: 'description',
   status: 'status',
-  createdAt: 'createdAt'
+  branchId: 'branchId',
+  createdAt: 'createdAt',
+  currency: 'currency',
+  exchangeRate: 'exchangeRate'
 };
 
 exports.Prisma.JournalEntryScalarFieldEnum = {
@@ -368,6 +412,9 @@ exports.Prisma.TransactionVoucherScalarFieldEnum = {
   primaryAccountId: 'primaryAccountId',
   relatedAccountId: 'relatedAccountId',
   journalVoucherId: 'journalVoucherId',
+  branchId: 'branchId',
+  currency: 'currency',
+  exchangeRate: 'exchangeRate',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -414,7 +461,10 @@ exports.Prisma.SalesQuotationScalarFieldEnum = {
   netAmount: 'netAmount',
   status: 'status',
   isTaxInclusive: 'isTaxInclusive',
+  branchId: 'branchId',
   convertedToInvoiceId: 'convertedToInvoiceId',
+  currency: 'currency',
+  exchangeRate: 'exchangeRate',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -434,7 +484,8 @@ exports.Prisma.UnitOfMeasureScalarFieldEnum = {
   name: 'name',
   nameAr: 'nameAr',
   parentUnitId: 'parentUnitId',
-  conversionFactor: 'conversionFactor'
+  conversionFactor: 'conversionFactor',
+  branchId: 'branchId'
 };
 
 exports.Prisma.CostCenterScalarFieldEnum = {
@@ -448,7 +499,8 @@ exports.Prisma.CostCenterScalarFieldEnum = {
   quantityUsed: 'quantityUsed',
   yieldWeight: 'yieldWeight',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  branchId: 'branchId'
 };
 
 exports.Prisma.CostCenterItemScalarFieldEnum = {
@@ -472,7 +524,8 @@ exports.Prisma.ProductionOrderScalarFieldEnum = {
   status: 'status',
   notes: 'notes',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  branchId: 'branchId'
 };
 
 exports.Prisma.ProductionOrderItemScalarFieldEnum = {
@@ -500,7 +553,8 @@ exports.Prisma.UserScalarFieldEnum = {
   roleId: 'roleId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
-  permissions: 'permissions'
+  permissions: 'permissions',
+  branchId: 'branchId'
 };
 
 exports.Prisma.RoleScalarFieldEnum = {
@@ -529,6 +583,7 @@ exports.Prisma.EmployeeScalarFieldEnum = {
   phone: 'phone',
   email: 'email',
   address: 'address',
+  branchId: 'branchId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -543,6 +598,7 @@ exports.Prisma.EmployeeFinancialMoveScalarFieldEnum = {
   reason: 'reason',
   status: 'status',
   journalVoucherId: 'journalVoucherId',
+  branchId: 'branchId',
   createdAt: 'createdAt'
 };
 
@@ -560,6 +616,7 @@ exports.Prisma.SalaryPaymentScalarFieldEnum = {
   netSalary: 'netSalary',
   status: 'status',
   journalVoucherId: 'journalVoucherId',
+  branchId: 'branchId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -577,7 +634,8 @@ exports.Prisma.DisposalVoucherScalarFieldEnum = {
   notes: 'notes',
   status: 'status',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  branchId: 'branchId'
 };
 
 exports.Prisma.PurchaseOrderScalarFieldEnum = {
@@ -594,6 +652,9 @@ exports.Prisma.PurchaseOrderScalarFieldEnum = {
   status: 'status',
   isTaxInclusive: 'isTaxInclusive',
   notes: 'notes',
+  currency: 'currency',
+  exchangeRate: 'exchangeRate',
+  branchId: 'branchId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -607,6 +668,96 @@ exports.Prisma.PurchaseOrderItemScalarFieldEnum = {
   quantity: 'quantity',
   unitPrice: 'unitPrice',
   total: 'total'
+};
+
+exports.Prisma.CurrencyScalarFieldEnum = {
+  companyId: 'companyId',
+  id: 'id',
+  code: 'code',
+  name: 'name',
+  nameAr: 'nameAr',
+  exchangeRate: 'exchangeRate',
+  isDefault: 'isDefault',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.FixedAssetScalarFieldEnum = {
+  companyId: 'companyId',
+  id: 'id',
+  code: 'code',
+  name: 'name',
+  nameAr: 'nameAr',
+  description: 'description',
+  purchaseDate: 'purchaseDate',
+  purchasePrice: 'purchasePrice',
+  salvageValue: 'salvageValue',
+  usefulLifeYears: 'usefulLifeYears',
+  depreciationMethod: 'depreciationMethod',
+  accumulatedDepreciation: 'accumulatedDepreciation',
+  netBookValue: 'netBookValue',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.DepreciationScheduleScalarFieldEnum = {
+  id: 'id',
+  assetId: 'assetId',
+  date: 'date',
+  amount: 'amount',
+  accumulatedTotal: 'accumulatedTotal',
+  journalVoucherId: 'journalVoucherId',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.BankAccountScalarFieldEnum = {
+  companyId: 'companyId',
+  id: 'id',
+  accountNumber: 'accountNumber',
+  bankName: 'bankName',
+  bankNameAr: 'bankNameAr',
+  currency: 'currency',
+  initialBalance: 'initialBalance',
+  currentBalance: 'currentBalance',
+  linkedAccountId: 'linkedAccountId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.BankStatementScalarFieldEnum = {
+  id: 'id',
+  bankAccountId: 'bankAccountId',
+  date: 'date',
+  description: 'description',
+  reference: 'reference',
+  withdrawal: 'withdrawal',
+  deposit: 'deposit',
+  balance: 'balance',
+  isReconciled: 'isReconciled',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.BankReconciliationScalarFieldEnum = {
+  companyId: 'companyId',
+  id: 'id',
+  bankAccountId: 'bankAccountId',
+  statementDate: 'statementDate',
+  statementBalance: 'statementBalance',
+  systemBalance: 'systemBalance',
+  difference: 'difference',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.BankReconciliationItemScalarFieldEnum = {
+  id: 'id',
+  reconciliationId: 'reconciliationId',
+  bankStatementId: 'bankStatementId',
+  systemVoucherId: 'systemVoucherId',
+  status: 'status',
+  notes: 'notes'
 };
 
 exports.Prisma.SortOrder = {
@@ -627,6 +778,8 @@ exports.Prisma.NullsOrder = {
 
 exports.Prisma.ModelName = {
   Company: 'Company',
+  Branch: 'Branch',
+  SubscriptionPlan: 'SubscriptionPlan',
   Customer: 'Customer',
   Supplier: 'Supplier',
   Warehouse: 'Warehouse',
@@ -659,7 +812,14 @@ exports.Prisma.ModelName = {
   SalaryPayment: 'SalaryPayment',
   DisposalVoucher: 'DisposalVoucher',
   PurchaseOrder: 'PurchaseOrder',
-  PurchaseOrderItem: 'PurchaseOrderItem'
+  PurchaseOrderItem: 'PurchaseOrderItem',
+  Currency: 'Currency',
+  FixedAsset: 'FixedAsset',
+  DepreciationSchedule: 'DepreciationSchedule',
+  BankAccount: 'BankAccount',
+  BankStatement: 'BankStatement',
+  BankReconciliation: 'BankReconciliation',
+  BankReconciliationItem: 'BankReconciliationItem'
 };
 
 /**

@@ -4,6 +4,7 @@ import EmployeesClient from './EmployeesClient';
 import { cookies } from 'next/headers';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import { getActiveBranch } from '@/lib/branch';
 
 export default async function EmployeesPage() {
   const session = await getSession();
@@ -16,14 +17,16 @@ export default async function EmployeesPage() {
   const lang = cookieStore.get('NX_LANG')?.value || 'en';
   
   const dict = getDictionary(lang);
+  const branchId = await getActiveBranch();
+  const whereClause: any = { companyId, branchId: branchId || null };
 
   const employees = await prisma.employee.findMany({
-    where: { companyId },
+    where: whereClause,
     orderBy: { createdAt: 'desc' }
   });
 
   const financialMoves = await prisma.employeeFinancialMove.findMany({
-    where: { companyId },
+    where: whereClause,
     orderBy: { date: 'desc' },
     include: { employee: true }
   });

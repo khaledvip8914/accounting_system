@@ -39,6 +39,15 @@ type InvoiceItem = {
 
 type Account = { id: string; code: string; name: string; nameAr: string | null; type: string };
 
+type Currency = {
+  id: string;
+  code: string;
+  name: string;
+  nameAr: string | null;
+  exchangeRate: number;
+  isDefault: boolean;
+};
+
 export default function CreateInvoiceModal({
   invoiceToEdit,
   customers,
@@ -49,14 +58,15 @@ export default function CreateInvoiceModal({
   onSave,
   warehouses
 }: {
-  invoiceToEdit?: any,
   customers: Customer[],
   products: Product[],
   accounts: Account[],
+  currencies?: Currency[],
   onClose: () => void,
   lang: string,
   onSave: (data: any) => Promise<void>,
-  warehouses: Warehouse[]
+  warehouses: Warehouse[],
+  currencies?: Currency[]
 }) {
   const [selectedCustomerId, setSelectedCustomerId] = useState(invoiceToEdit?.customerId || '');
   const [selectedWarehouseId, setSelectedWarehouseId] = useState(invoiceToEdit?.warehouseId || '');
@@ -64,6 +74,12 @@ export default function CreateInvoiceModal({
     invoiceToEdit ? new Date(invoiceToEdit.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
   );
   const [isTaxInclusive, setIsTaxInclusive] = useState(invoiceToEdit?.isTaxInclusive || false);
+  
+  const defaultCurrency = currencies?.find(c => c.isDefault)?.code || 'SAR';
+  const defaultExchangeRate = currencies?.find(c => c.isDefault)?.exchangeRate || 1.0;
+
+  const [currency, setCurrency] = useState(invoiceToEdit?.currency || defaultCurrency);
+  const [exchangeRate, setExchangeRate] = useState<number>(invoiceToEdit?.exchangeRate || defaultExchangeRate);
   
   const [items, setItems] = useState<InvoiceItem[]>(
     invoiceToEdit && invoiceToEdit.items ? invoiceToEdit.items.map((i: any) => ({
@@ -175,6 +191,8 @@ export default function CreateInvoiceModal({
             warehouseId: selectedWarehouseId,
             date: invoiceDate,
             isTaxInclusive,
+            currency,
+            exchangeRate,
             items,
             discount,
             ...totals,
@@ -276,6 +294,40 @@ export default function CreateInvoiceModal({
                 required
               />
             </div>
+
+            <div className="form-group">
+              <label>{lang === 'ar' ? 'العملة' : 'Currency'}</label>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <select 
+                  value={currency} 
+                  onChange={e => {
+                    const selectedCurr = currencies?.find(c => c.code === e.target.value);
+                    setCurrency(e.target.value);
+                    if (selectedCurr) setExchangeRate(selectedCurr.exchangeRate);
+                  }}
+                  required
+                >
+                  {currencies?.map(c => (
+                    <option key={c.id} value={c.code}>
+                      {c.code} - {lang === 'ar' && c.nameAr ? c.nameAr : c.name}
+                    </option>
+                  )) || <option value="SAR">SAR - Saudi Riyal</option>}
+                </select>
+              </div>
+            </div>
+
+            {exchangeRate !== 1 && (
+              <div className="form-group">
+                <label>{lang === 'ar' ? 'سعر الصرف (مقابل العملة الأساسية)' : 'Exchange Rate'}</label>
+                <input 
+                  type="number" 
+                  step="0.000001"
+                  value={exchangeRate} 
+                  onChange={e => setExchangeRate(parseFloat(e.target.value) || 1)} 
+                  required
+                />
+              </div>
+            )}
 
             <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '1.8rem' }}>
               <input 
@@ -471,7 +523,7 @@ export default function CreateInvoiceModal({
                           />
                         </td>
                         <td style={{ textAlign: 'right', fontWeight: '600' }}>
-                           {item.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                           {item.total.toLocaleString(undefined, { minimumFractionDigits: 2 })} {currency}
                         </td>
                         <td>
                            {items.length > 1 && (
@@ -511,7 +563,14 @@ export default function CreateInvoiceModal({
                 </div>
                 <div className="total-row net-total">
                    <span>{lang === 'ar' ? 'الإجمالي النهائي' : 'Net Total'}</span>
-                   <span>{totals.netAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} SAR</span>
+                   <div style={{ textAlign: 'right' }}>
+                     <div>{totals.netAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} {currency}</div>
+                     {exchangeRate !== 1 && (
+                       <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'normal', marginTop: '4px' }}>
+                         {lang === 'ar' ? 'يعادل' : 'Equals'} {(totals.netAmount * exchangeRate).toLocaleString(undefined, { minimumFractionDigits: 2 })} {currencies?.find(c=>c.isDefault)?.code || 'SAR'}
+                       </div>
+                     )}
+                   </div>
                 </div>
 
                 {/* Payment Summary */}
@@ -519,7 +578,7 @@ export default function CreateInvoiceModal({
                   {paymentType === 'credit' ? (
                     <>
                       <span>📋 {lang === 'ar' ? 'سيُضاف لذمة العميل' : 'Added to Customer Receivable'}</span>
-                      <span style={{ fontWeight: 700 }}>{totals.netAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} SAR</span>
+                      <span style={{ fontWeight: 700 }}>{totals.netAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} {currency}</span>
                     </>
                   ) : (
                     <>

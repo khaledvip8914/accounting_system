@@ -32,6 +32,8 @@ export async function getCategories() {
 export async function saveCategory(data: { id?: string, name: string, nameAr?: string }) {
   try {
     const { companyId, permissions } = await getAuthContext();
+    const { getActiveBranch } = await import('@/lib/branch');
+    const branchId = await getActiveBranch();
     
     if (!hasPermission(permissions, 'inventory', 'edit')) {
       throw new Error('غير مصرح لك بإدارة الأقسام');
@@ -48,6 +50,7 @@ export async function saveCategory(data: { id?: string, name: string, nameAr?: s
       const cat = await prisma.category.create({
         data: { 
             companyId,
+            branchId: branchId || null,
             name: data.name, 
             nameAr: data.nameAr 
         }

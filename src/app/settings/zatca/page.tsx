@@ -2,10 +2,15 @@ import ZatcaOnboarding from '@/components/ZatcaOnboarding';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
+import { requireFeature } from '@/lib/subscription';
 
 export default async function ZatcaSettingsPage() {
   const session = await getSession();
-  if (!session) redirect('/login');
+  if (!session) {
+    redirect('/login');
+  }
+
+  await requireFeature(session.user.companyId, 'hasZatcaPhase2');
 
   const profile = await prisma.companyProfile.findFirst({
     where: { companyId: session.user?.companyId }

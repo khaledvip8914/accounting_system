@@ -6,6 +6,7 @@ import { getSession } from '@/lib/auth';
 import { hasPermission } from '@/lib/permissions';
 import { computeBaseUnitQty, getUnitWeightInGramsServer } from '@/lib/inventory-helpers';
 import { processZatcaInvoice } from '@/lib/zatca/invoice-processor';
+import { getActiveBranch } from '@/lib/branch';
 
 
 export async function getUnits() {
@@ -13,23 +14,24 @@ export async function getUnits() {
   const companyId = session?.user?.companyId;
   if (!companyId) return [];
 
+  const branchId = await getActiveBranch();
   const units = await prisma.unitOfMeasure.findMany({ 
-    where: { companyId },
+    where: { companyId, branchId: branchId || null },
     include: { parentUnit: true, childUnits: true },
     orderBy: { name: 'asc' } 
   });
   if (units.length === 0) {
     const defaults = [
-      { name: 'Kilogram', nameAr: 'كيلوجرام', companyId },
-      { name: 'Gram', nameAr: 'جرام', companyId },
-      { name: 'Liter', nameAr: 'لتر', companyId },
-      { name: 'Milliliter', nameAr: 'مليلتر', companyId },
-      { name: 'Piece', nameAr: 'قطعة', companyId },
-      { name: 'Carton', nameAr: 'كرتون', companyId },
-      { name: 'Bag', nameAr: 'كيس', companyId }
+      { name: 'Kilogram', nameAr: 'كيلوجرام', companyId, branchId: branchId || null },
+      { name: 'Gram', nameAr: 'جرام', companyId, branchId: branchId || null },
+      { name: 'Liter', nameAr: 'لتر', companyId, branchId: branchId || null },
+      { name: 'Milliliter', nameAr: 'مليلتر', companyId, branchId: branchId || null },
+      { name: 'Piece', nameAr: 'قطعة', companyId, branchId: branchId || null },
+      { name: 'Carton', nameAr: 'كرتون', companyId, branchId: branchId || null },
+      { name: 'Bag', nameAr: 'كيس', companyId, branchId: branchId || null }
     ];
     await prisma.unitOfMeasure.createMany({ data: defaults });
-    return prisma.unitOfMeasure.findMany({ where: { companyId }, orderBy: { name: 'asc' } });
+    return prisma.unitOfMeasure.findMany({ where: { companyId, branchId: branchId || null }, orderBy: { name: 'asc' } });
   }
   return units;
 }
@@ -40,6 +42,7 @@ export async function createUnit(data: { name: string, nameAr?: string, parentUn
      const session = await getSession();
      const companyId = session?.user?.companyId;
      if (!companyId) throw new Error('Unauthorized');
+     const branchId = await getActiveBranch();
 
      const unit = await prisma.unitOfMeasure.create({ 
        data: { 
@@ -47,7 +50,8 @@ export async function createUnit(data: { name: string, nameAr?: string, parentUn
          nameAr: data.nameAr || null,
          parentUnitId: data.parentUnitId || null,
          conversionFactor: data.conversionFactor || 1,
-         companyId
+         companyId,
+         branchId: branchId || null
        } 
      });
      revalidatePath('/sales');
@@ -80,8 +84,10 @@ export async function getCostCenters() {
   const companyId = session?.user?.companyId;
   if (!companyId) return [];
 
+  const branchId = await getActiveBranch();
+
   return prisma.costCenter.findMany({ 
-    where: { companyId },
+    where: { companyId, branchId: branchId || null },
     include: { 
       product: { include: { unitRef: true } }, 
       items: { include: { product: { include: { unitRef: true } }, unit: true } } 
@@ -113,12 +119,14 @@ export async function createCostCenter(data: {
       throw new Error('غير مصرح لك بإدارة مراكز التكلفة');
     }
 
+    const branchId = await getActiveBranch();
     const totalCost = data.items.reduce((sum: number, item: any) => sum + (item.quantity * item.costPrice), 0);
 
     const cc = await prisma.$transaction(async (tx) => {
         const createdCc = await tx.costCenter.create({
             data: {
               companyId,
+              branchId: branchId || null,
               code: data.code,
               name: data.name,
               nameAr: data.nameAr || null,
@@ -237,8 +245,10 @@ export async function getProductionOrders() {
   const companyId = session?.user?.companyId;
   if (!companyId) return [];
 
+  const branchId = await getActiveBranch();
+
   return prisma.productionOrder.findMany({
-    where: { companyId },
+    where: { companyId, branchId: branchId || null },
     include: { 
       product: { include: { unitRef: true } }, 
       warehouse: true, 
@@ -366,6 +376,7 @@ export async function createProductionOrder(data: {
      const order = await prisma.productionOrder.create({
         data: {
            companyId,
+           branchId: branchId || null,
            orderNumber,
            productId: data.productId,
            quantity: data.quantity,
@@ -684,6 +695,8 @@ export async function createSalesInvoice(data: {
   paymentType: 'paid' | 'credit';
   receiptAccountId: string | null;
   isTaxInclusive?: boolean;
+  currency?: string;
+  exchangeRate?: number;
 }) {
   try {
     const session = await getSession();
@@ -711,7 +724,10 @@ export async function createSalesInvoice(data: {
           taxAmount: data.taxAmount,
           discount: data.discount,
           netAmount: data.netAmount,
-          status: data.status, isTaxInclusive: data.isTaxInclusive,
+          status: data.status, 
+          isTaxInclusive: data.isTaxInclusive,
+          currency: data.currency || 'SAR',
+          exchangeRate: data.exchangeRate || 1.0,
           items: {
             create: data.items.map((i: any) => ({
               productId: i.productId,
@@ -925,6 +941,8 @@ export async function updateSalesInvoice(invoiceId: string, data: any) {
         discount: data.discount,
         netAmount: data.netAmount,
         status: data.status,
+        currency: data.currency || 'SAR',
+        exchangeRate: data.exchangeRate || 1.0,
         journalVoucherId: null, // Clear it temporarily
         items: {
           create: data.items.map((i: any) => ({
@@ -1293,6 +1311,7 @@ export async function createSalesQuotation(data: {
 
     const companyId = session?.user?.companyId;
     if (!companyId) throw new Error('Unauthorized');
+    const branchId = await getActiveBranch();
 
     const quotation = await prisma.$transaction(async (tx) => {
       // 1. Generate Quotation Number (e.g. QUO-2026-001)
@@ -1303,6 +1322,7 @@ export async function createSalesQuotation(data: {
       return await tx.salesQuotation.create({
         data: {
           companyId,
+          branchId,
           quotationNumber,
           date: new Date(data.date),
           validUntil: data.validUntil ? new Date(data.validUntil) : null,
@@ -1577,6 +1597,7 @@ export async function createProduct(data: {
     const product = await prisma.product.create({
       data: {
         sku: finalSku,
+        branchId: (await getActiveBranch()) || null,
         name: data.name,
         nameAr: data.nameAr || null,
         description: data.description || null,

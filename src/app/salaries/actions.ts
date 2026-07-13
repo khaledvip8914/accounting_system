@@ -3,6 +3,7 @@
 import { prisma_latest as prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/auth';
+import { getActiveBranch } from '@/lib/branch';
 
 async function getAuthContext() {
   const session = await getSession();
@@ -17,21 +18,19 @@ async function getAuthContext() {
 
 export async function getPayrollData(month: number, year: number) {
   const { companyId } = await getAuthContext();
+  const branchId = await getActiveBranch();
+  const whereClause: any = { status: 'Active', companyId, branchId: branchId || null };
+  const financialMovesWhere: any = { companyId, branchId: branchId || null, date: { gte: new Date(year, month - 1, 1), lt: new Date(year, month, 1) }, status: { in: ['Confirmed', 'Approved'] } };
+  const paymentsWhere: any = { month, year, companyId, branchId: branchId || null };
+
   const employees = await prisma.employee.findMany({
-    where: { status: 'Active', companyId },
+    where: whereClause,
     include: {
       financialMoves: {
-        where: {
-          companyId,
-          date: {
-            gte: new Date(year, month - 1, 1),
-            lt: new Date(year, month, 1)
-          },
-          status: { in: ['Confirmed', 'Approved'] }
-        }
+        where: financialMovesWhere
       },
       salaryPayments: {
-        where: { month, year, companyId }
+        where: paymentsWhere
       }
     }
   });
@@ -66,6 +65,7 @@ export async function getPayrollData(month: number, year: number) {
 export async function approveSalary({ employeeId, month, year, amounts }: { employeeId: string, month: number, year: number, amounts: any }) {
   try {
     const { companyId } = await getAuthContext();
+    const branchId = await getActiveBranch();
 
     // 1. Find necessary accounts (Scoped to company)
     const expenseAcc = await prisma.account.findFirst({ where: { code: '6000', companyId } });
@@ -103,7 +103,8 @@ export async function approveSalary({ employeeId, month, year, amounts }: { empl
           advances: amounts.advances,
           penalties: amounts.penalties,
           netSalary: amounts.netSalary,
-          status: 'Approved'
+          status: 'Approved',
+          branchId
         }
       });
 
@@ -119,6 +120,7 @@ export async function approveSalary({ employeeId, month, year, amounts }: { empl
       const jv = await tx.journalVoucher.create({
         data: {
           companyId,
+          branchId,
           reference: ref,
           date: new Date(),
           description: `Salary Payment - ${amounts.name} - ${month}/${year}`,

@@ -4,6 +4,7 @@ import { prisma } from '../../lib/db';
 import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/auth';
 import { hasPermission } from '@/lib/permissions';
+import { getActiveBranch } from '@/lib/branch';
 
 async function getAuthContext() {
   const session = await getSession();
@@ -19,8 +20,13 @@ async function getAuthContext() {
 export async function getInvoices() {
   try {
     const { companyId } = await getAuthContext();
+    const branchId = await getActiveBranch();
+    const whereClause: any = { companyId };
+    if (branchId) {
+      whereClause.branchId = branchId;
+    }
     const invoices = await prisma.salesInvoice.findMany({
-      where: { companyId },
+      where: whereClause,
       orderBy: { createdAt: 'desc' },
       include: { customer: true }
     });
@@ -69,9 +75,12 @@ export async function createInvoice(data: {
     const count = await prisma.salesInvoice.count({ where: { companyId } });
     const invoiceNumber = `INV-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
 
+    const branchId = await getActiveBranch();
+
     await prisma.salesInvoice.create({
       data: {
         companyId,
+        branchId,
         invoiceNumber,
         customerId: customer.id,
         netAmount: data.netAmount,

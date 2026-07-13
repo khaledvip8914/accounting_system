@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/auth';
 import { hasPermission } from '@/lib/permissions';
+import { getActiveBranch } from '@/lib/branch';
 
 async function getAuthContext() {
   const session = await getSession();
@@ -90,9 +91,12 @@ export async function saveTransactionVoucher(data: any) {
 
         voucherNumber = `${prefix}-${year}-${nextNum.toString().padStart(3, '0')}`;
 
+        const branchId = await getActiveBranch();
+
         voucher = await tx.transactionVoucher.create({
           data: {
             companyId,
+            branchId,
             voucherNumber,
             type: data.type,
             date: new Date(data.date),
@@ -113,9 +117,12 @@ export async function saveTransactionVoucher(data: any) {
           ]
         });
       } else {
+        const branchId = await getActiveBranch();
+
         const newJv = await tx.journalVoucher.create({
           data: {
             companyId,
+            branchId,
             reference: voucherNumber,
             date: new Date(data.date),
             description: data.description,
@@ -264,9 +271,12 @@ export async function saveOpeningBalances(data: {
       const count = await tx.journalVoucher.count({ where: { companyId } });
       const reference = `OB-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
 
+      const branchId = await getActiveBranch();
+
       const voucher = await tx.journalVoucher.create({
         data: {
           companyId,
+          branchId,
           reference,
           date: new Date(data.date),
           description: data.description || 'قيد أرصدة افتتاحية',

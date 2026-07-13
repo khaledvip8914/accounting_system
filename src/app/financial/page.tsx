@@ -8,6 +8,7 @@ import { prisma } from "../../lib/db";
 import { getCompanyProfile } from "../settings/actions";
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { getActiveBranch } from "@/lib/branch";
 
 export default async function FinancialManagementPage() {
   const session = await getSession();
@@ -34,8 +35,14 @@ export default async function FinancialManagementPage() {
     orderBy: { code: 'asc' }
   });
 
+  const branchId = await getActiveBranch();
+  const whereClause: any = { companyId };
+  if (branchId) {
+    whereClause.branchId = branchId;
+  }
+
   const transactionVouchers = await prisma.transactionVoucher.findMany({
-    where: { companyId },
+    where: whereClause,
     include: { primaryAccount: true, relatedAccount: true },
     orderBy: { createdAt: 'desc' }
   });

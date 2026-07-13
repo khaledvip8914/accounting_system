@@ -3,6 +3,7 @@ import WarehouseClient from './WarehouseClient';
 import { Lang } from '@/lib/i18n';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import { getActiveBranch } from '@/lib/branch';
 
 export default async function WarehousesPage(props: {
   params: Promise<any>;
@@ -18,21 +19,29 @@ export default async function WarehousesPage(props: {
   const companyId = session.user.companyId;
 
   try {
+    const branchId = await getActiveBranch();
+    const whereClause: any = { companyId, branchId: branchId || null };
+
     const [warehouses, products, stocks] = await Promise.all([
       prisma.warehouse.findMany({
-        where: { companyId },
+        where: whereClause,
         include: { stockItems: true },
         orderBy: { code: 'asc' }
       }),
       prisma.product.findMany({
-        where: { companyId },
+        where: whereClause,
         orderBy: { sku: 'asc' }
       }),
       prisma.warehouseStock.findMany({
-        where: { warehouse: { companyId } },
+        where: branchId ? { warehouse: { companyId, branchId } } : { warehouse: { companyId } },
         include: { product: true, warehouse: true }
       })
     ]);
+
+    products.forEach(p => {
+      const pStocks = stocks.filter(ws => ws.productId === p.id);
+      p.stockQuantity = pStocks.reduce((sum, ws) => sum + ws.quantity, 0);
+    });
 
     return (
       <WarehouseClient 

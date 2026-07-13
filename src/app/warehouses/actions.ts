@@ -23,6 +23,23 @@ export async function createWarehouse(data: any) {
       throw new Error('غير مصرح لك بإضافة مستودع');
     }
 
+    // Check branch limit
+    const companyInfo = await prisma.company.findUnique({
+      where: { id: companyId },
+      include: {
+        subscriptionPlan: true,
+        _count: {
+          select: { warehouses: true }
+        }
+      }
+    });
+
+    if (companyInfo?.subscriptionPlan) {
+      if (companyInfo._count.warehouses >= companyInfo.subscriptionPlan.maxBranches) {
+        throw new Error(`عذراً، لقد وصلت للحد الأقصى المسموح به للفروع/المستودعات (${companyInfo.subscriptionPlan.maxBranches}) في باقتك الحالية.`);
+      }
+    }
+
     // Auto-generate code if empty
     let code = data.code;
     if (!code) {

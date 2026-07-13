@@ -3,6 +3,7 @@
 import { prisma_latest as prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/auth';
+import { getActiveBranch } from '@/lib/branch';
 
 async function getAuthContext() {
   const session = await getSession();
@@ -29,6 +30,7 @@ export async function createEmployee(data: any) {
     const newEmployee = await prisma.employee.create({
       data: {
         companyId,
+        branchId: (await getActiveBranch()) || null,
         code: finalCode,
         name: data.name,
         nameAr: data.nameAr,
@@ -139,6 +141,7 @@ export async function createFinancialMove(data: any) {
     const newMove = await prisma.employeeFinancialMove.create({
       data: {
         companyId,
+        branchId: (await getActiveBranch()) || null,
         employeeId: data.employeeId,
         type: data.type, 
         amount,
