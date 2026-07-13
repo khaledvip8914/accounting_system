@@ -68,6 +68,18 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+html[dir="rtl"] body,
+html[dir="rtl"] button,
+html[dir="rtl"] input,
+html[dir="rtl"] select,
+html[dir="rtl"] textarea {
+  font-family: var(--font-tajawal), sans-serif !important;
+}
+
+html[dir="rtl"] * {
+  font-family: var(--font-tajawal), sans-serif;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
