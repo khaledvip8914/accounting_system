@@ -14,11 +14,16 @@ interface Props {
 
 export default function ZatcaOnboarding({ companyId, currentStatus, onClose }: Props) {
   const router = useRouter();
+  const [step, setStep] = useState<'auth' | 'onboard'>('auth');
+  const [adminPassword, setAdminPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [environment, setEnvironment] = useState<'Sandbox' | 'Simulation' | 'Production'>('Simulation');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error' | '', text: string }>({ type: '', text: '' });
   const [mounted, setMounted] = useState(false);
+
+  // The secret password for administration
+  const SECRET_ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ZATCA_PASSWORD || 'zatcaAdmin';
 
   useEffect(() => {
     setMounted(true);
@@ -27,6 +32,15 @@ export default function ZatcaOnboarding({ companyId, currentStatus, onClose }: P
       document.body.style.overflow = 'unset';
     };
   }, []);
+
+  const handleVerifyPassword = () => {
+    if (adminPassword === SECRET_ADMIN_PASSWORD) {
+      setStep('onboard');
+      setMessage({ type: '', text: '' });
+    } else {
+      setMessage({ type: 'error', text: 'كلمة المرور غير صحيحة' });
+    }
+  };
 
   const handleOnboard = async () => {
     if (!otp) {
@@ -61,86 +75,133 @@ export default function ZatcaOnboarding({ companyId, currentStatus, onClose }: P
           <X size={20} />
         </button>
 
-        <div className="zatca-header">
-          <h2>إعدادات الربط والتكامل مع ZATCA</h2>
-          <p>أدخل البيانات المطلوبة لضمان استقرار الخدمة والربط المباشر مع منصة فاتورة.</p>
-        </div>
-
-        <div className="zatca-body">
-          <div className={`zatca-status-banner ${isSuccess ? 'success' : 'warning'}`}>
-            <div className="zatca-status-icon">
-              {isSuccess ? <ShieldCheck size={24} /> : <AlertCircle size={24} />}
+        {step === 'auth' ? (
+          <>
+            <div className="zatca-header">
+              <h2>صلاحية الإدارة (ZATCA)</h2>
+              <p>هذه الصفحة مخصصة للإدارة فقط. يرجى إدخال كلمة المرور للمتابعة.</p>
             </div>
-            <div className="zatca-status-text">
-              <h4>حالة الربط الحالية</h4>
-              <p>{isSuccess ? 'تم الربط بنجاح والنظام جاهز لإرسال الفواتير.' : 'النظام غير مربوط حالياً بهيئة الزكاة والضريبة والجمارك.'}</p>
+            <div className="zatca-body">
+              <div className="zatca-form-group">
+                <label>كلمة المرور <span className="required">*</span></label>
+                <div style={{ position: 'relative' }}>
+                  <Lock className="env-icon" size={20} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)' }} />
+                  <input 
+                    type="password" 
+                    value={adminPassword}
+                    onChange={(e) => setAdminPassword(e.target.value)}
+                    placeholder="أدخل كلمة المرور"
+                    className="zatca-otp-input"
+                    style={{ paddingRight: '48px', textAlign: 'right', letterSpacing: 'normal' }}
+                    onKeyDown={(e) => e.key === 'Enter' && handleVerifyPassword()}
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+              
+              {message.text && (
+                <div className={`zatca-message ${message.type}`}>
+                  {message.type === 'error' ? <AlertCircle size={20} /> : <CheckCircle2 size={20} />}
+                  <span>{message.text}</span>
+                </div>
+              )}
+
+              <div className="zatca-actions">
+                <button onClick={onClose} className="zatca-btn-cancel">إلغاء</button>
+                <button 
+                  onClick={handleVerifyPassword} 
+                  disabled={!adminPassword}
+                  className="zatca-btn-submit"
+                >
+                  دخول
+                </button>
+              </div>
             </div>
-          </div>
-          
-          <div className="zatca-form-group">
-            <label>بيئة العمل <span className="required">*</span></label>
-            <div className="zatca-env-options">
-              <button
-                onClick={() => setEnvironment('Sandbox')}
-                className={`zatca-env-btn ${environment === 'Sandbox' ? 'active' : ''}`}
-              >
-                <Server size={24} className="env-icon" />
-                <h4>بيئة المطورين (Sandbox)</h4>
-                <p>للتجارب التقنية دون أثر ضريبي.</p>
-              </button>
-
-              <button
-                onClick={() => setEnvironment('Simulation')}
-                className={`zatca-env-btn ${environment === 'Simulation' ? 'active' : ''}`}
-              >
-                <Activity size={24} className="env-icon" />
-                <h4>بيئة المحاكاة (Simulation)</h4>
-                <p>لمحاكاة الفواتير الرسمية للتجربة.</p>
-              </button>
-
-              <button
-                onClick={() => setEnvironment('Production')}
-                className={`zatca-env-btn ${environment === 'Production' ? 'active' : ''}`}
-              >
-                <ShieldCheck size={24} className="env-icon" />
-                <h4>بيئة الإنتاج (Production)</h4>
-                <p>الفواتير معتمدة قانونياً بشكل مباشر.</p>
-              </button>
+          </>
+        ) : (
+          <>
+            <div className="zatca-header">
+              <h2>إعدادات الربط والتكامل مع ZATCA</h2>
+              <p>أدخل البيانات المطلوبة لضمان استقرار الخدمة والربط المباشر مع منصة فاتورة.</p>
             </div>
-          </div>
 
-          <div className="zatca-form-group">
-            <label>كود التوثيق (OTP) <span className="required">*</span></label>
-            <input 
-              type="text" 
-              maxLength={6}
-              value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/[^0-9a-zA-Z]/g, ''))}
-              placeholder="أدخل الكود المكون من 6 أرقام"
-              className="zatca-otp-input"
-              dir="ltr"
-            />
-            <p className="zatca-hint">يمكنك الحصول على الكود من منصة فاتورة (صالح لمدة ساعة واحدة)</p>
-          </div>
+            <div className="zatca-body">
+              <div className={`zatca-status-banner ${isSuccess ? 'success' : 'warning'}`}>
+                <div className="zatca-status-icon">
+                  {isSuccess ? <ShieldCheck size={24} /> : <AlertCircle size={24} />}
+                </div>
+                <div className="zatca-status-text">
+                  <h4>حالة الربط الحالية</h4>
+                  <p>{isSuccess ? 'تم الربط بنجاح والنظام جاهز لإرسال الفواتير.' : 'النظام غير مربوط حالياً بهيئة الزكاة والضريبة والجمارك.'}</p>
+                </div>
+              </div>
+              
+              <div className="zatca-form-group">
+                <label>بيئة العمل <span className="required">*</span></label>
+                <div className="zatca-env-options">
+                  <button
+                    onClick={() => setEnvironment('Sandbox')}
+                    className={`zatca-env-btn ${environment === 'Sandbox' ? 'active' : ''}`}
+                  >
+                    <Server size={24} className="env-icon" />
+                    <h4>بيئة المطورين (Sandbox)</h4>
+                    <p>للتجارب التقنية دون أثر ضريبي.</p>
+                  </button>
 
-          {message.text && (
-            <div className={`zatca-message ${message.type}`}>
-              {message.type === 'error' ? <AlertCircle size={20} /> : <CheckCircle2 size={20} />}
-              <span>{message.text}</span>
+                  <button
+                    onClick={() => setEnvironment('Simulation')}
+                    className={`zatca-env-btn ${environment === 'Simulation' ? 'active' : ''}`}
+                  >
+                    <Activity size={24} className="env-icon" />
+                    <h4>بيئة المحاكاة (Simulation)</h4>
+                    <p>لمحاكاة الفواتير الرسمية للتجربة.</p>
+                  </button>
+
+                  <button
+                    onClick={() => setEnvironment('Production')}
+                    className={`zatca-env-btn ${environment === 'Production' ? 'active' : ''}`}
+                  >
+                    <ShieldCheck size={24} className="env-icon" />
+                    <h4>بيئة الإنتاج (Production)</h4>
+                    <p>الفواتير معتمدة قانونياً بشكل مباشر.</p>
+                  </button>
+                </div>
+              </div>
+
+              <div className="zatca-form-group">
+                <label>كود التوثيق (OTP) <span className="required">*</span></label>
+                <input 
+                  type="text" 
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/[^0-9a-zA-Z]/g, ''))}
+                  placeholder="أدخل الكود المكون من 6 أرقام"
+                  className="zatca-otp-input"
+                  dir="ltr"
+                />
+                <p className="zatca-hint">يمكنك الحصول على الكود من منصة فاتورة (صالح لمدة ساعة واحدة)</p>
+              </div>
+
+              {message.text && (
+                <div className={`zatca-message ${message.type}`}>
+                  {message.type === 'error' ? <AlertCircle size={20} /> : <CheckCircle2 size={20} />}
+                  <span>{message.text}</span>
+                </div>
+              )}
+
+              <div className="zatca-actions">
+                <button onClick={() => setStep('auth')} className="zatca-btn-cancel">رجوع</button>
+                <button 
+                  onClick={handleOnboard} 
+                  disabled={loading || otp.length < 5}
+                  className="zatca-btn-submit"
+                >
+                  {loading ? 'جاري التحقق...' : 'تأكيد وحفظ'}
+                </button>
+              </div>
             </div>
-          )}
-
-          <div className="zatca-actions">
-            <button onClick={onClose} className="zatca-btn-cancel">إلغاء</button>
-            <button 
-              onClick={handleOnboard} 
-              disabled={loading || otp.length < 5}
-              className="zatca-btn-submit"
-            >
-              {loading ? 'جاري التحقق...' : 'تأكيد وحفظ'}
-            </button>
-          </div>
-        </div>
+          </>
+        )}
       </div>
 
       <style jsx>{`
