@@ -807,7 +807,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "D:\\برمجة\\accounting_software\\src\\generated\\client_v8",
+      "value": "D:\\برمجة\\qyedx.com\\src\\generated\\client_v8",
       "fromEnvVar": null
     },
     "config": {
@@ -825,7 +825,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "D:\\برمجة\\accounting_software\\prisma\\schema.prisma",
+    "sourceFilePath": "D:\\برمجة\\qyedx.com\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {

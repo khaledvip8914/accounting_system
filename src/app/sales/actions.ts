@@ -115,7 +115,7 @@ export async function createCostCenter(data: {
     const companyId = session?.user?.companyId;
     if (!companyId) throw new Error('Unauthorized');
 
-    if (!hasPermission(perms, 'production', 'create')) {
+    if (!hasPermission(session?.user, 'production', 'create')) {
       throw new Error('غير مصرح لك بإدارة مراكز التكلفة');
     }
 
@@ -701,7 +701,7 @@ export async function createSalesInvoice(data: {
     const session = await getSession();
     const perms = session?.user?.permissions;
 
-    if (!hasPermission(perms, 'invoices', 'create')) {
+    if (!hasPermission(session?.user, 'invoices', 'create')) {
       throw new Error('غير مصرح لك بإنشاء فاتورة مبيعات');
     }
 
