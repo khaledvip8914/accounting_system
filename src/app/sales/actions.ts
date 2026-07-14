@@ -376,7 +376,7 @@ export async function createProductionOrder(data: {
      const order = await prisma.productionOrder.create({
         data: {
            companyId,
-           branchId: branchId || null,
+           branchId: data.branchId || null,
            orderNumber,
            productId: data.productId,
            quantity: data.quantity,
