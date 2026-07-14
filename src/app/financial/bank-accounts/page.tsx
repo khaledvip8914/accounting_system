@@ -3,7 +3,7 @@ import BankAccountsClient from './BankAccountsClient';
 import { Lang } from '@/lib/i18n';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import { requireFeature } from '@/lib/subscription';
+
 
 export default async function BankAccountsPage(props: {
   params: Promise<any>;
@@ -15,7 +15,7 @@ export default async function BankAccountsPage(props: {
   }
   
   const companyId = session.user.companyId;
-  await requireFeature(companyId, 'hasFinancialModule');
+
 
   const searchParams = await props.searchParams;
   const lang = (searchParams.lang as Lang) || 'ar';

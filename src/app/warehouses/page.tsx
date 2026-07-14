@@ -20,9 +20,10 @@ export default async function WarehousesPage(props: {
 
   try {
     const branchId = await getActiveBranch();
-    const whereClause: any = { companyId, branchId: branchId || null };
+    const whereClause: any = { companyId };
+    if (branchId) whereClause.branchId = branchId;
 
-    const [warehouses, products, stocks] = await Promise.all([
+    const [warehouses, products, stocks, allCompanyWarehouses, transfers] = await Promise.all([
       prisma.warehouse.findMany({
         where: whereClause,
         include: { stockItems: true },
@@ -35,6 +36,19 @@ export default async function WarehousesPage(props: {
       prisma.warehouseStock.findMany({
         where: branchId ? { warehouse: { companyId, branchId } } : { warehouse: { companyId } },
         include: { product: true, warehouse: true }
+      }),
+      prisma.warehouse.findMany({
+        where: { companyId },
+        orderBy: { code: 'asc' }
+      }),
+      prisma.stockTransfer.findMany({
+        where: { companyId },
+        include: { 
+          fromWarehouse: true, 
+          toWarehouse: true,
+          items: { include: { product: true } }
+        },
+        orderBy: { createdAt: 'desc' }
       })
     ]);
 
@@ -49,6 +63,9 @@ export default async function WarehousesPage(props: {
         initialWarehouses={warehouses}
         initialProducts={products}
         initialStocks={stocks}
+        allWarehouses={allCompanyWarehouses}
+        initialTransfers={transfers}
+        companyId={companyId}
       />
     );
   } catch (err: any) {

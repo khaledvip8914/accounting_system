@@ -21,7 +21,8 @@ export default async function InventoryPage(props: {
   const lang = (searchParams.lang as Lang) || 'ar';
   
   const branchId = await getActiveBranch();
-  const whereClause: any = { companyId, branchId: branchId || null };
+  const whereClause: any = { companyId };
+  if (branchId) whereClause.branchId = branchId;
 
   try {
     const [products, units, costCenters, productionOrders, warehouses, disposalVouchers, suppliers, categories, warehouseStocks] = await Promise.all([

@@ -18,7 +18,8 @@ export default async function EmployeesPage() {
   
   const dict = getDictionary(lang);
   const branchId = await getActiveBranch();
-  const whereClause: any = { companyId, branchId: branchId || null };
+  const whereClause: any = { companyId };
+  if (branchId) whereClause.branchId = branchId;
 
   const employees = await prisma.employee.findMany({
     where: whereClause,

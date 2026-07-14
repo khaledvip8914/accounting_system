@@ -360,19 +360,21 @@ model PurchaseItem {
 }
 
 model StockTransfer {
-  companyId       String              @default("default")
-  company         Company             @relation(fields: [companyId], references: [id])
-  id              String              @id @default(cuid())
-  transferNumber  String
-  date            DateTime            @default(now())
-  fromWarehouseId String
-  toWarehouseId   String
-  status          String              @default("Completed")
-  notes           String?
-  createdAt       DateTime            @default(now())
-  toWarehouse     Warehouse           @relation("ToWarehouse", fields: [toWarehouseId], references: [id])
-  fromWarehouse   Warehouse           @relation("FromWarehouse", fields: [fromWarehouseId], references: [id])
-  items           StockTransferItem[]
+  companyId             String              @default("default")
+  company               Company             @relation(fields: [companyId], references: [id])
+  id                    String              @id @default(cuid())
+  transferNumber        String
+  date                  DateTime            @default(now())
+  fromWarehouseId       String
+  toWarehouseId         String
+  status                String              @default("Completed")
+  notes                 String?
+  createdAt             DateTime            @default(now())
+  toWarehouse           Warehouse           @relation("ToWarehouse", fields: [toWarehouseId], references: [id])
+  fromWarehouse         Warehouse           @relation("FromWarehouse", fields: [fromWarehouseId], references: [id])
+  items                 StockTransferItem[]
+  attachmentUrl         String?
+  receiverAttachmentUrl String?
 
   @@unique([companyId, transferNumber])
 }

@@ -35,6 +35,7 @@ export default function CreatePurchaseOrderModal({
   suppliers,
   products,
   warehouses,
+  currencies,
   lang,
   onClose,
   onSave

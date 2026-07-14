@@ -15,7 +15,7 @@ export default async function BankReconciliationPage(props: {
   }
   
   const companyId = session.user.companyId;
-  await requireFeature(companyId, 'hasFinancialModule');
+  await requireFeature(companyId, 'hasBankReconciliation');
 
   const searchParams = await props.searchParams;
   const lang = (searchParams.lang as Lang) || 'ar';

@@ -15,7 +15,7 @@ export default async function FixedAssetsPage(props: {
   }
   
   const companyId = session.user.companyId;
-  await requireFeature(companyId, 'hasFinancialModule');
+  await requireFeature(companyId, 'hasFixedAssets');
 
   const searchParams = await props.searchParams;
   const lang = (searchParams.lang as Lang) || 'ar';

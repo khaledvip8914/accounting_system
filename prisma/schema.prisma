@@ -366,6 +366,8 @@ model StockTransfer {
   toWarehouse     Warehouse           @relation("ToWarehouse", fields: [toWarehouseId], references: [id])
   fromWarehouse   Warehouse           @relation("FromWarehouse", fields: [fromWarehouseId], references: [id])
   items           StockTransferItem[]
+  attachmentUrl   String?
+  receiverAttachmentUrl String?
   @@unique([companyId, transferNumber])
 }
 

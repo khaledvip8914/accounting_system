@@ -24384,6 +24384,8 @@ export namespace Prisma {
     status: string | null
     notes: string | null
     createdAt: Date | null
+    attachmentUrl: string | null
+    receiverAttachmentUrl: string | null
   }
 
   export type StockTransferMaxAggregateOutputType = {
@@ -24396,6 +24398,8 @@ export namespace Prisma {
     status: string | null
     notes: string | null
     createdAt: Date | null
+    attachmentUrl: string | null
+    receiverAttachmentUrl: string | null
   }
 
   export type StockTransferCountAggregateOutputType = {
@@ -24408,6 +24412,8 @@ export namespace Prisma {
     status: number
     notes: number
     createdAt: number
+    attachmentUrl: number
+    receiverAttachmentUrl: number
     _all: number
   }
 
@@ -24422,6 +24428,8 @@ export namespace Prisma {
     status?: true
     notes?: true
     createdAt?: true
+    attachmentUrl?: true
+    receiverAttachmentUrl?: true
   }
 
   export type StockTransferMaxAggregateInputType = {
@@ -24434,6 +24442,8 @@ export namespace Prisma {
     status?: true
     notes?: true
     createdAt?: true
+    attachmentUrl?: true
+    receiverAttachmentUrl?: true
   }
 
   export type StockTransferCountAggregateInputType = {
@@ -24446,6 +24456,8 @@ export namespace Prisma {
     status?: true
     notes?: true
     createdAt?: true
+    attachmentUrl?: true
+    receiverAttachmentUrl?: true
     _all?: true
   }
 
@@ -24531,6 +24543,8 @@ export namespace Prisma {
     status: string
     notes: string | null
     createdAt: Date
+    attachmentUrl: string | null
+    receiverAttachmentUrl: string | null
     _count: StockTransferCountAggregateOutputType | null
     _min: StockTransferMinAggregateOutputType | null
     _max: StockTransferMaxAggregateOutputType | null
@@ -24560,6 +24574,8 @@ export namespace Prisma {
     status?: boolean
     notes?: boolean
     createdAt?: boolean
+    attachmentUrl?: boolean
+    receiverAttachmentUrl?: boolean
     company?: boolean | CompanyDefaultArgs<ExtArgs>
     toWarehouse?: boolean | WarehouseDefaultArgs<ExtArgs>
     fromWarehouse?: boolean | WarehouseDefaultArgs<ExtArgs>
@@ -24577,6 +24593,8 @@ export namespace Prisma {
     status?: boolean
     notes?: boolean
     createdAt?: boolean
+    attachmentUrl?: boolean
+    receiverAttachmentUrl?: boolean
     company?: boolean | CompanyDefaultArgs<ExtArgs>
     toWarehouse?: boolean | WarehouseDefaultArgs<ExtArgs>
     fromWarehouse?: boolean | WarehouseDefaultArgs<ExtArgs>
@@ -24592,6 +24610,8 @@ export namespace Prisma {
     status?: boolean
     notes?: boolean
     createdAt?: boolean
+    attachmentUrl?: boolean
+    receiverAttachmentUrl?: boolean
     company?: boolean | CompanyDefaultArgs<ExtArgs>
     toWarehouse?: boolean | WarehouseDefaultArgs<ExtArgs>
     fromWarehouse?: boolean | WarehouseDefaultArgs<ExtArgs>
@@ -24607,9 +24627,11 @@ export namespace Prisma {
     status?: boolean
     notes?: boolean
     createdAt?: boolean
+    attachmentUrl?: boolean
+    receiverAttachmentUrl?: boolean
   }
 
-  export type StockTransferOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"companyId" | "id" | "transferNumber" | "date" | "fromWarehouseId" | "toWarehouseId" | "status" | "notes" | "createdAt", ExtArgs["result"]["stockTransfer"]>
+  export type StockTransferOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"companyId" | "id" | "transferNumber" | "date" | "fromWarehouseId" | "toWarehouseId" | "status" | "notes" | "createdAt" | "attachmentUrl" | "receiverAttachmentUrl", ExtArgs["result"]["stockTransfer"]>
   export type StockTransferInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     company?: boolean | CompanyDefaultArgs<ExtArgs>
     toWarehouse?: boolean | WarehouseDefaultArgs<ExtArgs>
@@ -24646,6 +24668,8 @@ export namespace Prisma {
       status: string
       notes: string | null
       createdAt: Date
+      attachmentUrl: string | null
+      receiverAttachmentUrl: string | null
     }, ExtArgs["result"]["stockTransfer"]>
     composites: {}
   }
@@ -25082,6 +25106,8 @@ export namespace Prisma {
     readonly status: FieldRef<"StockTransfer", 'String'>
     readonly notes: FieldRef<"StockTransfer", 'String'>
     readonly createdAt: FieldRef<"StockTransfer", 'DateTime'>
+    readonly attachmentUrl: FieldRef<"StockTransfer", 'String'>
+    readonly receiverAttachmentUrl: FieldRef<"StockTransfer", 'String'>
   }
     
 
@@ -61638,7 +61664,9 @@ export namespace Prisma {
     toWarehouseId: 'toWarehouseId',
     status: 'status',
     notes: 'notes',
-    createdAt: 'createdAt'
+    createdAt: 'createdAt',
+    attachmentUrl: 'attachmentUrl',
+    receiverAttachmentUrl: 'receiverAttachmentUrl'
   };
 
   export type StockTransferScalarFieldEnum = (typeof StockTransferScalarFieldEnum)[keyof typeof StockTransferScalarFieldEnum]
@@ -63830,6 +63858,8 @@ export namespace Prisma {
     status?: StringFilter<"StockTransfer"> | string
     notes?: StringNullableFilter<"StockTransfer"> | string | null
     createdAt?: DateTimeFilter<"StockTransfer"> | Date | string
+    attachmentUrl?: StringNullableFilter<"StockTransfer"> | string | null
+    receiverAttachmentUrl?: StringNullableFilter<"StockTransfer"> | string | null
     company?: XOR<CompanyScalarRelationFilter, CompanyWhereInput>
     toWarehouse?: XOR<WarehouseScalarRelationFilter, WarehouseWhereInput>
     fromWarehouse?: XOR<WarehouseScalarRelationFilter, WarehouseWhereInput>
@@ -63846,6 +63876,8 @@ export namespace Prisma {
     status?: SortOrder
     notes?: SortOrderInput | SortOrder
     createdAt?: SortOrder
+    attachmentUrl?: SortOrderInput | SortOrder
+    receiverAttachmentUrl?: SortOrderInput | SortOrder
     company?: CompanyOrderByWithRelationInput
     toWarehouse?: WarehouseOrderByWithRelationInput
     fromWarehouse?: WarehouseOrderByWithRelationInput
@@ -63866,6 +63898,8 @@ export namespace Prisma {
     status?: StringFilter<"StockTransfer"> | string
     notes?: StringNullableFilter<"StockTransfer"> | string | null
     createdAt?: DateTimeFilter<"StockTransfer"> | Date | string
+    attachmentUrl?: StringNullableFilter<"StockTransfer"> | string | null
+    receiverAttachmentUrl?: StringNullableFilter<"StockTransfer"> | string | null
     company?: XOR<CompanyScalarRelationFilter, CompanyWhereInput>
     toWarehouse?: XOR<WarehouseScalarRelationFilter, WarehouseWhereInput>
     fromWarehouse?: XOR<WarehouseScalarRelationFilter, WarehouseWhereInput>
@@ -63882,6 +63916,8 @@ export namespace Prisma {
     status?: SortOrder
     notes?: SortOrderInput | SortOrder
     createdAt?: SortOrder
+    attachmentUrl?: SortOrderInput | SortOrder
+    receiverAttachmentUrl?: SortOrderInput | SortOrder
     _count?: StockTransferCountOrderByAggregateInput
     _max?: StockTransferMaxOrderByAggregateInput
     _min?: StockTransferMinOrderByAggregateInput
@@ -63900,6 +63936,8 @@ export namespace Prisma {
     status?: StringWithAggregatesFilter<"StockTransfer"> | string
     notes?: StringNullableWithAggregatesFilter<"StockTransfer"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"StockTransfer"> | Date | string
+    attachmentUrl?: StringNullableWithAggregatesFilter<"StockTransfer"> | string | null
+    receiverAttachmentUrl?: StringNullableWithAggregatesFilter<"StockTransfer"> | string | null
   }
 
   export type StockTransferItemWhereInput = {
@@ -68495,6 +68533,8 @@ export namespace Prisma {
     status?: string
     notes?: string | null
     createdAt?: Date | string
+    attachmentUrl?: string | null
+    receiverAttachmentUrl?: string | null
     company?: CompanyCreateNestedOneWithoutStockTransfersInput
     toWarehouse: WarehouseCreateNestedOneWithoutTransfersToInput
     fromWarehouse: WarehouseCreateNestedOneWithoutTransfersFromInput
@@ -68511,6 +68551,8 @@ export namespace Prisma {
     status?: string
     notes?: string | null
     createdAt?: Date | string
+    attachmentUrl?: string | null
+    receiverAttachmentUrl?: string | null
     items?: StockTransferItemUncheckedCreateNestedManyWithoutTransferInput
   }
 
@@ -68521,6 +68563,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    attachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    receiverAttachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     company?: CompanyUpdateOneRequiredWithoutStockTransfersNestedInput
     toWarehouse?: WarehouseUpdateOneRequiredWithoutTransfersToNestedInput
     fromWarehouse?: WarehouseUpdateOneRequiredWithoutTransfersFromNestedInput
@@ -68537,6 +68581,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    attachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    receiverAttachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     items?: StockTransferItemUncheckedUpdateManyWithoutTransferNestedInput
   }
 
@@ -68550,6 +68596,8 @@ export namespace Prisma {
     status?: string
     notes?: string | null
     createdAt?: Date | string
+    attachmentUrl?: string | null
+    receiverAttachmentUrl?: string | null
   }
 
   export type StockTransferUpdateManyMutationInput = {
@@ -68559,6 +68607,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    attachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    receiverAttachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type StockTransferUncheckedUpdateManyInput = {
@@ -68571,6 +68621,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    attachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    receiverAttachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type StockTransferItemCreateInput = {
@@ -72987,6 +73039,8 @@ export namespace Prisma {
     status?: SortOrder
     notes?: SortOrder
     createdAt?: SortOrder
+    attachmentUrl?: SortOrder
+    receiverAttachmentUrl?: SortOrder
   }
 
   export type StockTransferMaxOrderByAggregateInput = {
@@ -72999,6 +73053,8 @@ export namespace Prisma {
     status?: SortOrder
     notes?: SortOrder
     createdAt?: SortOrder
+    attachmentUrl?: SortOrder
+    receiverAttachmentUrl?: SortOrder
   }
 
   export type StockTransferMinOrderByAggregateInput = {
@@ -73011,6 +73067,8 @@ export namespace Prisma {
     status?: SortOrder
     notes?: SortOrder
     createdAt?: SortOrder
+    attachmentUrl?: SortOrder
+    receiverAttachmentUrl?: SortOrder
   }
 
   export type StockTransferScalarRelationFilter = {
@@ -81639,6 +81697,8 @@ export namespace Prisma {
     status?: string
     notes?: string | null
     createdAt?: Date | string
+    attachmentUrl?: string | null
+    receiverAttachmentUrl?: string | null
     toWarehouse: WarehouseCreateNestedOneWithoutTransfersToInput
     fromWarehouse: WarehouseCreateNestedOneWithoutTransfersFromInput
     items?: StockTransferItemCreateNestedManyWithoutTransferInput
@@ -81653,6 +81713,8 @@ export namespace Prisma {
     status?: string
     notes?: string | null
     createdAt?: Date | string
+    attachmentUrl?: string | null
+    receiverAttachmentUrl?: string | null
     items?: StockTransferItemUncheckedCreateNestedManyWithoutTransferInput
   }
 
@@ -82977,6 +83039,8 @@ export namespace Prisma {
     status?: StringFilter<"StockTransfer"> | string
     notes?: StringNullableFilter<"StockTransfer"> | string | null
     createdAt?: DateTimeFilter<"StockTransfer"> | Date | string
+    attachmentUrl?: StringNullableFilter<"StockTransfer"> | string | null
+    receiverAttachmentUrl?: StringNullableFilter<"StockTransfer"> | string | null
   }
 
   export type InventoryLogUpsertWithWhereUniqueWithoutCompanyInput = {
@@ -86363,6 +86427,8 @@ export namespace Prisma {
     status?: string
     notes?: string | null
     createdAt?: Date | string
+    attachmentUrl?: string | null
+    receiverAttachmentUrl?: string | null
     company?: CompanyCreateNestedOneWithoutStockTransfersInput
     fromWarehouse: WarehouseCreateNestedOneWithoutTransfersFromInput
     items?: StockTransferItemCreateNestedManyWithoutTransferInput
@@ -86377,6 +86443,8 @@ export namespace Prisma {
     status?: string
     notes?: string | null
     createdAt?: Date | string
+    attachmentUrl?: string | null
+    receiverAttachmentUrl?: string | null
     items?: StockTransferItemUncheckedCreateNestedManyWithoutTransferInput
   }
 
@@ -86397,6 +86465,8 @@ export namespace Prisma {
     status?: string
     notes?: string | null
     createdAt?: Date | string
+    attachmentUrl?: string | null
+    receiverAttachmentUrl?: string | null
     company?: CompanyCreateNestedOneWithoutStockTransfersInput
     toWarehouse: WarehouseCreateNestedOneWithoutTransfersToInput
     items?: StockTransferItemCreateNestedManyWithoutTransferInput
@@ -86411,6 +86481,8 @@ export namespace Prisma {
     status?: string
     notes?: string | null
     createdAt?: Date | string
+    attachmentUrl?: string | null
+    receiverAttachmentUrl?: string | null
     items?: StockTransferItemUncheckedCreateNestedManyWithoutTransferInput
   }
 
@@ -91466,6 +91538,8 @@ export namespace Prisma {
     status?: string
     notes?: string | null
     createdAt?: Date | string
+    attachmentUrl?: string | null
+    receiverAttachmentUrl?: string | null
     company?: CompanyCreateNestedOneWithoutStockTransfersInput
     toWarehouse: WarehouseCreateNestedOneWithoutTransfersToInput
     fromWarehouse: WarehouseCreateNestedOneWithoutTransfersFromInput
@@ -91481,6 +91555,8 @@ export namespace Prisma {
     status?: string
     notes?: string | null
     createdAt?: Date | string
+    attachmentUrl?: string | null
+    receiverAttachmentUrl?: string | null
   }
 
   export type StockTransferCreateOrConnectWithoutItemsInput = {
@@ -91593,6 +91669,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    attachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    receiverAttachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     company?: CompanyUpdateOneRequiredWithoutStockTransfersNestedInput
     toWarehouse?: WarehouseUpdateOneRequiredWithoutTransfersToNestedInput
     fromWarehouse?: WarehouseUpdateOneRequiredWithoutTransfersFromNestedInput
@@ -91608,6 +91686,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    attachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    receiverAttachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type CompanyCreateWithoutInventoryLogsInput = {
@@ -102964,6 +103044,8 @@ export namespace Prisma {
     status?: string
     notes?: string | null
     createdAt?: Date | string
+    attachmentUrl?: string | null
+    receiverAttachmentUrl?: string | null
   }
 
   export type InventoryLogCreateManyCompanyInput = {
@@ -103763,6 +103845,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    attachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    receiverAttachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     toWarehouse?: WarehouseUpdateOneRequiredWithoutTransfersToNestedInput
     fromWarehouse?: WarehouseUpdateOneRequiredWithoutTransfersFromNestedInput
     items?: StockTransferItemUpdateManyWithoutTransferNestedInput
@@ -103777,6 +103861,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    attachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    receiverAttachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     items?: StockTransferItemUncheckedUpdateManyWithoutTransferNestedInput
   }
 
@@ -103789,6 +103875,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    attachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    receiverAttachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type InventoryLogUpdateWithoutCompanyInput = {
@@ -106827,6 +106915,8 @@ export namespace Prisma {
     status?: string
     notes?: string | null
     createdAt?: Date | string
+    attachmentUrl?: string | null
+    receiverAttachmentUrl?: string | null
   }
 
   export type StockTransferCreateManyFromWarehouseInput = {
@@ -106838,6 +106928,8 @@ export namespace Prisma {
     status?: string
     notes?: string | null
     createdAt?: Date | string
+    attachmentUrl?: string | null
+    receiverAttachmentUrl?: string | null
   }
 
   export type WarehouseStockCreateManyWarehouseInput = {
@@ -107200,6 +107292,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    attachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    receiverAttachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     company?: CompanyUpdateOneRequiredWithoutStockTransfersNestedInput
     fromWarehouse?: WarehouseUpdateOneRequiredWithoutTransfersFromNestedInput
     items?: StockTransferItemUpdateManyWithoutTransferNestedInput
@@ -107214,6 +107308,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    attachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    receiverAttachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     items?: StockTransferItemUncheckedUpdateManyWithoutTransferNestedInput
   }
 
@@ -107226,6 +107322,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    attachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    receiverAttachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type StockTransferUpdateWithoutFromWarehouseInput = {
@@ -107235,6 +107333,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    attachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    receiverAttachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     company?: CompanyUpdateOneRequiredWithoutStockTransfersNestedInput
     toWarehouse?: WarehouseUpdateOneRequiredWithoutTransfersToNestedInput
     items?: StockTransferItemUpdateManyWithoutTransferNestedInput
@@ -107249,6 +107349,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    attachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    receiverAttachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
     items?: StockTransferItemUncheckedUpdateManyWithoutTransferNestedInput
   }
 
@@ -107261,6 +107363,8 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    attachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    receiverAttachmentUrl?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type WarehouseStockUpdateWithoutWarehouseInput = {

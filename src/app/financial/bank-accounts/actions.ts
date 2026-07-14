@@ -27,7 +27,7 @@ export async function createBankAccount(data: {
 }) {
   try {
     const { companyId, permissions } = await getAuthContext();
-    if (!hasPermission(permissions, 'financials', 'edit')) {
+    if (!hasPermission(permissions, 'accounting', 'edit')) {
       throw new Error('غير مصرح لك');
     }
 
@@ -51,7 +51,7 @@ export async function createBankAccount(data: {
 export async function updateBankAccount(id: string, data: any) {
   try {
     const { companyId, permissions } = await getAuthContext();
-    if (!hasPermission(permissions, 'financials', 'edit')) {
+    if (!hasPermission(permissions, 'accounting', 'edit')) {
       throw new Error('غير مصرح لك');
     }
 
@@ -77,7 +77,7 @@ export async function updateBankAccount(id: string, data: any) {
 export async function deleteBankAccount(id: string) {
   try {
     const { companyId, permissions } = await getAuthContext();
-    if (!hasPermission(permissions, 'financials', 'delete')) {
+    if (!hasPermission(permissions, 'accounting', 'delete')) {
       throw new Error('غير مصرح لك');
     }
 

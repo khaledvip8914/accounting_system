@@ -22,7 +22,8 @@ export default async function SalesPage(props: {
   const searchParams = await props.searchParams;
   const lang = (searchParams.lang as Lang) || 'ar';
   const branchId = await getActiveBranch();
-  const whereClause: any = { companyId, branchId: branchId || null };
+  const whereClause: any = { companyId };
+  if (branchId) whereClause.branchId = branchId;
   
   try {
     const [invoices, quotations, customers, warehouses, accounts, currencies, companyProfile] = await Promise.all([

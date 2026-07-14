@@ -19,7 +19,8 @@ async function getAuthContext() {
 export async function getPayrollData(month: number, year: number) {
   const { companyId } = await getAuthContext();
   const branchId = await getActiveBranch();
-  const whereClause: any = { status: 'Active', companyId, branchId: branchId || null };
+  const whereClause: any = { status: 'Active', companyId };
+  if (branchId) whereClause.branchId = branchId;
   const financialMovesWhere: any = { companyId, branchId: branchId || null, date: { gte: new Date(year, month - 1, 1), lt: new Date(year, month, 1) }, status: { in: ['Confirmed', 'Approved'] } };
   const paymentsWhere: any = { month, year, companyId, branchId: branchId || null };
 

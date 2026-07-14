@@ -56,8 +56,10 @@ export default function CreateInvoiceModal({
   onClose,
   lang,
   onSave,
-  warehouses
+  warehouses,
+  currencies
 }: {
+  invoiceToEdit?: any,
   customers: Customer[],
   products: Product[],
   accounts: Account[],
@@ -65,8 +67,7 @@ export default function CreateInvoiceModal({
   onClose: () => void,
   lang: string,
   onSave: (data: any) => Promise<void>,
-  warehouses: Warehouse[],
-  currencies?: Currency[]
+  warehouses: Warehouse[]
 }) {
   const [selectedCustomerId, setSelectedCustomerId] = useState(invoiceToEdit?.customerId || '');
   const [selectedWarehouseId, setSelectedWarehouseId] = useState(invoiceToEdit?.warehouseId || '');

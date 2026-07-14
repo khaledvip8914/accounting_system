@@ -338,7 +338,9 @@ exports.Prisma.StockTransferScalarFieldEnum = {
   toWarehouseId: 'toWarehouseId',
   status: 'status',
   notes: 'notes',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  attachmentUrl: 'attachmentUrl',
+  receiverAttachmentUrl: 'receiverAttachmentUrl'
 };
 
 exports.Prisma.StockTransferItemScalarFieldEnum = {

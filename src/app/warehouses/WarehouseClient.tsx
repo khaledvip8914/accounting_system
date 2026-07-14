@@ -3,18 +3,25 @@
 import { useState } from 'react';
 import WarehouseList from './WarehouseList';
 import WarehouseStockList from './WarehouseStockList';
+import WarehouseTransfersClient from './WarehouseTransfersClient';
 import { Lang, getDictionary } from '@/lib/i18n';
 
 export default function WarehouseClient({
   lang,
   initialWarehouses,
   initialProducts,
-  initialStocks
+  initialStocks,
+  allWarehouses,
+  initialTransfers,
+  companyId
 }: {
   lang: string,
   initialWarehouses: any[],
   initialProducts: any[],
-  initialStocks: any[]
+  initialStocks: any[],
+  allWarehouses: any[],
+  initialTransfers: any[],
+  companyId: string
 }) {
   const [activeTab, setActiveTab] = useState('inventory');
   const dict = getDictionary(lang);
@@ -71,11 +78,14 @@ export default function WarehouseClient({
         )}
         {activeTab === 'warehouses' && <WarehouseList warehouses={initialWarehouses} lang={lang} />}
         {activeTab === 'transfers' && (
-           <div className="card" style={{ padding: '3rem', textAlign: 'center', background: 'white' }}>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🚚</div>
-              <h3>{lang === 'ar' ? 'إدارة التحويلات المخزنية' : 'Stock Transfer Management'}</h3>
-              <p className="text-sub">{lang === 'ar' ? 'جاري تطوير ميزة نقل البضاعة بين المستودعات' : 'Inter-warehouse transfers module is under construction'}</p>
-           </div>
+           <WarehouseTransfersClient 
+              lang={lang} 
+              allWarehouses={allWarehouses} 
+              initialProducts={initialProducts}
+              initialStocks={initialStocks}
+              initialTransfers={initialTransfers}
+              companyId={companyId}
+           />
         )}
       </div>
 

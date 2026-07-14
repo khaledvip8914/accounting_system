@@ -30,7 +30,7 @@ export async function createFixedAsset(data: {
 }) {
   try {
     const { companyId, permissions } = await getAuthContext();
-    if (!hasPermission(permissions, 'financials', 'edit')) {
+    if (!hasPermission(permissions, 'accounting', 'edit')) {
       throw new Error('غير مصرح لك بإدارة الأصول');
     }
 
@@ -57,7 +57,7 @@ export async function createFixedAsset(data: {
 export async function updateFixedAsset(id: string, data: any) {
   try {
     const { companyId, permissions } = await getAuthContext();
-    if (!hasPermission(permissions, 'financials', 'edit')) {
+    if (!hasPermission(permissions, 'accounting', 'edit')) {
       throw new Error('غير مصرح لك بإدارة الأصول');
     }
 
@@ -79,7 +79,7 @@ export async function updateFixedAsset(id: string, data: any) {
 export async function deleteFixedAsset(id: string) {
   try {
     const { companyId, permissions } = await getAuthContext();
-    if (!hasPermission(permissions, 'financials', 'delete')) {
+    if (!hasPermission(permissions, 'accounting', 'delete')) {
       throw new Error('غير مصرح لك بإدارة الأصول');
     }
 
@@ -97,7 +97,7 @@ export async function deleteFixedAsset(id: string) {
 export async function runDepreciation(assetId: string, amount: number, date: string) {
   try {
     const { companyId, permissions } = await getAuthContext();
-    if (!hasPermission(permissions, 'financials', 'edit')) {
+    if (!hasPermission(permissions, 'accounting', 'edit')) {
       throw new Error('غير مصرح لك بإدارة الأصول');
     }
 

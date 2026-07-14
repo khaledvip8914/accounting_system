@@ -23,7 +23,8 @@ export default async function PurchasesPage(props: {
   const lang = (searchParams.lang as Lang) || 'ar';
   
   const branchId = await getActiveBranch();
-  const whereClause: any = { companyId, branchId: branchId || null };
+  const whereClause: any = { companyId };
+  if (branchId) whereClause.branchId = branchId;
 
   try {
     const [invoices, suppliers, products, accounts, companyProfile, warehouses, units, purchaseOrders, currencies, warehouseStocks] = await Promise.all([

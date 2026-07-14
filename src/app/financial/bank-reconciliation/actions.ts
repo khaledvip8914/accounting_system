@@ -24,7 +24,7 @@ export async function createBankReconciliation(data: {
 }) {
   try {
     const { companyId, permissions } = await getAuthContext();
-    if (!hasPermission(permissions, 'financials', 'edit')) {
+    if (!hasPermission(permissions, 'accounting', 'edit')) {
       throw new Error('غير مصرح لك');
     }
 
@@ -67,7 +67,7 @@ export async function addReconciliationItem(data: {
 }) {
   try {
     const { companyId, permissions } = await getAuthContext();
-    if (!hasPermission(permissions, 'financials', 'edit')) {
+    if (!hasPermission(permissions, 'accounting', 'edit')) {
       throw new Error('غير مصرح لك');
     }
 
@@ -99,7 +99,7 @@ export async function addReconciliationItem(data: {
 export async function completeReconciliation(id: string) {
   try {
     const { companyId, permissions } = await getAuthContext();
-    if (!hasPermission(permissions, 'financials', 'edit')) {
+    if (!hasPermission(permissions, 'accounting', 'edit')) {
       throw new Error('غير مصرح لك');
     }
 

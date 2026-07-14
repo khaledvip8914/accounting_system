@@ -25,6 +25,7 @@ export default function CreatePurchaseModal({
   accounts,
   warehouses,
   inventoryUnits,
+  currencies,
   onClose,
   lang,
   onSave
