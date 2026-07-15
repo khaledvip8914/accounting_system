@@ -12,7 +12,17 @@ export async function GET() {
         zatcaStatus: true,
         zatcaErrorLogs: true,
         createdAt: true,
-        branchId: true
+        branchId: true,
+        company: {
+          select: {
+            profile: {
+              select: {
+                zatcaEnvironment: true,
+                zatcaCsid: true
+              }
+            }
+          }
+        }
       }
     });
     return NextResponse.json(invoices);

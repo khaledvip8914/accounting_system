@@ -5,9 +5,9 @@
 
 // Environments
 const ENV_URLS = {
-  Sandbox: 'https://gw-apic-gov.gazt.gov.sa/e-invoicing/developer-portal',
-  Simulation: 'https://gw-apic-gov.gazt.gov.sa/e-invoicing/simulation',
-  Production: 'https://gw-apic-gov.gazt.gov.sa/e-invoicing/core',
+  Sandbox: 'https://gw-fatoora.zatca.gov.sa/e-invoicing/developer-portal',
+  Simulation: 'https://gw-fatoora.zatca.gov.sa/e-invoicing/simulation',
+  Production: 'https://gw-fatoora.zatca.gov.sa/e-invoicing/core',
 };
 
 export class ZatcaApiClient {
