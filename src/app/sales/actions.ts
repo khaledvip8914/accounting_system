@@ -784,8 +784,8 @@ export async function createSalesInvoice(data: {
       }
 
       // 4. Handle Accounting Link (Journal Voucher)
-      const revenueAccount     = await tx.account.findUnique({ where: { code: '4000' } })
-                              || await tx.account.findUnique({ where: { code: '4100' } });
+      const revenueAccount     = await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '4000' } })
+                              || await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '4100' } });
 
       let debitAccountId: string | null = null;
       if (data.paymentType === 'paid' && data.receiptAccountId) {
@@ -797,8 +797,8 @@ export async function createSalesInvoice(data: {
         });
 
         if (!receivablesAccount) {
-          receivablesAccount = await tx.account.findUnique({ where: { code: '1130' } })
-                            || await tx.account.findUnique({ where: { code: '1131' } });
+          receivablesAccount = await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '1130' } })
+                            || await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '1131' } });
           if (!receivablesAccount) {
             receivablesAccount = await tx.account.create({
               data: { code: '1130', name: 'Accounts Receivable', nameAr: 'ذمم مدينة - عملاء', type: 'Asset' }
@@ -808,7 +808,7 @@ export async function createSalesInvoice(data: {
         debitAccountId = receivablesAccount.id;
       }
 
-      let vatPayableAccount = await tx.account.findUnique({ where: { code: '2120' } });
+      let vatPayableAccount = await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '2120' } });
       if (!vatPayableAccount) {
         vatPayableAccount = await tx.account.create({
           data: { code: '2120', name: 'VAT Payable (Output Tax)', nameAr: 'ضريبة القيمة المضافة المحصلة', type: 'Liability' }
@@ -992,16 +992,16 @@ export async function updateSalesInvoice(invoiceId: string, data: any) {
     }
 
     // 7. Handle Accounting Link (Journal Voucher)
-    const revenueAccount     = await tx.account.findUnique({ where: { code: '4101' } }) || await tx.account.findUnique({ where: { code: '1101' } });
+    const revenueAccount     = await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '4101' } }) || await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '1101' } });
 
     let debitAccountId: string | null = null;
     if (data.paymentType === 'paid' && data.receiptAccountId) {
       debitAccountId = data.receiptAccountId;
     } else {
       const customerSubAccountCode = `1130-${invoice.customer.code}`;
-      let receivablesAccount = await tx.account.findUnique({ where: { code: customerSubAccountCode } });
+      let receivablesAccount = await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: customerSubAccountCode } });
       if (!receivablesAccount) {
-        receivablesAccount = await tx.account.findUnique({ where: { code: '1130' } });
+        receivablesAccount = await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '1130' } });
         if (!receivablesAccount) {
           receivablesAccount = await tx.account.create({
             data: { code: '1130', name: 'Accounts Receivable', nameAr: 'ذمم مدينة - عملاء', type: 'Asset' }
@@ -1011,7 +1011,7 @@ export async function updateSalesInvoice(invoiceId: string, data: any) {
       debitAccountId = receivablesAccount.id;
     }
 
-    let vatPayableAccount = await tx.account.findUnique({ where: { code: '2120' } });
+    let vatPayableAccount = await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '2120' } });
     if (!vatPayableAccount) {
       vatPayableAccount = await tx.account.create({
         data: { code: '2120', name: 'VAT Payable (Output Tax)', nameAr: 'ضريبة القيمة المضافة المحصلة', type: 'Liability' }
