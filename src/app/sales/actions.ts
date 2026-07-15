@@ -373,9 +373,11 @@ export async function createProductionOrder(data: {
      if (recipeYieldG === 0) throw new Error('وصفة الإنتاج تحتوي على مكونات بدون وزن. يرجى التحقق من وحدات القياس.');
      const scaleFactor = requestedWeightG / recipeYieldG;
 
+     const branchId = await getActiveBranch();
      const order = await prisma.productionOrder.create({
         data: {
            companyId,
+           branchId,
            orderNumber,
            productId: data.productId,
            quantity: data.quantity,
@@ -711,6 +713,11 @@ export async function createSalesInvoice(data: {
       const invoiceNumber = `INV-${new Date().getFullYear()}-${(count + 1).toString().padStart(3, '0')}`;
 
       const finalWarehouseId = data.warehouseId || null;
+      let finalBranchId = (await getActiveBranch()) || null;
+      if (finalWarehouseId) {
+        const wh = await tx.warehouse.findUnique({ where: { id: finalWarehouseId }});
+        if (wh && wh.branchId) finalBranchId = wh.branchId;
+      }
 
       // 2. Add Invoice to DB
       const invoice = await tx.salesInvoice.create({
@@ -719,6 +726,7 @@ export async function createSalesInvoice(data: {
           date: new Date(data.date),
           customerId: data.customerId,
           warehouseId: finalWarehouseId,
+          branchId: finalBranchId,
           totalAmount: data.subtotal,
           taxAmount: data.taxAmount,
           discount: data.discount,
@@ -772,6 +780,7 @@ export async function createSalesInvoice(data: {
 
           await tx.inventoryLog.create({
             data: {
+              companyId: session?.user?.companyId,
               productId: item.productId,
               warehouseId: finalWarehouseId,
               type: 'Sale',
@@ -846,6 +855,8 @@ export async function createSalesInvoice(data: {
 
         const gv = await tx.journalVoucher.create({
           data: {
+            companyId: session?.user?.companyId,
+            branchId: finalBranchId,
             reference: `JVI-${invoiceNumber}`,
             date: new Date(data.date),
             description: `Sales Invoice ${invoiceNumber} - ${data.status === 'Paid' ? 'Cash Sale' : 'Credit Sale'}`,
