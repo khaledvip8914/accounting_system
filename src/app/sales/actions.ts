@@ -897,7 +897,7 @@ export async function createSalesInvoice(data: {
 export async function updateSalesInvoice(invoiceId: string, data: any) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user?.permissions, 'invoices', 'edit')) {
+    if (!hasPermission(session?.user, 'invoices', 'edit')) {
       throw new Error('غير مصرح لك بتعديل الفواتير');
     }
 
@@ -1104,7 +1104,7 @@ export async function updateSalesInvoice(invoiceId: string, data: any) {
 export async function deleteSalesInvoice(invoiceId: string) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user?.permissions, 'invoices', 'edit')) {
+    if (!hasPermission(session?.user, 'invoices', 'edit')) {
       throw new Error('غير مصرح لك بحذف الفواتير');
     }
 
@@ -1176,7 +1176,7 @@ export async function updateSalesInvoiceStatus(invoiceId: string, status: string
 export async function createCustomer(data: { address?: string, taxNumber?: string, commercialRegistry?: string, name: string, nameAr?: string, code: string, phone?: string, email?: string }) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user?.permissions, 'contacts', 'edit')) {
+    if (!hasPermission(session?.user, 'contacts', 'edit')) {
       throw new Error('غير مصرح لك بإدارة العملاء');
     }
 
@@ -1227,7 +1227,7 @@ export async function createCustomer(data: { address?: string, taxNumber?: strin
 export async function updateCustomer(id: string, data: { address?: string, taxNumber?: string, commercialRegistry?: string, name: string, nameAr?: string, code: string, phone?: string, email?: string }) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user?.permissions, 'contacts', 'edit')) {
+    if (!hasPermission(session?.user, 'contacts', 'edit')) {
       throw new Error('غير مصرح لك بإدارة العملاء');
     }
 
@@ -1268,7 +1268,7 @@ export async function updateCustomer(id: string, data: { address?: string, taxNu
 export async function deleteCustomer(id: string) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user?.permissions, 'contacts', 'delete')) {
+    if (!hasPermission(session?.user, 'contacts', 'delete')) {
       throw new Error('غير مصرح لك بحذف العملاء');
     }
 
@@ -1315,7 +1315,7 @@ export async function createSalesQuotation(data: {
 }) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user?.permissions, 'quotations', 'create')) {
+    if (!hasPermission(session?.user, 'quotations', 'create')) {
       throw new Error('غير مصرح لك بإنشاء عروض أسعار');
     }
 
@@ -1366,7 +1366,7 @@ export async function createSalesQuotation(data: {
 export async function updateSalesQuotation(id: string, data: any) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user?.permissions, 'quotations', 'edit')) {
+    if (!hasPermission(session?.user, 'quotations', 'edit')) {
       throw new Error('غير مصرح لك بتعديل عروض الأسعار');
     }
 
@@ -1409,7 +1409,7 @@ export async function updateSalesQuotation(id: string, data: any) {
 export async function deleteSalesQuotation(id: string) {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user?.permissions, 'quotations', 'delete')) {
+    if (!hasPermission(session?.user, 'quotations', 'delete')) {
       throw new Error('غير مصرح لك بحذف عروض الأسعار');
     }
 
@@ -1424,7 +1424,7 @@ export async function deleteSalesQuotation(id: string) {
 export async function deleteAllQuotations() {
   try {
     const session = await getSession();
-    if (!hasPermission(session?.user?.permissions, 'quotations', 'delete')) {
+    if (!hasPermission(session?.user, 'quotations', 'delete')) {
       throw new Error('غير مصرح لك بحذف عروض الأسعار');
     }
 
@@ -1441,7 +1441,7 @@ export async function deleteAllProducts() {
     const session = await getSession();
     // Temporary bypass to restore access
     const isAuthorized = true;
-    if (!isAuthorized && !hasPermission(session?.user?.permissions, 'inventory', 'edit')) {
+    if (!isAuthorized && !hasPermission(session?.user, 'inventory', 'edit')) {
       throw new Error('غير مصرح لك بحذف الأصناف');
     }
 
@@ -1585,7 +1585,7 @@ export async function createProduct(data: {
     const session = await getSession();
     // Temporary bypass to restore access
     const isAuthorized = true;
-    if (!isAuthorized && !hasPermission(session?.user?.permissions, 'inventory', 'edit')) {
+    if (!isAuthorized && !hasPermission(session?.user, 'inventory', 'edit')) {
       throw new Error('غير مصرح لك بإدارة المخزون');
     }
 
@@ -1639,7 +1639,7 @@ export async function updateProduct(id: string, data: any) {
     const session = await getSession();
     // Temporary bypass to restore access
     const isAuthorized = true;
-    if (!isAuthorized && !hasPermission(session?.user?.permissions, 'inventory', 'edit')) {
+    if (!isAuthorized && !hasPermission(session?.user, 'inventory', 'edit')) {
       throw new Error('غير مصرح لك بإدارة المخزون');
     }
 
@@ -1684,7 +1684,7 @@ export async function deleteProduct(id: string, lang: string = 'ar') {
     const session = await getSession();
     // Temporary bypass to restore access
     const isAuthorized = true;
-    if (!isAuthorized && !hasPermission(session?.user?.permissions, 'inventory', 'edit')) {
+    if (!isAuthorized && !hasPermission(session?.user, 'inventory', 'edit')) {
       throw new Error('غير مصرح لك بحذف الأصناف');
     }
 
@@ -1727,7 +1727,7 @@ export async function deleteProducts(ids: string[], lang: string = 'ar') {
     const session = await getSession();
     // Temporary bypass to restore access
     const isAuthorized = true;
-    if (!isAuthorized && !hasPermission(session?.user?.permissions, 'inventory', 'edit')) {
+    if (!isAuthorized && !hasPermission(session?.user, 'inventory', 'edit')) {
       throw new Error('غير مصرح لك بحذف الأصناف');
     }
 
@@ -1784,7 +1784,7 @@ export async function bulkCreateProducts(productsData: any[]) {
     const session = await getSession();
     // Temporary bypass to restore access
     const isAuthorized = true;
-    if (!isAuthorized && !hasPermission(session?.user?.permissions, 'inventory', 'edit')) {
+    if (!isAuthorized && !hasPermission(session?.user, 'inventory', 'edit')) {
       throw new Error('غير مصرح لك بإدارة المخزون');
     }
 
