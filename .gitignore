@@ -47,3 +47,4 @@ next-env.d.ts
 *.exe
 src/generated/
 tmp/
+/public/uploads/
