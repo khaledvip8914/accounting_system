@@ -22,6 +22,10 @@ export default function PackagesClient({ initialPackages }: { initialPackages: a
     hasFixedAssets: false,
     hasMultiCurrency: false,
     hasAdvancedReports: false,
+    hasWhatsApp: false,
+    hasHumanResources: false,
+    hasApiIntegration: false,
+    hasAnalysisDimensions: false,
   })
 
   const openCreate = () => {
@@ -39,6 +43,10 @@ export default function PackagesClient({ initialPackages }: { initialPackages: a
       hasFixedAssets: false,
       hasMultiCurrency: false,
       hasAdvancedReports: false,
+      hasWhatsApp: false,
+      hasHumanResources: false,
+      hasApiIntegration: false,
+      hasAnalysisDimensions: false,
     })
     setIsModalOpen(true)
   }
@@ -58,6 +66,10 @@ export default function PackagesClient({ initialPackages }: { initialPackages: a
       hasFixedAssets: pkg.hasFixedAssets || false,
       hasMultiCurrency: pkg.hasMultiCurrency || false,
       hasAdvancedReports: pkg.hasAdvancedReports || false,
+      hasWhatsApp: pkg.hasWhatsApp || false,
+      hasHumanResources: pkg.hasHumanResources || false,
+      hasApiIntegration: pkg.hasApiIntegration || false,
+      hasAnalysisDimensions: pkg.hasAnalysisDimensions || false,
     })
     setIsModalOpen(true)
   }
@@ -235,6 +247,10 @@ export default function PackagesClient({ initialPackages }: { initialPackages: a
                     <CheckboxToggle label="إدارة الأصول الثابتة" checked={formData.hasFixedAssets} onChange={(val) => setFormData({...formData, hasFixedAssets: val})} />
                     <CheckboxToggle label="تعدد العملات" checked={formData.hasMultiCurrency} onChange={(val) => setFormData({...formData, hasMultiCurrency: val})} />
                     <CheckboxToggle label="التقارير المتقدمة والقيود" checked={formData.hasAdvancedReports} onChange={(val) => setFormData({...formData, hasAdvancedReports: val})} />
+                    <CheckboxToggle label="ميزة الواتساب وإرسال الفواتير" checked={formData.hasWhatsApp} onChange={(val) => setFormData({...formData, hasWhatsApp: val})} />
+                    <CheckboxToggle label="الموارد البشرية وشؤون الموظفين" checked={formData.hasHumanResources} onChange={(val) => setFormData({...formData, hasHumanResources: val})} />
+                    <CheckboxToggle label="ربط الأنظمة الخارجية (API)" checked={formData.hasApiIntegration} onChange={(val) => setFormData({...formData, hasApiIntegration: val})} />
+                    <CheckboxToggle label="الأبعاد التحليلية (مراكز التكلفة)" checked={formData.hasAnalysisDimensions} onChange={(val) => setFormData({...formData, hasAnalysisDimensions: val})} />
                   </div>
 
                   <div className="modal-actions">

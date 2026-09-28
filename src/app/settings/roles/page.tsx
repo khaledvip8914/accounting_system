@@ -15,6 +15,12 @@ export default async function RolesPage() {
   if (!session || !session.user || !session.user.companyId) {
     redirect('/login');
   }
+
+  const { hasPermission } = await import('@/lib/permissions');
+  if (!hasPermission(session.user, 'settings_users', 'view') && !hasPermission(session.user, 'settings', 'view')) {
+    redirect('/unauthorized');
+  }
+
   await requireFeature(session.user.companyId, 'hasUserPermissions');
 
   const roles = await prisma.role.findMany({

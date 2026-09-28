@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { createCustomer } from './actions';
 import CreateCustomerModal from '@/components/CreateCustomerModal';
 import SearchableSelect from '@/components/SearchableSelect';
@@ -43,7 +43,8 @@ export default function CreateQuotationModal({
   onClose,
   lang,
   onSave,
-  warehouses
+  warehouses,
+  branches = []
 }: {
   quotationToEdit?: any,
   customers: Customer[],
@@ -51,9 +52,11 @@ export default function CreateQuotationModal({
   onClose: () => void,
   lang: string,
   onSave: (data: any) => Promise<void>,
-  warehouses: Warehouse[]
+  warehouses: Warehouse[],
+  branches?: any[]
 }) {
   const [selectedCustomerId, setSelectedCustomerId] = useState(quotationToEdit?.customerId || '');
+  const [selectedBranchId, setSelectedBranchId] = useState(quotationToEdit?.branchId || (branches.length === 1 ? branches[0].id : ''));
   const [selectedWarehouseId, setSelectedWarehouseId] = useState(quotationToEdit?.warehouseId || '');
   const [quotationDate, setQuotationDate] = useState(
     quotationToEdit ? new Date(quotationToEdit.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
@@ -74,7 +77,16 @@ export default function CreateQuotationModal({
   
   const [discount, setDiscount] = useState(quotationToEdit?.discount || 0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [taxRates, setTaxRates] = useState<any[]>([]);
+  const [selectedTaxRate, setSelectedTaxRate] = useState<number>(0.15);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/taxes').then(res => res.json()).then(data => {
+      setTaxRates(data);
+      if (data.length > 0) setSelectedTaxRate(data[0].rate);
+    });
+  }, []);
 
   const handleQuickAdd = async (data: any) => {
     return createCustomer(data);
@@ -108,7 +120,8 @@ export default function CreateQuotationModal({
 
   const totals = useMemo(() => {
     const rawSubtotal = items.reduce((sum, item) => sum + item.total, 0);
-    const taxRate = 0.15;
+    const rawTaxRate = selectedTaxRate;
+    const taxRate = rawTaxRate > 1 ? rawTaxRate / 100 : rawTaxRate;
     
     if (isTaxInclusive) {
       const netAmount = rawSubtotal - discount;
@@ -121,7 +134,7 @@ export default function CreateQuotationModal({
       const netAmount = (subtotal - discount) + taxAmount;
       return { subtotal, taxAmount, netAmount };
     }
-  }, [items, discount, isTaxInclusive]);
+  }, [items, discount, isTaxInclusive, selectedTaxRate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,6 +147,7 @@ export default function CreateQuotationModal({
     try {
         await onSave({
             customerId: selectedCustomerId,
+            branchId: selectedBranchId,
             warehouseId: selectedWarehouseId || null,
             date: quotationDate,
             validUntil: validUntil || null,
@@ -214,11 +228,21 @@ export default function CreateQuotationModal({
               />
             </div>
 
+            {branches.length > 1 && (
+              <div className="form-group">
+                <label>{lang === 'ar' ? 'الفرع' : 'Branch'}</label>
+                <select value={selectedBranchId} onChange={e => setSelectedBranchId(e.target.value)} required>
+                  <option value="">{lang === 'ar' ? '--- اختر الفرع ---' : '--- Select Branch ---'}</option>
+                  {branches.map((b: any) => (<option key={b.id} value={b.id}>{lang === 'ar' && b.nameAr ? b.nameAr : b.name}</option>))}
+                </select>
+              </div>
+            )}
+
             <div className="form-group">
-                <label>{lang === 'ar' ? 'مستودع العرض (اختياري)' : 'Warehouse (Optional)'}</label>
+                <label>{lang === 'ar' ? 'المستودع' : 'Warehouse'}</label>
                 <select value={selectedWarehouseId} onChange={e => setSelectedWarehouseId(e.target.value)}>
-                    <option value="">{lang === 'ar' ? '--- بدون مستودع ---' : '--- No Warehouse ---'}</option>
-                    {warehouses.map(w => (
+                    <option value="">{lang === 'ar' ? '--- اختر مستودعاً ---' : '--- Select Warehouse ---'}</option>
+                    {warehouses.filter((w: any) => !selectedBranchId || w.branchId === selectedBranchId || !w.branchId).map(w => (
                         <option key={w.id} value={w.id}>{lang === 'ar' && w.nameAr ? w.nameAr : w.name}</option>
                     ))}
                 </select>
@@ -229,13 +253,27 @@ export default function CreateQuotationModal({
                 <input type="date" value={validUntil} onChange={e => setValidUntil(e.target.value)} />
             </div>
 
-            <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '1.8rem' }}>
+            <div className="form-group">
+              <label>{lang === 'ar' ? 'نسبة الضريبة' : 'Tax Rate'}</label>
+              <select
+                value={selectedTaxRate}
+                onChange={(e) => setSelectedTaxRate(parseFloat(e.target.value))}
+              >
+                {taxRates.map((tr: any) => (
+                  <option key={tr.id} value={tr.rate}>
+                    {lang === 'ar' && tr.nameAr ? tr.nameAr : tr.name} ({(tr.rate > 1 ? tr.rate : tr.rate * 100).toFixed(0)}%)
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group checkbox-group" style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: '0.75rem' }}>
               <input 
                 type="checkbox" 
                 id="isTaxIncv" 
                 checked={isTaxInclusive} 
                 onChange={e => setIsTaxInclusive(e.target.checked)}
-                style={{ width: 'auto', cursor: 'pointer' }}
+                style={{ width: 'auto', cursor: 'pointer', marginRight: '0.5rem' }}
               />
               <label htmlFor="isTaxIncv" style={{ margin: 0, cursor: 'pointer', fontWeight: 700, color: '#ca8a04' }}>
                 {lang === 'ar' ? 'الأسعار تشمل الضريبة (15%)' : 'Prices include 15% VAT'}

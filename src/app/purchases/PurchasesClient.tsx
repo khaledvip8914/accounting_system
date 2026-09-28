@@ -141,22 +141,41 @@ export default function PurchasesClient({
           </div>
         </div>
       </div>
-      <div className="purchases-header no-print">
-        <div className="header-left">
-           <div className="tabs-container">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`tab-item ${activeTab === tab.id ? 'active' : ''}`}
-                suppressHydrationWarning
-              >
-                <span className="tab-icon">{tab.icon}</span>
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
+      <div className="page-header no-print" style={{ marginBottom: '2rem' }}>
+        <h1 className="page-title">{lang === 'ar' ? 'المشتريات' : 'Purchases'}</h1>
+        <p className="page-subtitle">{lang === 'ar' ? 'إدارة فواتير المشتريات وطلبات الشراء والموردين' : 'Manage purchase invoices, orders, and suppliers'}</p>
+      </div>
+
+      <div className="categories-container no-print" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+        {tabs.map((tab) => (
+          <button suppressHydrationWarning
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            style={{
+              flex: '1',
+              minWidth: '160px',
+              padding: '1.25rem 1rem',
+              background: activeTab === tab.id ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.03)',
+              color: activeTab === tab.id ? 'white' : 'var(--text-primary)',
+              border: `1px solid ${activeTab === tab.id ? 'var(--accent-primary)' : 'var(--glass-border)'}`,
+              borderRadius: '12px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              fontSize: '1rem',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.75rem',
+              transition: 'all 0.3s ease',
+              boxShadow: activeTab === tab.id ? '0 8px 20px rgba(var(--accent-primary-rgb), 0.2)' : 'none'
+            }}
+            className="animate-in"
+          >
+            <span style={{ fontSize: '1.8rem', lineHeight: '1' }}>{tab.icon}</span>
+            <span style={{ textAlign: 'center' }}>{tab.label}</span>
+          </button>
+        ))}
       </div>
 
       <div className="tab-content" style={{ marginTop: '1.5rem' }}>
@@ -234,50 +253,32 @@ export default function PurchasesClient({
       )}
 
       <style jsx>{`
-        .purchases-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          background: white;
-          padding: 0.5rem 1.5rem;
-          border-bottom: 1px solid #e5e7eb;
-          margin: -1.5rem -1.5rem 0 -1.5rem;
-          position: sticky;
-          top: 0;
-          z-index: 10;
+        .categories-container::-webkit-scrollbar {
+          height: 6px;
         }
-        .tabs-container { display: flex; gap: 1.5rem; }
-        .tab-item {
-          padding: 1rem 0;
-          border: none;
-          background: none;
-          font-weight: 500;
-          color: var(--text-secondary);
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          position: relative;
+        .categories-container::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.02);
+          border-radius: 4px;
         }
-        .tab-item.active { color: #059669; }
-        .tab-item.active::after {
-          content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: #059669; border-radius: 3px 3px 0 0;
+        .categories-container::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 4px;
+        }
+        .categories-container::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.2);
         }
         .stat-card { border-left: 4px solid #059669; }
 
         @media (max-width: 768px) {
-          .purchases-header {
-            flex-direction: column;
-            align-items: stretch;
-            padding: 1rem;
-            margin: -1rem -1rem 1rem -1rem;
-            gap: 1rem;
+          .categories-container button {
+            min-width: 130px !important;
+            padding: 1rem 0.5rem !important;
           }
-          .header-left {
-            width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            padding-bottom: 0.5rem;
+          .categories-container button span:first-child {
+            font-size: 1.5rem !important;
+          }
+          .categories-container button span:last-child {
+            font-size: 0.85rem !important;
           }
         }
       `}</style>

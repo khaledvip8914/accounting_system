@@ -101,15 +101,39 @@ export default function ProductList({ products, units, warehouses, suppliers, ca
   };
 
   const handleTranslate = async () => {
-    if (formData.name && !formData.nameAr) {
-      setIsTranslating(true);
-      const res = await translateText(formData.name, 'en', 'ar');
-      if (res.success) setFormData({ ...formData, nameAr: res.text });
-      setIsTranslating(false);
-    } else if (formData.nameAr && !formData.name) {
-      setIsTranslating(true);
-      const res = await translateText(formData.nameAr, 'ar', 'en');
-      if (res.success) setFormData({ ...formData, name: res.text });
+    const hasAr = formData.nameAr && formData.nameAr.trim().length > 0;
+    const hasEn = formData.name && formData.name.trim().length > 0;
+
+    if (!hasAr && !hasEn) {
+      alert(lang === 'ar' ? 'يرجى إدخال اسم واحد على الأقل للترجمة' : 'Please enter at least one name to translate');
+      return;
+    }
+    if (hasAr && hasEn) {
+      alert(lang === 'ar' ? 'كلا الحقلين ممتلئين، يرجى مسح أحدهما للترجمة' : 'Both fields are filled. Clear one to translate');
+      return;
+    }
+
+    setIsTranslating(true);
+    try {
+      if (hasAr && !hasEn) {
+        const res = await translateText(formData.nameAr.trim(), 'ar', 'en');
+        if (res?.success && res.text) {
+          setFormData(prev => ({ ...prev, name: res.text }));
+        } else {
+          alert(lang === 'ar' ? 'فشلت الترجمة' : 'Translation failed');
+        }
+      } else if (hasEn && !hasAr) {
+        const res = await translateText(formData.name.trim(), 'en', 'ar');
+        if (res?.success && res.text) {
+          setFormData(prev => ({ ...prev, nameAr: res.text }));
+        } else {
+          alert(lang === 'ar' ? 'فشلت الترجمة' : 'Translation failed');
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      alert(lang === 'ar' ? 'حدث خطأ في الترجمة' : 'Translation error');
+    } finally {
       setIsTranslating(false);
     }
   };
@@ -672,17 +696,37 @@ export default function ProductList({ products, units, warehouses, suppliers, ca
                     <input type="date" value={formData.expiryDate} onChange={e => setFormData({...formData, expiryDate: e.target.value})} />
                     </div>
                     <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <label>{lang === 'ar' ? 'الاسم الأصلي (AR)' : 'Arabic Name (AR)'}</label>
-                            <button type="button" onClick={handleTranslate} disabled={isTranslating} style={{ fontSize: '0.7rem', color: 'var(--accent-primary)', background: 'none', border: 'none', cursor: 'pointer' }}>
-                                {isTranslating ? '...' : (lang === 'ar' ? '🔄 ترجمة للإنجليزية' : '🔄 Translate to EN')}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                            <label style={{ margin: 0, fontWeight: 600 }}>{lang === 'ar' ? 'الاسم الأصلي (AR)' : 'Arabic Name (AR)'}</label>
+                            <button 
+                              type="button" 
+                              onClick={handleTranslate} 
+                              disabled={isTranslating} 
+                              style={{ 
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                fontSize: '0.75rem', 
+                                fontWeight: 600,
+                                color: isTranslating ? '#94a3b8' : '#2563eb', 
+                                background: '#eff6ff', 
+                                border: '1px solid #bfdbfe', 
+                                borderRadius: '6px',
+                                padding: '2px 8px',
+                                cursor: isTranslating ? 'not-allowed' : 'pointer',
+                                transition: 'all 0.2s'
+                              }}
+                            >
+                                {isTranslating ? (lang === 'ar' ? '⏳ جاري الترجمة...' : '⏳ Translating...') : (lang === 'ar' ? '🔄 ترجمة ذكية' : '🔄 Smart Translate')}
                             </button>
                         </div>
-                    <input required value={formData.nameAr} onChange={e => setFormData({...formData, nameAr: e.target.value})} dir="rtl" />
+                        <input required value={formData.nameAr} onChange={e => setFormData({...formData, nameAr: e.target.value})} dir="rtl" placeholder={lang === 'ar' ? 'مثال: قهوة عربي مختصة' : 'Arabic Name'} />
                     </div>
                     <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                    <label>{lang === 'ar' ? 'الاسم بالإنجليزية (EN)' : 'English Name (EN)'}</label>
-                    <input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                            <label style={{ margin: 0, fontWeight: 600 }}>{lang === 'ar' ? 'الاسم بالإنجليزية (EN)' : 'English Name (EN)'}</label>
+                        </div>
+                        <input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder={lang === 'ar' ? 'مثال: Special Arabic Coffee' : 'English Name'} />
                     </div>
                     <div className="form-group" style={{ gridColumn: 'span 2' }}>
                        <label>{lang === 'ar' ? 'القسم (نظامي)' : 'Category (System)'}</label>
@@ -697,25 +741,78 @@ export default function ProductList({ products, units, warehouses, suppliers, ca
                         <option value="Raw Material">{lang === 'ar' ? 'مادة خام' : 'Raw Material'}</option>
                         <option value="Semi-finished">{lang === 'ar' ? 'منتج شبه تام' : 'Semi-finished'}</option>
                         <option value="Finished Product">{lang === 'ar' ? 'منتج تام' : 'Finished Product'}</option>
+                        <option value="Service">{lang === 'ar' ? 'خدمة' : 'Service'}</option>
                     </select>
                     </div>
                     <div className="form-group">
-                        <label>{lang === 'ar' ? 'وحدة القياس' : 'Unit'}</label>
-                        <select value={formData.unitId} onChange={e => setFormData({...formData, unitId: e.target.value})}>
-                            <option value="">-- {lang === 'ar' ? 'الوحدة' : 'Unit'} --</option>
-                            {units.map(u => (<option key={u.id} value={u.id}>{lang === 'ar' ? u.nameAr : u.name}</option>))}
+                        <label>{lang === 'ar' ? 'وحدة القياس الأساسية' : 'Main Unit'}</label>
+                        <select 
+                            value={formData.unitId} 
+                            onChange={e => {
+                                const val = e.target.value;
+                                const selectedUnit = units.find((u: any) => u.id === val);
+                                let newSubUnitId = formData.subUnitId;
+                                let newUnitQty = formData.unitQuantity;
+
+                                if (selectedUnit && selectedUnit.parentUnitId) {
+                                    newSubUnitId = selectedUnit.parentUnitId;
+                                    newUnitQty = selectedUnit.conversionFactor || 1;
+                                }
+
+                                setFormData({...formData, unitId: val, subUnitId: newSubUnitId, unitQuantity: newUnitQty});
+                            }}
+                        >
+                            <option value="">-- {lang === 'ar' ? 'اختر الوحدة' : 'Select Unit'} --</option>
+                            {units.map(u => (<option key={u.id} value={u.id}>{lang === 'ar' ? (u.nameAr || u.name) : u.name}</option>))}
                         </select>
                     </div>
-                    <div className="form-group">
-                        <label>{lang === 'ar' ? 'الوحدة الصغرى' : 'Sub-Unit'}</label>
-                        <select value={formData.subUnitId} onChange={e => setFormData({...formData, subUnitId: e.target.value})}>
-                            <option value="">-- {lang === 'ar' ? 'الوحدة الصغرى' : 'Sub-Unit'} --</option>
-                            {units.map(u => (<option key={u.id} value={u.id}>{lang === 'ar' ? u.nameAr : u.name}</option>))}
-                        </select>
-                    </div>
-                    <div className="form-group">
-                        <label>{lang === 'ar' ? 'الكمية في الوحدة الكبرى' : 'Sub-Units in Main'}</label>
-                        <input type="number" step="any" value={formData.unitQuantity} onChange={e => setFormData({...formData, unitQuantity: parseFloat(e.target.value) || 1})} />
+
+                    <div className="form-group" style={{ gridColumn: '1 / -1', background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                            <div style={{ flex: 1 }}>
+                                <label style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '0.5rem', display: 'block' }}>
+                                    {lang === 'ar' ? 'الوحدة الصغرى التابعة' : 'Sub-Unit (Base)'}
+                                </label>
+                                <select 
+                                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                                    value={formData.subUnitId} 
+                                    onChange={e => setFormData({...formData, subUnitId: e.target.value})}
+                                >
+                                    <option value="">-- {lang === 'ar' ? 'لا يوجد (وحدة وحيدة)' : 'None (Single Unit)'} --</option>
+                                    {units.map(u => (<option key={u.id} value={u.id}>{lang === 'ar' ? (u.nameAr || u.name) : u.name}</option>))}
+                                </select>
+                            </div>
+                            
+                            {formData.subUnitId && (
+                                <div style={{ flex: 2 }}>
+                                    <label style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '0.5rem', display: 'block' }}>
+                                        {lang === 'ar' ? 'معامل التحويل (خاص بهذا المنتج)' : 'Conversion Factor (For this product)'}
+                                    </label>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'white', padding: '0.4rem 0.75rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
+                                        <span style={{ fontWeight: '600', color: '#0f172a' }}>
+                                            1 {units.find(u => u.id === formData.unitId)?.[lang === 'ar' ? 'nameAr' : 'name'] || (lang === 'ar' ? 'الوحدة' : 'Unit')} = 
+                                        </span>
+                                        <input 
+                                            type="number" 
+                                            step="any" 
+                                            min="0.00001"
+                                            required
+                                            style={{ width: '100px', textAlign: 'center', border: '1px solid #e2e8f0', borderRadius: '4px', padding: '0.25rem', fontWeight: 'bold', color: '#4f46e5' }}
+                                            value={formData.unitQuantity} 
+                                            onChange={e => setFormData({...formData, unitQuantity: parseFloat(e.target.value) || 1})} 
+                                        />
+                                        <span style={{ color: '#64748b' }}>
+                                            {units.find(u => u.id === formData.subUnitId)?.[lang === 'ar' ? 'nameAr' : 'name'] || ''}
+                                        </span>
+                                    </div>
+                                    <p style={{ margin: '0.5rem 0 0', fontSize: '0.75rem', color: '#64748b' }}>
+                                        {lang === 'ar' 
+                                            ? 'يمكنك تعديل معامل التحويل ليتناسب مع هذا المنتج تحديداً.' 
+                                            : 'You can adjust the conversion factor specifically for this product.'}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                     <div className="form-group">
                     <label>{lang === 'ar' ? 'سعر التكلفة (شامل الضريبة)' : 'Cost Price (Inc. VAT)'}</label>

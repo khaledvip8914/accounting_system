@@ -52,21 +52,41 @@ export default function InventoryClient({
 
   return (
     <div className="inventory-module">
-      <div className="sales-header no-print">
-        <div className="header-left">
-           <div className="tabs-container">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`tab-item ${activeTab === tab.id ? 'active' : ''}`}
-              >
-                <span className="tab-icon">{tab.icon}</span>
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
+      <div className="page-header no-print" style={{ marginBottom: '2rem' }}>
+        <h1 className="page-title">{lang === 'ar' ? 'المخزون والمنتجات' : 'Inventory & Products'}</h1>
+        <p className="page-subtitle">{lang === 'ar' ? 'إدارة المنتجات والمستودعات والتصنيع' : 'Manage products, warehouses, and manufacturing'}</p>
+      </div>
+
+      <div className="categories-container no-print" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+        {tabs.map((tab) => (
+          <button suppressHydrationWarning
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            style={{
+              flex: '1',
+              minWidth: '160px',
+              padding: '1.25rem 1rem',
+              background: activeTab === tab.id ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.03)',
+              color: activeTab === tab.id ? 'white' : 'var(--text-primary)',
+              border: `1px solid ${activeTab === tab.id ? 'var(--accent-primary)' : 'var(--glass-border)'}`,
+              borderRadius: '12px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              fontSize: '1rem',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.75rem',
+              transition: 'all 0.3s ease',
+              boxShadow: activeTab === tab.id ? '0 8px 20px rgba(var(--accent-primary-rgb), 0.2)' : 'none'
+            }}
+            className="animate-in"
+          >
+            <span style={{ fontSize: '1.8rem', lineHeight: '1' }}>{tab.icon}</span>
+            <span style={{ textAlign: 'center' }}>{tab.label}</span>
+          </button>
+        ))}
       </div>
 
       <div className="tab-content" style={{ marginTop: '1.5rem' }}>
@@ -91,48 +111,32 @@ export default function InventoryClient({
       </div>
 
       <style jsx>{`
-        .sales-header { 
-          display: flex; 
-          justify-content: space-between; 
-          align-items: center; 
-          background: var(--card-bg); 
-          backdrop-filter: blur(20px); 
-          -webkit-backdrop-filter: blur(20px); 
-          padding: 0 1.5rem; 
-          border-bottom: 1px solid var(--glass-border); 
-          margin: -2rem -2rem 0 -2rem; 
-          position: sticky; 
-          top: 0; 
-          z-index: 10; 
-          overflow-x: auto;
-          scrollbar-width: none;
+        .categories-container::-webkit-scrollbar {
+          height: 6px;
         }
-        .sales-header::-webkit-scrollbar { display: none; }
-        .header-left { display: flex; align-items: center; width: 100%; }
-        .tabs-container { display: flex; gap: 1.5rem; width: 100%; }
-        .tab-item { 
-          padding: 1.25rem 0; 
-          border: none; 
-          background: none; 
-          font-weight: 600; 
-          color: #94a3b8; 
-          cursor: pointer; 
-          display: flex; 
-          align-items: center; 
-          gap: 0.5rem; 
-          position: relative; 
-          transition: all 0.2s; 
-          white-space: nowrap; 
-          font-size: 0.9rem;
+        .categories-container::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.02);
+          border-radius: 4px;
         }
-        .tab-item.active { color: #6366f1; }
-        .tab-item.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: #6366f1; border-radius: 3px 3px 0 0; }
-        .tab-icon { font-size: 1.2rem; }
+        .categories-container::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 4px;
+        }
+        .categories-container::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.2);
+        }
 
         @media (max-width: 768px) {
-          .sales-header { margin: -1.5rem -1.5rem 0 -1.5rem; }
-          .tabs-container { gap: 1.25rem; }
-          .tab-item { font-size: 0.85rem; padding: 1rem 0; }
+          .categories-container button {
+            min-width: 130px !important;
+            padding: 1rem 0.5rem !important;
+          }
+          .categories-container button span:first-child {
+            font-size: 1.5rem !important;
+          }
+          .categories-container button span:last-child {
+            font-size: 0.85rem !important;
+          }
         }
       `}</style>
     </div>

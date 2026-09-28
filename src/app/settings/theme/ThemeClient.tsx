@@ -44,6 +44,24 @@ export default function ThemeClient({ lang }: { lang: Lang }) {
       descEn: 'Purple and gold gradients giving a unique royal character',
       preview: 'linear-gradient(135deg, #1a1c2c 0%, #1a1c2c 100%)',
       accent: '#eab308'
+    },
+    { 
+      id: 'emerald-luxury', 
+      nameAr: 'الزمرد الإمبراطوري', 
+      nameEn: 'Emerald Prestige', 
+      descAr: 'فخامة راقية مستوحاة من الصيرفة العالمية والنمو المالي مع لمسات زمردية مشعة',
+      descEn: 'Executive Swiss banking prestige with deep emerald canvas and radiant mint accents',
+      preview: 'linear-gradient(135deg, #04140e 0%, #0a291e 50%, #051a13 100%)',
+      accent: '#10b981'
+    },
+    { 
+      id: 'ocean-sapphire', 
+      nameAr: 'الياقوت المحيطي', 
+      nameEn: 'Ocean Sapphire', 
+      descAr: 'زرقة بحرية كريستالية عميقة مع توهج سيبراني ولمسات تكنولوجية فائقة الحداثة',
+      descEn: 'Deep crystalline oceanic navy with vibrant cyan and high-tech fintech vibes',
+      preview: 'linear-gradient(135deg, #030b18 0%, #071e3d 50%, #0b2d5c 100%)',
+      accent: '#06b6d4'
     }
   ];
 

@@ -4,16 +4,28 @@ import React, { useState, useTransition } from 'react';
 import { saveTransactionVoucher, deleteTransactionVoucher } from './actions';
 
 // We reuse the AccountSelectorInternal component idea from FinancialClient or build a simple searchable select
+const normalizeArabic = (text: string) => {
+  if (!text) return '';
+  return text
+    .replace(/[أإآا]/g, 'ا')
+    .replace(/[ةه]/g, 'ه')
+    .replace(/[يى]/g, 'ي')
+    .replace(/[\u064B-\u065F]/g, '');
+};
+
 function AccountSelect({ accounts, selectedId, onSelect, lang, label, placeholder }: any) {
   const [search, setSearch] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   
   const selected = accounts.find((a: any) => a.id === selectedId);
-  const filtered = (accounts || []).filter((a: any) => 
-    (a?.code || '').toLowerCase().includes(search.toLowerCase()) || 
-    (a?.name || '').toLowerCase().includes(search.toLowerCase()) ||
-    (a?.nameAr && a.nameAr.toLowerCase().includes(search.toLowerCase()))
-  ).slice(0, 50);
+  const filtered = (accounts || []).filter((a: any) => {
+    const s = normalizeArabic(search.toLowerCase());
+    return (
+      (a?.code && normalizeArabic(a.code.toLowerCase()).includes(s)) || 
+      (a?.name && normalizeArabic(a.name.toLowerCase()).includes(s)) ||
+      (a?.nameAr && normalizeArabic(a.nameAr.toLowerCase()).includes(s))
+    );
+  });
 
   return (
     <div className="account-select-wrapper" style={{ position: 'relative' }}>
@@ -76,6 +88,8 @@ function AccountSelect({ accounts, selectedId, onSelect, lang, label, placeholde
   );
 }
 
+import DimensionSelector from '@/components/DimensionSelector';
+
 export default function VouchersClient({ type, initialVouchers, accounts, lang, dict }: any) {
   const [vouchers, setVouchers] = useState(initialVouchers);
   const [showModal, setShowModal] = useState(false);
@@ -92,7 +106,8 @@ export default function VouchersClient({ type, initialVouchers, accounts, lang, 
     amount: '',
     description: '',
     primaryAccountId: '',
-    relatedAccountId: ''
+    relatedAccountId: '',
+    dimensionValues: [] as any[]
   });
 
   const isReceipt = type === 'RECEIPT';
@@ -121,6 +136,7 @@ export default function VouchersClient({ type, initialVouchers, accounts, lang, 
         description: formData.description,
         primaryAccountId: formData.primaryAccountId,
         relatedAccountId: formData.relatedAccountId,
+        dimensionValues: formData.dimensionValues,
         id: editingId || undefined
       };
       
@@ -145,7 +161,8 @@ export default function VouchersClient({ type, initialVouchers, accounts, lang, 
       amount: '',
       description: '',
       primaryAccountId: '',
-      relatedAccountId: ''
+      relatedAccountId: '',
+      dimensionValues: []
     });
     setShowModal(true);
   };
@@ -157,7 +174,8 @@ export default function VouchersClient({ type, initialVouchers, accounts, lang, 
       amount: v.amount.toString(),
       description: v.description || '',
       primaryAccountId: v.primaryAccountId,
-      relatedAccountId: v.relatedAccountId
+      relatedAccountId: v.relatedAccountId,
+      dimensionValues: v.dimensionValues || []
     });
     setShowModal(true);
   };
@@ -245,7 +263,7 @@ export default function VouchersClient({ type, initialVouchers, accounts, lang, 
             </div>
             
             <form onSubmit={handleSubmit}>
-              <div className="modal-body" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div className="modal-body" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingBottom: '20rem' }}>
                 
                 <div style={{ display: 'flex', gap: '1rem' }}>
                   <div style={{ flex: 1 }}>
@@ -292,6 +310,19 @@ export default function VouchersClient({ type, initialVouchers, accounts, lang, 
                     lang={lang}
                     label={relatedLabel}
                     placeholder={lang === 'ar' ? '--- اختر الحساب المقابل ---' : '--- Select Counterpart Account ---'}
+                  />
+                </div>
+
+                <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <h3 style={{ margin: '0 0 0.5rem', fontSize: '0.9rem', color: '#334155' }}>
+                    {lang === 'ar' ? 'الأبعاد التحليلية (مراكز التكلفة) (اختياري)' : 'Analytical Dimensions (Cost Centers) (Optional)'}
+                  </h3>
+                  <DimensionSelector
+                    companyId=""
+                    lang={lang}
+                    value={formData.dimensionValues}
+                    onChange={val => setFormData({ ...formData, dimensionValues: val })}
+                    inline={true}
                   />
                 </div>
 

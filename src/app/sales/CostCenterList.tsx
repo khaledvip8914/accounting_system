@@ -500,7 +500,7 @@ export default function CostCenterList({ costCenters, products, units, lang }: {
                                 </div>
                             </div>
 
-                            <div className="recipe-table-container" style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
+                            <div className="recipe-table-container" style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'visible' }}>
                                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                     <thead style={{ background: '#1e293b', color: '#ffffff' }}>
                                         <tr>

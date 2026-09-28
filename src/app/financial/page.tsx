@@ -18,7 +18,7 @@ export default async function FinancialManagementPage() {
   const companyId = session.user.companyId;
 
   const cookieStore = await cookies();
-  const lang = cookieStore.get('NX_LANG')?.value || 'en';
+  const lang = cookieStore.get('NX_LANG')?.value || 'ar';
   
   // Fetch all necessary data for the sub-modules
   const [vouchers, accountsTree, trialBalance, profitLoss, balanceSheet, companyProfile] = await Promise.all([
@@ -30,22 +30,23 @@ export default async function FinancialManagementPage() {
     getCompanyProfile()
   ]);
 
-  const flatAccounts = await prisma.account.findMany({
-    where: { companyId },
-    orderBy: { code: 'asc' }
-  });
-
   const branchId = await getActiveBranch();
   const whereClause: any = { companyId };
   if (branchId) {
     whereClause.branchId = branchId;
   }
 
-  const transactionVouchers = await prisma.transactionVoucher.findMany({
-    where: whereClause,
-    include: { primaryAccount: true, relatedAccount: true },
-    orderBy: { createdAt: 'desc' }
-  });
+  const [transactionVouchers, customers, suppliers, products, warehouses] = await Promise.all([
+    prisma.transactionVoucher.findMany({
+      where: whereClause,
+      include: { primaryAccount: true, relatedAccount: true },
+      orderBy: { createdAt: 'desc' }
+    }),
+    prisma.customer.findMany({ where: { companyId }, orderBy: { name: 'asc' } }),
+    prisma.supplier.findMany({ where: { companyId }, orderBy: { name: 'asc' } }),
+    prisma.product.findMany({ where: { companyId }, orderBy: { name: 'asc' } }),
+    prisma.warehouse.findMany({ where: whereClause, orderBy: { name: 'asc' } })
+  ]);
 
   const reportsData = {
     trialBalance,
@@ -62,6 +63,11 @@ export default async function FinancialManagementPage() {
       accountsForLedger={trialBalance}
       initialTransactionVouchers={transactionVouchers}
       companyProfile={companyProfile}
+      customers={customers}
+      suppliers={suppliers}
+      products={products}
+      warehouses={warehouses}
     />
   );
 }
+

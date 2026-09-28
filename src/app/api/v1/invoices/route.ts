@@ -46,7 +46,8 @@ export async function POST(request: NextRequest) {
     
     const items = body.items.map((item: any) => {
       const lineTotal = item.quantity * item.unitPrice;
-      const lineTax = lineTotal * 0.15; // 15% VAT assumption
+      const itemTaxRate = item.taxRate !== undefined ? parseFloat(item.taxRate) : 0.15;
+      const lineTax = lineTotal * itemTaxRate;
       totalAmount += lineTotal;
       taxAmount += lineTax;
       
@@ -76,6 +77,7 @@ export async function POST(request: NextRequest) {
         isTaxInclusive: false,
         invoiceType: '388', 
         zatcaStatus: 'Pending', // Ready to be synced with ZATCA
+        dimensionValues: body.dimensionValues || [],
         items: {
           create: items
         }

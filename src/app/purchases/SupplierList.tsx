@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { createSupplier, updateSupplier, deleteSupplier } from './actions';
 import CreateSupplierModal from '@/components/CreateSupplierModal';
+import ContactStatementModal from '../reports/ContactStatementModal';
 
 export default function SupplierList({ suppliers, lang, dict }: { suppliers: any[], lang: string, dict: any }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -10,6 +11,7 @@ export default function SupplierList({ suppliers, lang, dict }: { suppliers: any
   const [isPending, startTransition] = useTransition();
   const [editingSupplier, setEditingSupplier] = useState<any | null>(null);
   const [formData, setFormData] = useState({ code: '', name: '', nameAr: '', phone: '', email: '' });
+  const [selectedStatementContact, setSelectedStatementContact] = useState<any | null>(null);
 
   const filtered = (suppliers || []).filter(s => {
     const term = (searchTerm || '').toLowerCase();
@@ -111,9 +113,9 @@ export default function SupplierList({ suppliers, lang, dict }: { suppliers: any
                   <td><span className="badge" style={{ background: '#fef3c7', color: '#92400e' }}>{s.code}</span></td>
                   <td>
                     <div style={{ fontWeight: '600' }}>
-                      <a href={`/financial?tab=ledger&accountCode=2000-${s.code}`} style={{ color: 'var(--accent-primary)', textDecoration: 'none' }} title={lang === 'ar' ? 'عرض كشف الحساب' : 'View Account Statement'}>
+                      <span onClick={() => setSelectedStatementContact(s)} style={{ color: 'var(--accent-primary)', cursor: 'pointer' }} title={lang === 'ar' ? 'عرض كشف الحساب' : 'View Account Statement'}>
                         {lang === 'ar' && s.nameAr ? s.nameAr : s.name}
-                      </a>
+                      </span>
                     </div>
                     <div className="text-sub" style={{ fontSize: '0.75rem' }}>{s.email || ''}</div>
                   </td>
@@ -151,6 +153,16 @@ export default function SupplierList({ suppliers, lang, dict }: { suppliers: any
               return createSupplier(data);
             }
           }}
+        />
+      )}
+
+      {selectedStatementContact && (
+        <ContactStatementModal
+          contact={selectedStatementContact}
+          type="supplier"
+          onClose={() => setSelectedStatementContact(null)}
+          lang={lang}
+          dict={dict}
         />
       )}
     </div>

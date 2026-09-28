@@ -7,10 +7,11 @@ export const dynamic = 'force-dynamic';
 
 export default async function InvoicesPage() {
   const cookieStore = await cookies();
-  const lang = cookieStore.get('NX_LANG')?.value || 'en';
+  const lang = cookieStore.get('NX_LANG')?.value || 'ar';
   const dict = getDictionary(lang).invoices;
 
   const invoices = await getInvoices();
   
   return <InvoicesClient initialInvoices={invoices} dict={dict} />;
 }
+

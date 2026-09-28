@@ -15,6 +15,13 @@ export default async function InventoryPage(props: {
   if (!session || !session.user || !session.user.companyId) {
     redirect('/login');
   }
+
+  // Check Inventory Permission
+  const { hasPermission } = await import('@/lib/permissions');
+  if (!hasPermission(session.user, 'inventory', 'view')) {
+    redirect('/unauthorized');
+  }
+
   const companyId = session.user.companyId;
 
   const searchParams = await props.searchParams;

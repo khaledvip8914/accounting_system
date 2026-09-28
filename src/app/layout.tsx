@@ -25,6 +25,19 @@ const tajawal = Tajawal({
 export const metadata: Metadata = {
   title: "QaydX - Professional Accounting",
   description: "Comprehensive multi-currency accounting software",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "QaydX",
+  },
+};
+
+export const viewport = {
+  themeColor: "#0f172a",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 import { ThemeProvider } from "../components/ThemeProvider";
@@ -40,7 +53,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const cookieStore = await cookies();
-  const lang = cookieStore.get('NX_LANG')?.value || 'en';
+  const lang = cookieStore.get('NX_LANG')?.value || 'ar';
   const dict = getDictionary(lang);
   const dir = lang === 'ar' ? 'rtl' : 'ltr';
 
@@ -108,3 +121,4 @@ export default async function RootLayout({
     </html>
   );
 }
+

@@ -2,6 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 
+function extractZatcaError(logStr: string | null): string {
+  if (!logStr) return '';
+  try {
+    const startIdx = logStr.indexOf('{');
+    if (startIdx !== -1) {
+      const jsonStr = logStr.substring(startIdx);
+      const obj = JSON.parse(jsonStr);
+      if (obj.validationResults && obj.validationResults.errorMessages && obj.validationResults.errorMessages.length > 0) {
+        return obj.validationResults.errorMessages.map((e: any) => e.message).join(' | ');
+      }
+    }
+    return logStr.length > 200 ? logStr.substring(0, 200) + '...' : logStr;
+  } catch (e) {
+    return logStr.length > 200 ? logStr.substring(0, 200) + '...' : logStr;
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
@@ -21,17 +38,20 @@ export async function GET(request: NextRequest) {
       take: 20
     });
 
-    const notifications = failedInvoices.map(inv => ({
-      id: inv.id,
-      type: 'ZatcaError',
-      title: 'ZATCA Submission Failed',
-      titleAr: 'فشل إرسال الفاتورة',
-      message: `Invoice ${inv.invoiceNumber} failed to sync with ZATCA.`,
-      messageAr: `فشل مزامنة الفاتورة ${inv.invoiceNumber} مع منصة فاتورة.`,
-      isRead: false,
-      link: `/sales`,
-      date: inv.updatedAt
-    }));
+    const notifications = failedInvoices.map(inv => {
+      const reason = extractZatcaError(inv.zatcaErrorLogs);
+      return {
+        id: inv.id,
+        type: 'ZatcaError',
+        title: 'ZATCA Submission Failed',
+        titleAr: 'فشل إرسال الفاتورة',
+        message: `Invoice ${inv.invoiceNumber} failed to sync with ZATCA. Reason: ${reason}`,
+        messageAr: `فشل مزامنة الفاتورة ${inv.invoiceNumber} مع منصة فاتورة. السبب: ${reason}`,
+        isRead: false,
+        link: `/sales`,
+        date: inv.updatedAt
+      };
+    });
 
     return NextResponse.json({ notifications, count: notifications.length });
   } catch (error: any) {

@@ -16,18 +16,21 @@ export default function LanguageSwitcher({ currentLang }: { currentLang: string 
       value={currentLang} 
       onChange={handleSwitch} 
       disabled={isPending}
+      className="language-switcher-select"
       style={{
-        background: 'transparent',
+        background: 'var(--chip-bg)',
         border: '1px solid var(--glass-border)',
         color: 'var(--text-primary)',
-        padding: '0.25rem 0.5rem',
-        borderRadius: '8px',
+        padding: '0.35rem 0.65rem',
+        borderRadius: '10px',
         outline: 'none',
-        cursor: 'pointer'
+        cursor: 'pointer',
+        fontWeight: 600,
+        fontSize: '0.85rem'
       }}
     >
-      <option value="en" style={{background: '#0f172a'}}>En</option>
-      <option value="ar" style={{background: '#0f172a'}}>Ar</option>
+      <option value="en" style={{ background: 'var(--card-bg)', color: 'var(--text-primary)' }}>En</option>
+      <option value="ar" style={{ background: 'var(--card-bg)', color: 'var(--text-primary)' }}>Ar</option>
     </select>
   );
 }

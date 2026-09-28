@@ -573,7 +573,7 @@ export default function LoginPage({ lang = 'ar' }: { lang?: string }) {
             <div className="login-card">
               <div className="login-header">
                 <div className="logo-container">
-                  <img src="/qaydx-logo.png?v=3" alt="QaydX" style={{ width: '145%', height: '145%', maxWidth: 'none', objectFit: 'contain', mixBlendMode: 'multiply' }} />
+                  <img src="/qaydx-logo.png" alt="QaydX" style={{ width: '145%', height: '145%', maxWidth: 'none', objectFit: 'contain', mixBlendMode: 'multiply' }} />
                 </div>
                 <h1>{lang === 'ar' ? 'تسجيل الدخول' : 'Sign In'}</h1>
                 <p>{lang === 'ar' ? 'سجل دخولك للوصول إلى حساباتك بأمان' : 'Sign in securely to access your accounts'}</p>

@@ -67,7 +67,8 @@ export async function saveTransactionVoucher(data: any) {
             amount: data.amount,
             description: data.description,
             primaryAccountId: data.primaryAccountId,
-            relatedAccountId: data.relatedAccountId
+            relatedAccountId: data.relatedAccountId,
+            dimensionValues: data.dimensionValues || []
           }
         });
 
@@ -104,6 +105,7 @@ export async function saveTransactionVoucher(data: any) {
             description: data.description,
             primaryAccountId: data.primaryAccountId,
             relatedAccountId: data.relatedAccountId,
+            dimensionValues: data.dimensionValues || []
           }
         });
       }
@@ -112,8 +114,8 @@ export async function saveTransactionVoucher(data: any) {
         // Reuse JV
         await tx.journalEntry.createMany({
           data: [
-            { journalVoucherId: jvId, accountId: debitAccountId, debit: data.amount, credit: 0, description: data.description, date: new Date(data.date) },
-            { journalVoucherId: jvId, accountId: creditAccountId, debit: 0, credit: data.amount, description: data.description, date: new Date(data.date) },
+            { journalVoucherId: jvId, accountId: debitAccountId, debit: data.amount, credit: 0, description: data.description, date: new Date(data.date), dimensionValues: data.dimensionValues || [] },
+            { journalVoucherId: jvId, accountId: creditAccountId, debit: 0, credit: data.amount, description: data.description, date: new Date(data.date), dimensionValues: data.dimensionValues || [] },
           ]
         });
       } else {
@@ -129,8 +131,8 @@ export async function saveTransactionVoucher(data: any) {
             status: 'Posted',
             entries: {
               create: [
-                { accountId: debitAccountId, debit: data.amount, credit: 0, description: data.description, date: new Date(data.date) },
-                { accountId: creditAccountId, debit: 0, credit: data.amount, description: data.description, date: new Date(data.date) },
+                { accountId: debitAccountId, debit: data.amount, credit: 0, description: data.description, date: new Date(data.date), dimensionValues: data.dimensionValues || [] },
+                { accountId: creditAccountId, debit: 0, credit: data.amount, description: data.description, date: new Date(data.date), dimensionValues: data.dimensionValues || [] },
               ]
             }
           }
@@ -293,6 +295,282 @@ export async function saveOpeningBalances(data: {
     revalidatePath('/financial');
     revalidatePath('/ledger');
     revalidatePath('/accounts');
+    
+    return { success: true, voucher: result };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function saveCustomerOpeningBalances(data: {
+  date: string;
+  description: string;
+  primaryAccountId: string; // The opening balance equity account
+  receivablesAccountId: string; // The Accounts Receivable account
+  rows: { customerId: string; balance: number }[];
+}) {
+  try {
+    const { companyId, permissions } = await getAuthContext();
+    if (!hasPermission(permissions, 'accounting', 'create')) {
+      throw new Error('غير مصرح لك بإنشاء قيد يومية');
+    }
+
+    const result = await prisma.$transaction(async (tx: any) => {
+      let totalBalance = 0;
+      
+      // Update customers
+      for (const row of data.rows) {
+        if (!row.customerId || isNaN(row.balance) || row.balance <= 0) continue;
+        
+        await tx.customer.updateMany({
+          where: { id: row.customerId, companyId },
+          data: { balance: row.balance } // Assuming balance means how much they owe us
+        });
+        
+        totalBalance += row.balance;
+      }
+
+      if (totalBalance <= 0) {
+        throw new Error('يجب إدخال رصيد أكبر من صفر');
+      }
+
+      // Create Journal Voucher (Debit Accounts Receivable, Credit Primary Account)
+      const count = await tx.journalVoucher.count({ where: { companyId } });
+      const reference = `OBC-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
+      const branchId = await getActiveBranch();
+
+      const voucher = await tx.journalVoucher.create({
+        data: {
+          companyId,
+          branchId,
+          reference,
+          date: new Date(data.date),
+          description: data.description || 'رصيد افتتاحي للعملاء',
+          status: 'Posted',
+          entries: {
+            create: [
+              {
+                accountId: data.receivablesAccountId, // Debit AR
+                debit: totalBalance,
+                credit: 0,
+                description: data.description || 'رصيد افتتاحي للعملاء',
+                date: new Date(data.date)
+              },
+              {
+                accountId: data.primaryAccountId, // Credit Equity/OB
+                debit: 0,
+                credit: totalBalance,
+                description: data.description || 'رصيد افتتاحي للعملاء',
+                date: new Date(data.date)
+              }
+            ]
+          }
+        }
+      });
+
+      return voucher;
+    });
+
+    revalidatePath('/financial');
+    revalidatePath('/ledger');
+    revalidatePath('/customers');
+    
+    return { success: true, voucher: result };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function saveSupplierOpeningBalances(data: {
+  date: string;
+  description: string;
+  primaryAccountId: string; // The opening balance equity account
+  payablesAccountId: string; // The Accounts Payable account
+  rows: { supplierId: string; balance: number }[];
+}) {
+  try {
+    const { companyId, permissions } = await getAuthContext();
+    if (!hasPermission(permissions, 'accounting', 'create')) {
+      throw new Error('غير مصرح لك بإنشاء قيد يومية');
+    }
+
+    const result = await prisma.$transaction(async (tx: any) => {
+      let totalBalance = 0;
+      
+      // Update suppliers
+      for (const row of data.rows) {
+        if (!row.supplierId || isNaN(row.balance) || row.balance <= 0) continue;
+        
+        await tx.supplier.updateMany({
+          where: { id: row.supplierId, companyId },
+          data: { balance: row.balance } // Assuming balance means how much we owe them
+        });
+        
+        totalBalance += row.balance;
+      }
+
+      if (totalBalance <= 0) {
+        throw new Error('يجب إدخال رصيد أكبر من صفر');
+      }
+
+      // Create Journal Voucher (Credit Accounts Payable, Debit Primary Account)
+      const count = await tx.journalVoucher.count({ where: { companyId } });
+      const reference = `OBS-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
+      const branchId = await getActiveBranch();
+
+      const voucher = await tx.journalVoucher.create({
+        data: {
+          companyId,
+          branchId,
+          reference,
+          date: new Date(data.date),
+          description: data.description || 'رصيد افتتاحي للموردين',
+          status: 'Posted',
+          entries: {
+            create: [
+              {
+                accountId: data.primaryAccountId, // Debit Equity/OB
+                debit: totalBalance,
+                credit: 0,
+                description: data.description || 'رصيد افتتاحي للموردين',
+                date: new Date(data.date)
+              },
+              {
+                accountId: data.payablesAccountId, // Credit AP
+                debit: 0,
+                credit: totalBalance,
+                description: data.description || 'رصيد افتتاحي للموردين',
+                date: new Date(data.date)
+              }
+            ]
+          }
+        }
+      });
+
+      return voucher;
+    });
+
+    revalidatePath('/financial');
+    revalidatePath('/ledger');
+    revalidatePath('/suppliers');
+    
+    return { success: true, voucher: result };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function saveProductOpeningBalances(data: {
+  date: string;
+  description: string;
+  primaryAccountId: string; // The opening balance equity account
+  inventoryAccountId: string; // The Inventory Asset account
+  rows: { productId: string; warehouseId: string; quantity: number; unitCost: number }[];
+}) {
+  try {
+    const { companyId, permissions } = await getAuthContext();
+    if (!hasPermission(permissions, 'accounting', 'create')) {
+      throw new Error('غير مصرح لك بإدارة المخزون');
+    }
+
+    const result = await prisma.$transaction(async (tx: any) => {
+      let totalValue = 0;
+      
+      for (const row of data.rows) {
+        if (!row.productId || !row.warehouseId || isNaN(row.quantity) || isNaN(row.unitCost)) continue;
+        if (row.quantity <= 0 || row.unitCost < 0) continue;
+        
+        const lineTotal = row.quantity * row.unitCost;
+        totalValue += lineTotal;
+
+        // 1. Create Inventory Log
+        await tx.inventoryLog.create({
+          data: {
+            companyId,
+            productId: row.productId,
+            warehouseId: row.warehouseId,
+            date: new Date(data.date),
+            type: 'Opening Balance',
+            quantity: row.quantity,
+            description: data.description || 'رصيد افتتاحي للمخزون'
+          }
+        });
+
+        // 2. Update Warehouse Stock
+        const existingStock = await tx.warehouseStock.findFirst({
+          where: { companyId, warehouseId: row.warehouseId, productId: row.productId }
+        });
+
+        if (existingStock) {
+          await tx.warehouseStock.updateMany({
+            where: { id: existingStock.id, companyId },
+            data: { quantity: { increment: row.quantity } }
+          });
+        } else {
+          await tx.warehouseStock.create({
+            data: {
+              companyId,
+              warehouseId: row.warehouseId,
+              productId: row.productId,
+              quantity: row.quantity
+            }
+          });
+        }
+
+        await tx.product.updateMany({
+          where: { id: row.productId, companyId },
+          data: { 
+            costPrice: row.unitCost, // Simplified: Just set the cost price
+            stockQuantity: { increment: row.quantity }
+          }
+        });
+      }
+
+      if (totalValue <= 0) {
+        throw new Error('يجب إدخال كميات صالحة');
+      }
+
+      // 4. Create Journal Voucher (Debit Inventory, Credit Primary Account)
+      const count = await tx.journalVoucher.count({ where: { companyId } });
+      const reference = `OBP-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
+      const branchId = await getActiveBranch();
+
+      const voucher = await tx.journalVoucher.create({
+        data: {
+          companyId,
+          branchId,
+          reference,
+          date: new Date(data.date),
+          description: data.description || 'رصيد افتتاحي للمخزون',
+          status: 'Posted',
+          entries: {
+            create: [
+              {
+                accountId: data.inventoryAccountId, // Debit Inventory
+                debit: totalValue,
+                credit: 0,
+                description: data.description || 'رصيد افتتاحي للمخزون',
+                date: new Date(data.date)
+              },
+              {
+                accountId: data.primaryAccountId, // Credit Equity/OB
+                debit: 0,
+                credit: totalValue,
+                description: data.description || 'رصيد افتتاحي للمخزون',
+                date: new Date(data.date)
+              }
+            ]
+          }
+        }
+      });
+
+      return voucher;
+    });
+
+    revalidatePath('/financial');
+    revalidatePath('/ledger');
+    revalidatePath('/inventory');
+    revalidatePath('/products');
     
     return { success: true, voucher: result };
   } catch (error: any) {

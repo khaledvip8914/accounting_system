@@ -31,7 +31,20 @@ export default function RolesClient({ initialRoles, lang, dict }: { initialRoles
     setEditingRole(role);
     setName(role.name);
     try {
-      setPermissions(JSON.parse(role.permissions || '{}'));
+      const parsed = JSON.parse(role.permissions || '{}');
+      const normalized: any = {};
+      Object.keys(parsed).forEach(mod => {
+        if (Array.isArray(parsed[mod])) {
+          normalized[mod] = parsed[mod];
+        } else if (typeof parsed[mod] === 'object' && parsed[mod] !== null) {
+          normalized[mod] = [];
+          if (parsed[mod].view) normalized[mod].push('view');
+          if (parsed[mod].create) normalized[mod].push('create');
+          if (parsed[mod].edit) normalized[mod].push('edit');
+          if (parsed[mod].delete) normalized[mod].push('delete');
+        }
+      });
+      setPermissions(normalized);
     } catch {
       setPermissions({});
     }

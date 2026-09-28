@@ -3,6 +3,12 @@
  * Handles communication with ZATCA APIs for Onboarding, Reporting, and Clearance.
  */
 
+import dns from 'dns';
+// Force IPv4 first to prevent "fetch failed" on servers with unroutable IPv6
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
+
 // Environments
 const ENV_URLS = {
   Sandbox: 'https://gw-fatoora.zatca.gov.sa/e-invoicing/developer-portal',
@@ -50,15 +56,19 @@ export class ZatcaApiClient {
     secret: string,
     invoiceHash: string,
     uuid: string,
-    invoiceXmlBase64: string
+    invoiceXmlBase64: string,
+    isCompliance: boolean = false
   ) {
-    const url = `${this.baseUrl}/invoices/reporting/single`;
-    const auth = Buffer.from(`${csid}:${secret}`).toString('base64');
+    const url = isCompliance ? `${this.baseUrl}/compliance/invoices` : `${this.baseUrl}/invoices/reporting/single`;
+    const cleanCsid = csid.replace(/\\s+/g, '');
+    const cleanSecret = secret.trim();
+    const auth = Buffer.from(`${cleanCsid}:${cleanSecret}`).toString('base64');
 
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Accept-Version': 'V2',
+        'Accept-Language': 'en',
         'Authorization': `Basic ${auth}`,
         'Clearance-Status': '0',
         'Content-Type': 'application/json',
@@ -72,7 +82,7 @@ export class ZatcaApiClient {
 
     if (!response.ok) {
       const err = await response.text();
-      throw new Error(`ZATCA Reporting Failed: ${err}`);
+      throw new Error(`ZATCA Reporting Failed (Status ${response.status}): ${err}`);
     }
 
     return response.json();
@@ -87,15 +97,19 @@ export class ZatcaApiClient {
     secret: string,
     invoiceHash: string,
     uuid: string,
-    invoiceXmlBase64: string
+    invoiceXmlBase64: string,
+    isCompliance: boolean = false
   ) {
-    const url = `${this.baseUrl}/invoices/clearance/single`;
-    const auth = Buffer.from(`${csid}:${secret}`).toString('base64');
+    const url = isCompliance ? `${this.baseUrl}/compliance/invoices` : `${this.baseUrl}/invoices/clearance/single`;
+    const cleanCsid = csid.replace(/\\s+/g, '');
+    const cleanSecret = secret.trim();
+    const auth = Buffer.from(`${cleanCsid}:${cleanSecret}`).toString('base64');
 
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Accept-Version': 'V2',
+        'Accept-Language': 'en',
         'Authorization': `Basic ${auth}`,
         'Clearance-Status': '1',
         'Content-Type': 'application/json',
@@ -109,7 +123,7 @@ export class ZatcaApiClient {
 
     if (!response.ok) {
       const err = await response.text();
-      throw new Error(`ZATCA Clearance Failed: ${err}`);
+      throw new Error(`ZATCA Clearance Failed (Status ${response.status}): ${err}`);
     }
 
     return response.json();

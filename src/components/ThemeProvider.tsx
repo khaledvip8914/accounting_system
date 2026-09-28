@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-type Theme = 'glass-dark' | 'pure-light' | 'deep-night' | 'royal-gold';
+type Theme = 'glass-dark' | 'pure-light' | 'deep-night' | 'royal-gold' | 'emerald-luxury' | 'ocean-sapphire';
 
 interface ThemeContextType {
   theme: Theme;
@@ -30,10 +30,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.setAttribute('data-theme', newTheme);
   };
 
-  if (!mounted) {
-    return <div style={{ opacity: 0 }}>{children}</div>;
-  }
-
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>
       <div className={`theme-wrapper ${theme}`}>
@@ -55,7 +51,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+    return {
+      theme: 'glass-dark' as Theme,
+      setTheme: (_t: Theme) => {}
+    };
   }
   return context;
-}
+};

@@ -15,6 +15,12 @@ export default async function PurchasesPage(props: {
   if (!session || !session.user || !session.user.companyId) {
     redirect('/login');
   }
+
+  const { hasPermission } = await import('@/lib/permissions');
+  if (!hasPermission(session.user, 'purchases', 'view')) {
+    redirect('/unauthorized');
+  }
+
   const companyId = session.user.companyId;
 
   await requireFeature(companyId, 'hasSalesAndPurchases');

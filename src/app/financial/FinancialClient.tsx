@@ -16,7 +16,11 @@ export default function FinancialClient({
   initialReportsData,
   accountsForLedger,
   initialTransactionVouchers,
-  companyProfile
+  companyProfile,
+  customers = [],
+  suppliers = [],
+  products = [],
+  warehouses = []
 }: { 
   lang: string, 
   initialLedgerData: any,
@@ -24,11 +28,21 @@ export default function FinancialClient({
   initialReportsData: any,
   accountsForLedger: any[],
   initialTransactionVouchers: any[],
-  companyProfile: any
+  companyProfile: any,
+  customers?: any[],
+  suppliers?: any[],
+  products?: any[],
+  warehouses?: any[]
 }) {
   const [activeTab, setActiveTab] = useState('journal');
-  const [tempStartDate, setTempStartDate] = useState(new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0]);
-  const [tempEndDate, setTempEndDate] = useState(new Date().toISOString().split('T')[0]);
+  
+  const currentDate = new Date();
+  const yyyy = currentDate.getFullYear();
+  const mm = String(currentDate.getMonth() + 1).padStart(2, '0');
+  const lastDay = new Date(yyyy, currentDate.getMonth() + 1, 0).getDate();
+  
+  const [tempStartDate, setTempStartDate] = useState(`${yyyy}-${mm}-01`);
+  const [tempEndDate, setTempEndDate] = useState(`${yyyy}-${mm}-${lastDay}`);
   const [startDate, setStartDate] = useState(tempStartDate);
   const [endDate, setEndDate] = useState(tempEndDate);
   const [selectedLedgerAccountId, setSelectedLedgerAccountId] = useState('');
@@ -210,47 +224,83 @@ export default function FinancialClient({
         </div>
       </div>
 
-      <div className="financial-header no-print">
-        <div className="header-left">
-          <div className="tabs-container">
-            {tabs.map((tab) => (
-              <button suppressHydrationWarning
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`tab-item ${activeTab === tab.id ? 'active' : ''}`}
-              >
-                <span className="tab-icon">{tab.icon}</span>
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-        
-        <div className="header-right">
-          <div className="date-filters">
-            <div className="date-input-group">
-              <label>{lang === 'ar' ? 'من' : 'From'}</label>
-              <input type="date" value={tempStartDate} onChange={e => setTempStartDate(e.target.value)} />
-            </div>
-            <div className="date-input-group">
-              <label>{lang === 'ar' ? 'إلى' : 'To'}</label>
-              <input type="date" value={tempEndDate} onChange={e => setTempEndDate(e.target.value)} />
-            </div>
-            <button suppressHydrationWarning className="btn-filter" onClick={applyFilters}>
-              {lang === 'ar' ? 'فلترة' : 'Filter'} 🔍
-            </button>
-          </div>
+      <div className="page-header no-print" style={{ marginBottom: '2rem' }}>
+        <h1 className="page-title">{lang === 'ar' ? 'الإدارة المالية' : 'Financial Management'}</h1>
+        <p className="page-subtitle">{lang === 'ar' ? 'إدارة القيود، الحسابات، الأرصدة، والسندات' : 'Manage entries, accounts, balances, and vouchers'}</p>
+      </div>
 
-          <div className="header-actions">
-            <button suppressHydrationWarning className="btn-export pdf" onClick={() => window.print()}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-              PDF
-            </button>
-            <button suppressHydrationWarning className="btn-export excel" onClick={handleExportExcel}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
-              Excel
-            </button>
+      <div className="categories-container no-print" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+        {tabs.map((tab) => (
+          <button suppressHydrationWarning
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            style={{
+              flex: '1',
+              minWidth: '160px',
+              padding: '1.25rem 1rem',
+              background: activeTab === tab.id ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.03)',
+              color: activeTab === tab.id ? 'white' : 'var(--text-primary)',
+              border: `1px solid ${activeTab === tab.id ? 'var(--accent-primary)' : 'var(--glass-border)'}`,
+              borderRadius: '12px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              fontSize: '1rem',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.75rem',
+              transition: 'all 0.3s ease',
+              boxShadow: activeTab === tab.id ? '0 8px 20px rgba(var(--accent-primary-rgb), 0.2)' : 'none'
+            }}
+            className="animate-in"
+          >
+            <span style={{ fontSize: '1.8rem', lineHeight: '1' }}>{tab.icon}</span>
+            <span style={{ textAlign: 'center' }}>{tab.label}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="card glass-panel no-print" style={{ marginBottom: '2rem', padding: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+          <div style={{ minWidth: '150px' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+              {lang === 'ar' ? 'من تاريخ' : 'Start Date'}
+            </label>
+            <input 
+              type="date" 
+              value={tempStartDate} 
+              onChange={e => setTempStartDate(e.target.value)} 
+              className="form-input" 
+              style={{ width: '100%', background: 'var(--chip-bg)', color: 'var(--text-primary)', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }} 
+            />
           </div>
+          <div style={{ minWidth: '150px' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+              {lang === 'ar' ? 'إلى تاريخ' : 'End Date'}
+            </label>
+            <input 
+              type="date" 
+              value={tempEndDate} 
+              onChange={e => setTempEndDate(e.target.value)} 
+              className="form-input" 
+              style={{ width: '100%', background: 'var(--chip-bg)', color: 'var(--text-primary)', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }} 
+            />
+          </div>
+          <button suppressHydrationWarning className="btn btn-primary" onClick={applyFilters} style={{ height: '42px', padding: '0 2rem', fontWeight: 'bold' }}>
+            {lang === 'ar' ? 'تطبيق الفلتر' : 'Apply Filter'} 🔍
+          </button>
+        </div>
+
+        <div className="header-actions" style={{ display: 'flex', gap: '0.75rem' }}>
+          <button suppressHydrationWarning className="btn-export pdf" onClick={() => window.print()}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            PDF
+          </button>
+          <button suppressHydrationWarning className="btn-export excel" onClick={handleExportExcel}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+            Excel
+          </button>
         </div>
       </div>
 
@@ -282,7 +332,14 @@ export default function FinancialClient({
           />
         )}
         {activeTab === 'opening_balances' && (
-          <OpeningBalancesClient lang={lang} accounts={accountsForLedger} />
+          <OpeningBalancesClient 
+             lang={lang} 
+             accounts={accountsForLedger} 
+             customers={customers}
+             suppliers={suppliers}
+             products={products}
+             warehouses={warehouses}
+          />
         )}
         {activeTab === 'ledger' && (
           <div className="ledger-container">
@@ -332,88 +389,19 @@ export default function FinancialClient({
 
       <style jsx>{`
         .financial-module { color: inherit; }
-        .financial-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          background: rgba(15, 23, 42, 0.4);
-          padding: 0.5rem 1.5rem;
-          border-bottom: 1px solid var(--glass-border);
-          margin: -1.5rem -1.5rem 1.5rem -1.5rem;
-          position: sticky;
-          top: 0;
-          z-index: 10;
-          backdrop-filter: blur(12px);
+        .categories-container::-webkit-scrollbar {
+          height: 6px;
         }
-        .header-left {
-          display: flex;
-          align-items: center;
-        }
-        .header-right {
-          display: flex;
-          align-items: center;
-          gap: 2rem;
-        }
-        .date-filters {
-          display: flex;
-          gap: 1rem;
-          align-items: center;
-          background: var(--glass-bg);
-          padding: 0.4rem 0.8rem;
-          border-radius: 0.6rem;
-          border: 1px solid var(--glass-border);
-        }
-        .date-input-group {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-size: 0.8rem;
-          color: var(--text-secondary);
-          font-weight: 600;
-        }
-        .date-input-group input {
-          border: 1px solid var(--glass-border);
+        .categories-container::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.02);
           border-radius: 4px;
-          padding: 2px 4px;
-          font-size: 0.8rem;
-          outline: none;
-          color: var(--text-primary);
-          background: var(--glass-bg);
         }
-        .tabs-container {
-          display: flex;
-          gap: 1.5rem;
+        .categories-container::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 4px;
         }
-        .tab-item {
-          padding: 1rem 0;
-          border: none;
-          background: none;
-          font-weight: 600;
-          color: var(--text-secondary);
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          position: relative;
-          transition: all 0.2s;
-        }
-        .tab-item.active {
-          color: var(--accent-primary);
-        }
-        .tab-item:hover {
-          color: var(--text-primary);
-        }
-        .tab-item.active::after {
-          content: '';
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          height: 2px;
-          background: var(--accent-primary);
-        }
-        .tab-icon {
-          font-size: 1.1rem;
+        .categories-container::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.2);
         }
         .header-actions {
           display: flex;
@@ -439,6 +427,17 @@ export default function FinancialClient({
           cursor: pointer;
           color: var(--text-primary);
         }
+        .status.overdue::before {
+  background: var(--accent-danger);
+}
+
+.status.approved {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+.status.approved::before {
+  background: #3b82f6;
+}
         .btn-filter {
           background: var(--accent-primary);
           color: white;
@@ -471,50 +470,37 @@ export default function FinancialClient({
         }
         
         @media print {
-          .financial-header, .btn-export, .btn-filter, .tabs-container { display: none !important; }
+          .no-print { display: none !important; }
           .financial-module { background: white !important; color: black !important; padding: 0 !important; }
           .tab-content { padding: 0 !important; }
           .ledger-container { background: white !important; color: black !important; }
         }
 
         @media (max-width: 768px) {
-          .financial-header {
-            flex-direction: column;
-            align-items: stretch;
-            padding: 1rem;
-            margin: -1rem -1rem 1rem -1rem;
-            gap: 1rem;
+          .categories-container button {
+            min-width: 130px !important;
+            padding: 1rem 0.5rem !important;
           }
-          .header-left {
-            width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            padding-bottom: 0.5rem;
+          .categories-container button span:first-child {
+            font-size: 1.5rem !important;
           }
-          .header-right {
-            width: 100%;
-            flex-direction: column;
-            align-items: stretch;
-            gap: 1rem;
-          }
-          .date-filters {
-            width: 100%;
-            flex-wrap: wrap;
-            justify-content: space-between;
-          }
-          .header-actions {
-            width: 100%;
-            justify-content: space-between;
-          }
-          .btn-export {
-            flex: 1;
-            justify-content: center;
+          .categories-container button span:last-child {
+            font-size: 0.85rem !important;
           }
         }
       `}</style>
     </div>
   );
 }
+
+const normalizeArabic = (text: string) => {
+  if (!text) return '';
+  return text
+    .replace(/[أإآا]/g, 'ا')
+    .replace(/[ةه]/g, 'ه')
+    .replace(/[يى]/g, 'ي')
+    .replace(/[\u064B-\u065F]/g, '');
+};
 
 function AccountSelectorInternal({ 
   accounts, 
@@ -537,12 +523,12 @@ function AccountSelectorInternal({
 
   const filteredAccounts = useMemo(() => {
     if (!Array.isArray(accounts)) return [];
-    const lower = searchTerm.toLowerCase();
+    const lower = normalizeArabic(searchTerm.toLowerCase());
     return accounts.filter(acc => 
-      (acc.code && acc.code.toLowerCase().includes(lower)) || 
-      (acc.name && acc.name.toLowerCase().includes(lower)) || 
-      (acc.nameAr && acc.nameAr.toLowerCase().includes(lower))
-    ).slice(0, 100); 
+      (acc.code && normalizeArabic(acc.code.toLowerCase()).includes(lower)) || 
+      (acc.name && normalizeArabic(acc.name.toLowerCase()).includes(lower)) || 
+      (acc.nameAr && normalizeArabic(acc.nameAr.toLowerCase()).includes(lower))
+    ); 
   }, [accounts, searchTerm]);
 
   const getLocalizedName = (acc: any) => 

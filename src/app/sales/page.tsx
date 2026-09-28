@@ -26,7 +26,7 @@ export default async function SalesPage(props: {
   if (branchId) whereClause.branchId = branchId;
   
   try {
-    const [invoices, quotations, customers, warehouses, accounts, currencies, companyProfile] = await Promise.all([
+    const [invoices, quotations, customers, warehouses, accounts, currencies, companyProfile, branches] = await Promise.all([
       prisma.salesInvoice.findMany({
         where: whereClause,
         include: { customer: true, items: { include: { product: true } } },
@@ -53,7 +53,8 @@ export default async function SalesPage(props: {
         where: { companyId },
         orderBy: { isDefault: 'desc' }
       }),
-      getCompanyProfile()
+      getCompanyProfile(),
+      prisma.branch.findMany({ where: branchId ? { companyId, id: branchId } : { companyId } })
     ]);
 
     // Fetch products just for the selection in invoices/quotations
@@ -80,6 +81,7 @@ export default async function SalesPage(props: {
         initialCustomers={customers || []}
         initialProducts={products || []}
         initialWarehouses={warehouses || []}
+        initialBranches={branches || []}
         initialAccounts={accounts || []}
         initialCurrencies={currencies || []}
         companyProfile={companyProfile}

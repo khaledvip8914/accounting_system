@@ -22,6 +22,7 @@ export default function AppShell({ children, dict, user, lang, subscriptionEndsA
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const notificationsRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
@@ -53,6 +54,9 @@ export default function AppShell({ children, dict, user, lang, subscriptionEndsA
       if (module === 'advancedReports') {
          if (!subscriptionPlan.hasAdvancedReports) return false;
       }
+      if (module === 'hr') {
+         if (subscriptionPlan.hasHumanResources === false) return false;
+      }
     }
 
     // Admins and SuperAdmins have access to everything
@@ -74,6 +78,10 @@ export default function AppShell({ children, dict, user, lang, subscriptionEndsA
         .then(data => {
           if (data.notifications) {
             setNotifications(data.notifications);
+            const lastRead = localStorage.getItem('lastReadNotification');
+            const parsedLastRead = lastRead ? new Date(lastRead).getTime() : 0;
+            const unread = data.notifications.filter((n: any) => new Date(n.date).getTime() > parsedLastRead);
+            setUnreadCount(unread.length);
           }
         })
         .catch(err => console.error('Error fetching notifications:', err));
@@ -100,7 +108,7 @@ export default function AppShell({ children, dict, user, lang, subscriptionEndsA
   if (!mounted) return <div style={{ opacity: 0 }}>{children}</div>;
 
   return (
-    <UserProvider user={user}>
+    <UserProvider user={user} subscriptionPlan={subscriptionPlan}>
       <div className={`app-container ${isSidebarOpen ? 'sidebar-open' : ''}`} dir={dir}>
       {/* Mobile Overlay */}
       {isSidebarOpen && (
@@ -111,7 +119,7 @@ export default function AppShell({ children, dict, user, lang, subscriptionEndsA
       <aside className={`sidebar ${isSidebarOpen ? 'active' : ''}`}>
         <div className="sidebar-header">
            <div className="logo-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', marginBottom: '1rem', marginTop: '1rem' }}>
-             <div style={{ width: '100px', height: '100px', borderRadius: '50%', overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '0.5rem', background: '#1e293b', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+             <div style={{ width: '100px', height: '100px', borderRadius: '50%', overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '0.5rem', background: 'var(--card-bg, #ffffff)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
                <img src="/qaydx-logo.png" alt="QaydX" style={{ width: '140%', height: '140%', objectFit: 'cover' }} />
              </div>
              <div className="logo-text" style={{ fontSize: '1.5rem', fontWeight: '900' }}>{dict.sidebar.brand}</div>
@@ -210,7 +218,7 @@ export default function AppShell({ children, dict, user, lang, subscriptionEndsA
                 </span>
                 {dict.sidebar.employees}
               </Link>
-              <Link href="/salaries" className={`nav-item ${pathname.startsWith('/salaries') ? 'active' : ''}`}>
+              <Link href="/salaries" className={`nav-item ${pathname === '/salaries' ? 'active' : ''}`}>
                 <span className="nav-icon">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
                 </span>
@@ -271,7 +279,7 @@ export default function AppShell({ children, dict, user, lang, subscriptionEndsA
               : `Important: Your subscription expires in ${daysLeft} days. Please contact management to renew and avoid service interruption.`}
           </div>
         )}
-        <header className="header">
+        <header className="header" style={{ position: 'relative', zIndex: 100 }}>
           <div className="header-mobile-toggle">
             <button className="hamburger" onClick={() => setIsSidebarOpen(true)}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
@@ -286,10 +294,9 @@ export default function AppShell({ children, dict, user, lang, subscriptionEndsA
           
           <div className="header-actions">
             {branches.length > 0 && (
-              <div className="branch-switcher" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-secondary)', padding: '0.25rem 0.75rem', borderRadius: '8px' }}>
+              <div className="branch-switcher">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
                 <select 
-                  style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}
                   onChange={(e) => {
                     document.cookie = `NX_BRANCH=${e.target.value}; path=/; max-age=31536000`;
                     window.location.reload();
@@ -307,18 +314,24 @@ export default function AppShell({ children, dict, user, lang, subscriptionEndsA
             
             <div className="notifications-wrapper" ref={notificationsRef} style={{ position: 'relative' }}>
               <button 
-                className={`action-btn no-mobile ${notifications.length > 0 ? 'has-notifications' : ''}`}
-                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                className={`action-btn no-mobile ${unreadCount > 0 ? 'has-notifications' : ''}`}
+                onClick={() => {
+                  if (!isNotificationsOpen) {
+                    localStorage.setItem('lastReadNotification', new Date().toISOString());
+                    setUnreadCount(0);
+                  }
+                  setIsNotificationsOpen(!isNotificationsOpen);
+                }}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                {notifications.length > 0 && <span className="badge">{notifications.length}</span>}
+                {unreadCount > 0 && <span className="badge">{unreadCount}</span>}
               </button>
               
               {isNotificationsOpen && (
                 <div className="notifications-dropdown">
                   <div className="notifications-header">
                     <h4>{lang === 'ar' ? 'التنبيهات' : 'Notifications'}</h4>
-                    {notifications.length > 0 && <span className="notifications-count">{notifications.length}</span>}
+                    {unreadCount > 0 && <span className="notifications-count">{unreadCount}</span>}
                   </div>
                   <div className="notifications-list">
                     {notifications.length === 0 ? (
@@ -393,7 +406,7 @@ export default function AppShell({ children, dict, user, lang, subscriptionEndsA
         .mobile-brand {
           font-weight: 700;
           font-size: 1.25rem;
-          background: linear-gradient(to right, #fff, #a5b4fc);
+          background: var(--brand-gradient);
           -webkit-background-clip: text;
           background-clip: text;
           -webkit-text-fill-color: transparent;
@@ -448,7 +461,7 @@ export default function AppShell({ children, dict, user, lang, subscriptionEndsA
           top: 120%;
           left: ${lang === 'ar' ? '0' : 'auto'};
           right: ${lang === 'ar' ? 'auto' : '0'};
-          width: 320px;
+          width: 380px;
           background: #ffffff;
           border-radius: 12px;
           box-shadow: 0 10px 40px -10px rgba(0,0,0,0.15);
@@ -504,20 +517,20 @@ export default function AppShell({ children, dict, user, lang, subscriptionEndsA
           gap: 1rem;
         }
 
-        .notification-item {
+        :global(.notification-item) {
           display: flex;
-          gap: 1rem;
-          padding: 1rem 1.25rem;
+          gap: 1.25rem;
+          padding: 1.25rem 2rem;
           border-bottom: 1px solid #f1f5f9;
           text-decoration: none;
           transition: background 0.2s;
         }
 
-        .notification-item:hover {
+        :global(.notification-item:hover) {
           background: #f8fafc;
         }
 
-        .notification-item:last-child {
+        :global(.notification-item:last-child) {
           border-bottom: none;
         }
 
@@ -536,8 +549,13 @@ export default function AppShell({ children, dict, user, lang, subscriptionEndsA
           color: #ef4444;
         }
 
+        .notification-content {
+          flex: 1;
+          padding: 0 0.5rem;
+        }
+
         .notification-content h5 {
-          margin: 0 0 0.25rem 0;
+          margin: 0 0 0.5rem 0;
           font-size: 0.9rem;
           font-weight: 700;
           color: #0f172a;

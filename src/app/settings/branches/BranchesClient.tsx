@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Lang } from '@/lib/i18n';
 import { createBranch, updateBranch, deleteBranch } from './actions';
+import LocationPicker from '@/components/LocationPicker';
 
 export default function BranchesClient({ lang, initialBranches, maxBranches }: { lang: Lang, initialBranches: any[], maxBranches: number }) {
   const [branches, setBranches] = useState(initialBranches);
@@ -89,6 +90,16 @@ export default function BranchesClient({ lang, initialBranches, maxBranches }: {
             <div className="card-body">
               <p><strong>{lang === 'ar' ? 'العنوان' : 'Address'}:</strong> {b.address || '-'}</p>
               <p><strong>{lang === 'ar' ? 'الرقم الضريبي' : 'Tax No'}:</strong> {b.taxNumber || '-'}</p>
+              {b.workLat && b.workLng ? (
+                <div style={{ marginTop: '0.5rem', padding: '6px 10px', borderRadius: '6px', background: '#ecfdf5', color: '#065f46', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>📍</span>
+                  <span>{lang === 'ar' ? `الموقع مفعل (نطاق: ${b.workRadius || 100}م)` : `GPS Active (${b.workRadius || 100}m)`}</span>
+                </div>
+              ) : (
+                <div style={{ marginTop: '0.5rem', padding: '6px 10px', borderRadius: '6px', background: '#f8fafc', color: '#94a3b8', fontSize: '0.75rem' }}>
+                  <span>⚪ {lang === 'ar' ? 'لم يتم تحديد موقع جغرافي' : 'No GPS set'}</span>
+                </div>
+              )}
             </div>
             <div className="card-footer">
               <button onClick={() => handleEdit(b)} className="btn-secondary btn-sm">{lang === 'ar' ? 'تعديل' : 'Edit'}</button>
@@ -102,7 +113,7 @@ export default function BranchesClient({ lang, initialBranches, maxBranches }: {
 
       {showModal && (
         <div className="modal-overlay">
-          <div className="modal-content">
+          <div className="modal-content" style={{ maxWidth: '550px' }}>
             <h2>{formData.id ? (lang === 'ar' ? 'تعديل فرع' : 'Edit Branch') : (lang === 'ar' ? 'فرع جديد' : 'New Branch')}</h2>
             <form onSubmit={handleSave} className="form">
               <div className="form-group">
@@ -125,6 +136,97 @@ export default function BranchesClient({ lang, initialBranches, maxBranches }: {
                 <label>{lang === 'ar' ? 'السجل التجاري (اختياري)' : 'Commercial Registry'}</label>
                 <input type="text" value={formData.commercialRegistry} onChange={e => setFormData({...formData, commercialRegistry: e.target.value})} />
               </div>
+
+              {/* قسم إعدادات الحضور الجغرافي للفرع */}
+              <div style={{ gridColumn: '1 / -1', background: '#f8fafc', padding: '1rem', borderRadius: '10px', border: '1px solid #e2e8f0', marginTop: '0.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <label style={{ fontWeight: 700, fontSize: '0.85rem', color: '#1e293b' }}>
+                    📍 {lang === 'ar' ? 'الموقع الجغرافي للفرع (لبصمة الجوال)' : 'Branch GPS Location (For Mobile Punch)'}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if ('geolocation' in navigator) {
+                        navigator.geolocation.getCurrentPosition(
+                          (pos) => {
+                            setFormData({
+                              ...formData,
+                              workLat: pos.coords.latitude,
+                              workLng: pos.coords.longitude
+                            });
+                            alert(lang === 'ar' ? 'تم التقاط إحداثيات موقعك للفرع بنجاح!' : 'Branch GPS captured!');
+                          },
+                          (err) => {
+                            alert(lang === 'ar' ? `تعذر جلب الموقع: ${err.message}` : `Location error: ${err.message}`);
+                          }
+                        );
+                      }
+                    }}
+                    style={{
+                      background: '#eff6ff',
+                      border: '1px solid #bfdbfe',
+                      borderRadius: '6px',
+                      padding: '4px 8px',
+                      fontSize: '0.75rem',
+                      color: '#1d4ed8',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    🎯 {lang === 'ar' ? 'التقاط موقعي الحالي' : 'Capture GPS'}
+                  </button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                  <div>
+                    <label style={{ fontSize: '0.75rem', color: '#64748b' }}>{lang === 'ar' ? 'خط العرض (Lat)' : 'Latitude'}</label>
+                    <input 
+                      type="number" 
+                      step="any"
+                      value={formData.workLat || ''} 
+                      onChange={e => setFormData({...formData, workLat: e.target.value})} 
+                      placeholder="24.7136"
+                      style={{ width: '100%', padding: '6px 8px', fontSize: '0.8rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.75rem', color: '#64748b' }}>{lang === 'ar' ? 'خط الطول (Lng)' : 'Longitude'}</label>
+                    <input 
+                      type="number" 
+                      step="any"
+                      value={formData.workLng || ''} 
+                      onChange={e => setFormData({...formData, workLng: e.target.value})} 
+                      placeholder="46.6753"
+                      style={{ width: '100%', padding: '6px 8px', fontSize: '0.8rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.75rem', color: '#64748b' }}>{lang === 'ar' ? 'نطاق السماح (متر)' : 'Radius (m)'}</label>
+                    <input 
+                      type="number" 
+                      value={formData.workRadius || 100} 
+                      onChange={e => setFormData({...formData, workRadius: e.target.value})} 
+                      placeholder="100"
+                      style={{ width: '100%', padding: '6px 8px', fontSize: '0.8rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                    />
+                  </div>
+                </div>
+
+                {/* زر الخريطة التفاعلية */}
+                <LocationPicker 
+                  lat={formData.workLat ? parseFloat(formData.workLat) : null}
+                  lng={formData.workLng ? parseFloat(formData.workLng) : null}
+                  radius={formData.workRadius ? parseFloat(formData.workRadius) : 100}
+                  onLocationChange={(newLat, newLng) => {
+                    setFormData({
+                      ...formData,
+                      workLat: newLat,
+                      workLng: newLng
+                    });
+                  }}
+                  lang={lang}
+                />
+              </div>
+
               <div className="modal-actions">
                 <button type="button" onClick={() => setShowModal(false)} className="btn-secondary">{lang === 'ar' ? 'إلغاء' : 'Cancel'}</button>
                 <button type="submit" className="btn-primary" disabled={loading}>{lang === 'ar' ? 'حفظ' : 'Save'}</button>

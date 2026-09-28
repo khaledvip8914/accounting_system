@@ -18,12 +18,14 @@ export default function SalesClient({
   initialCustomers,
   initialProducts,
   initialWarehouses,
+  initialBranches,
   initialAccounts,
   initialCurrencies,
   initialUnits,
   initialCostCenters,
   initialProductionOrders,
-  companyProfile
+  companyProfile,
+  initialPaymentMethods
 }: {
   lang: string,
   initialInvoices: any[],
@@ -31,17 +33,20 @@ export default function SalesClient({
   initialCustomers: any[],
   initialProducts: any[],
   initialWarehouses: any[],
+  initialBranches?: any[],
   initialAccounts: any[],
   initialCurrencies: any[],
   initialUnits: any[],
   initialCostCenters: any[],
   initialProductionOrders: any[],
-  companyProfile: any
+  companyProfile: any,
+  initialPaymentMethods?: any[]
 }) {
   const { canAccess } = useUser();
   const [activeTab, setActiveTab] = useState('invoices');
   const [showNewInvoice, setShowNewInvoice] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<any | null>(null);
+  const [paymentMethods] = useState<any[]>(initialPaymentMethods || []);
   
   const [showNewQuotation, setShowNewQuotation] = useState(false);
   const [editingQuotation, setEditingQuotation] = useState<any | null>(null);
@@ -128,28 +133,59 @@ export default function SalesClient({
           </div>
         </div>
       </div>
-      <div className="sales-header no-print">
-        <div className="header-left">
-           <div className="tabs-container">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`tab-item ${currentTab === tab.id ? 'active' : ''}`}
-              >
-                <span className="tab-icon">{tab.icon}</span>
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="header-right">
-           <div className="header-actions">
-              <button className="btn-export pdf" onClick={() => window.print()}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                  PDF
-              </button>
-           </div>
+      <div className="page-header no-print" style={{ marginBottom: '2rem' }}>
+        <h1 className="page-title">{lang === 'ar' ? 'المبيعات' : 'Sales'}</h1>
+        <p className="page-subtitle">{lang === 'ar' ? 'إدارة فواتير المبيعات وعروض الأسعار والعملاء' : 'Manage sales invoices, quotations, and customers'}</p>
+      </div>
+
+      <div className="categories-container no-print" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+        {tabs.map((tab) => (
+          <button suppressHydrationWarning
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            style={{
+              flex: '1',
+              minWidth: '160px',
+              padding: '1.25rem 1rem',
+              background: currentTab === tab.id ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.03)',
+              color: currentTab === tab.id ? 'white' : 'var(--text-primary)',
+              border: `1px solid ${currentTab === tab.id ? 'var(--accent-primary)' : 'var(--glass-border)'}`,
+              borderRadius: '12px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              fontSize: '1rem',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.75rem',
+              transition: 'all 0.3s ease',
+              boxShadow: currentTab === tab.id ? '0 8px 20px rgba(var(--accent-primary-rgb), 0.2)' : 'none'
+            }}
+            className="animate-in"
+          >
+            <span style={{ fontSize: '1.8rem', lineHeight: '1' }}>{tab.icon}</span>
+            <span style={{ textAlign: 'center' }}>{tab.label}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="card glass-panel no-print" style={{ marginBottom: '2rem', padding: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'flex-end', alignItems: 'center' }}>
+        <div className="header-actions" style={{ display: 'flex', gap: '0.75rem' }}>
+          
+          {currentTab === 'invoices' && canAccess('invoices', 'create') && (
+            <button className="btn btn-primary" onClick={() => { setEditingInvoice(null); setShowNewInvoice(true); }}>
+              <span className="icon">+</span>
+              {lang === 'ar' ? 'فاتورة مبيعات' : 'New Invoice'}
+            </button>
+          )}
+
+          {currentTab === 'quotations' && canAccess('quotations', 'create') && (
+            <button className="btn btn-primary" onClick={() => { setEditingQuotation(null); setShowNewQuotation(true); }}>
+              <span className="icon">+</span>
+              {lang === 'ar' ? 'عرض سعر' : 'New Quotation'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -159,6 +195,7 @@ export default function SalesClient({
             orders={initialProductionOrders}
             products={initialProducts}
             warehouses={initialWarehouses}
+          branches={initialBranches || []}
             units={initialUnits}
             costCenters={initialCostCenters}
             lang={lang}
@@ -214,8 +251,10 @@ export default function SalesClient({
           customers={initialCustomers}
           products={initialProducts}
           warehouses={initialWarehouses}
+          branches={initialBranches || []}
           accounts={initialAccounts}
           currencies={initialCurrencies}
+          paymentMethods={paymentMethods}
           lang={lang}
           onClose={() => { setShowNewInvoice(false); setEditingInvoice(null); }}
           onSave={handleInvoiceSave}
@@ -228,6 +267,7 @@ export default function SalesClient({
             customers={initialCustomers}
             products={initialProducts}
             warehouses={initialWarehouses}
+          branches={initialBranches || []}
             lang={lang}
             onClose={() => { setShowNewQuotation(false); setEditingQuotation(null); }}
             onSave={handleQuotationSave}
@@ -235,35 +275,34 @@ export default function SalesClient({
       )}
 
       <style jsx>{`
-        .sales-header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 0.5rem 1.5rem; border-bottom: 1px solid #e5e7eb; margin: -1.5rem -1.5rem 1.5rem -1.5rem; position: sticky; top: 0; z-index: 10; }
-        .header-left { display: flex; align-items: center; }
-        .tabs-container { display: flex; gap: 1.5rem; }
-        .tab-item { padding: 1rem 0; border: none; background: none; font-weight: 500; color: #64748b; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; position: relative; transition: all 0.2s; }
-        .tab-item.active { color: #2563eb; }
-        .tab-item.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: #2563eb; }
-        .tab-icon { font-size: 1.1rem; }
+        .categories-container::-webkit-scrollbar {
+          height: 6px;
+        }
+        .categories-container::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.02);
+          border-radius: 4px;
+        }
+        .categories-container::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 4px;
+        }
+        .categories-container::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.2);
+        }
         .header-actions { display: flex; gap: 0.75rem; }
         .btn-export { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.2s; }
         .btn-export.pdf { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
 
         @media (max-width: 768px) {
-          .sales-header {
-            flex-direction: column;
-            align-items: stretch;
-            padding: 1rem;
-            margin: -1rem -1rem 1rem -1rem;
-            gap: 1rem;
+          .categories-container button {
+            min-width: 130px !important;
+            padding: 1rem 0.5rem !important;
           }
-          .header-left {
-            width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            padding-bottom: 0.5rem;
+          .categories-container button span:first-child {
+            font-size: 1.5rem !important;
           }
-          .header-right {
-            width: 100%;
-            display: flex;
-            justify-content: flex-start;
+          .categories-container button span:last-child {
+            font-size: 0.85rem !important;
           }
         }
       `}</style>

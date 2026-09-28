@@ -32,6 +32,7 @@ export async function sendVerificationEmail(email: string, token: string, name?:
         <p style="font-size: 0.8rem; color: #888;">إذا لم تكن أنت من طلب هذا الحساب، يرجى تجاهل هذه الرسالة.</p>
       </div>
     `,
+    text: `مرحباً ${name || 'بك'}\nلقد تم إنشاء حساب لك في نظام المحاسبة. يرجى تفعيل حسابك من خلال الرابط أدناه:\n${verifyUrl}\nإذا لم تكن أنت من طلب هذا الحساب، يرجى تجاهل هذه الرسالة.`,
   };
 
   try {
@@ -116,6 +117,7 @@ export async function sendWelcomeEmail(email: string, name: string, companyId: s
         </div>
       </div>
     `,
+    text: `تهانينا، ${name}!\nلقد تم الانتهاء من تأسيس النظام الخاص بشركتكم بنجاح.\n\nبيانات الدخول:\n- معرف النظام (Tenant ID): ${companyId}\n- اسم المستخدم: ${username}\n- كلمة المرور المؤقتة: ${pass}\n- صلاحية الاشتراك: ${days} يوم\n\nرابط الدخول: ${loginUrl}\n\nنوصي بشدة بتغيير كلمة المرور المؤقتة فور تسجيل دخولك لأول مرة.`,
   };
 
   try {
@@ -151,6 +153,7 @@ export async function sendResetPasswordEmail(email: string, token: string, name?
         <p style="font-size: 0.8rem; color: #888;">إذا لم تكن أنت من طلب إعادة التعيين، يرجى تجاهل هذه الرسالة ولن يتم إجراء أي تغيير.</p>
       </div>
     `,
+    text: `مرحباً ${name || 'بك'}\nلقد استلمنا طلب لإعادة تعيين كلمة المرور لحسابك.\nإذا كنت أنت من طلب ذلك، يرجى الضغط على الرابط أدناه لتغيير كلمة المرور:\n${resetUrl}\nهذا الرابط صالح لمدة ساعة واحدة فقط.\nإذا لم تكن أنت من طلب إعادة التعيين، يرجى تجاهل هذه الرسالة ولن يتم إجراء أي تغيير.`,
   };
 
   try {

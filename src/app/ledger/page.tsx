@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function LedgerPage() {
   const cookieStore = await cookies();
-  const lang = cookieStore.get('NX_LANG')?.value || 'en';
+  const lang = cookieStore.get('NX_LANG')?.value || 'ar';
   const dictionary = getDictionary(lang);
   const dict = dictionary.ledger;
   const financialDict = dictionary.financial;
@@ -17,3 +17,4 @@ export default async function LedgerPage() {
 
   return <LedgerClient accounts={accounts} vouchers={vouchers} dict={dict} financialDict={financialDict} lang={lang} />;
 }
+

@@ -7,7 +7,13 @@ export type Module =
   | 'purchases' 
   | 'accounting' 
   | 'hr' 
+  | 'hr_employees'
+  | 'hr_salaries'
   | 'settings' 
+  | 'settings_general'
+  | 'settings_payroll'
+  | 'settings_users'
+  | 'settings_financial'
   | 'reports' 
   | 'contacts'
   | 'users'
@@ -32,7 +38,13 @@ export const ALL_MODULES: Module[] = [
   'purchases', 
   'accounting', 
   'hr', 
+  'hr_employees',
+  'hr_salaries',
   'settings', 
+  'settings_general',
+  'settings_payroll',
+  'settings_users',
+  'settings_financial',
   'reports', 
   'contacts',
   'users',
@@ -62,14 +74,24 @@ export const MODULE_GROUPS: PermissionGroup[] = [
     modules: ['purchases', 'inventory']
   },
   {
-    name: 'Financial & HR',
-    nameAr: 'المالية والموارد البشرية',
-    modules: ['accounting', 'hr', 'contacts']
+    name: 'Financial & Accounting',
+    nameAr: 'المالية والحسابات',
+    modules: ['accounting', 'contacts']
   },
   {
-    name: 'System & Reports',
-    nameAr: 'النظام والتقارير',
-    modules: ['settings', 'reports', 'users', 'sales_reports', 'purchase_reports', 'return_reports']
+    name: 'Human Resources',
+    nameAr: 'الموارد البشرية والرواتب',
+    modules: ['hr_employees', 'hr_salaries', 'hr']
+  },
+  {
+    name: 'System Settings',
+    nameAr: 'إعدادات النظام',
+    modules: ['settings_general', 'settings_financial', 'settings_payroll', 'settings_users', 'settings']
+  },
+  {
+    name: 'Reports',
+    nameAr: 'التقارير',
+    modules: ['reports', 'sales_reports', 'purchase_reports', 'return_reports']
   }
 ];
 
@@ -81,7 +103,13 @@ export const DEFAULT_PERMISSIONS: Permissions = {
   purchases: { view: false, create: false, edit: false, delete: false },
   accounting: { view: false, create: false, edit: false, delete: false },
   hr: { view: false, create: false, edit: false, delete: false },
+  hr_employees: { view: false, create: false, edit: false, delete: false },
+  hr_salaries: { view: false, create: false, edit: false, delete: false },
   settings: { view: false, create: false, edit: false, delete: false },
+  settings_general: { view: false, create: false, edit: false, delete: false },
+  settings_payroll: { view: false, create: false, edit: false, delete: false },
+  settings_users: { view: false, create: false, edit: false, delete: false },
+  settings_financial: { view: false, create: false, edit: false, delete: false },
   reports: { view: false, create: false, edit: false, delete: false },
   contacts: { view: false, create: false, edit: false, delete: false },
   users: { view: false, create: false, edit: false, delete: false },
@@ -98,10 +126,10 @@ export function hasPermission(
   if (!userOrPermissions) return false;
 
   // Support passing the full user object or just permissions
-  const role = typeof userOrPermissions === 'object' ? userOrPermissions.role : null;
+  const role = typeof userOrPermissions === 'object' ? (userOrPermissions.role || userOrPermissions.roleRef?.name) : null;
   const username = typeof userOrPermissions === 'object' ? userOrPermissions.username : null;
   
-  if (role === 'Admin' || role === 'SuperAdmin' || username === 'khaled-ma' || username === 'admin') return true;
+  if (role === 'Admin' || role === 'SuperAdmin' || role === 'مدير النظام (Admin)' || username === 'khaled-ma' || username === 'admin') return true;
 
   let perms: any;
   if (typeof userOrPermissions === 'string') {
@@ -112,8 +140,12 @@ export function hasPermission(
       return false;
     }
   } else {
-    // If it's a user object, extract permissions property, otherwise use as is
-    perms = userOrPermissions.permissions || userOrPermissions;
+    // If it's a user object, extract permissions property from roleRef or user, otherwise use as is
+    if (userOrPermissions.roleRef?.permissions) {
+      perms = userOrPermissions.roleRef.permissions;
+    } else {
+      perms = userOrPermissions.permissions || userOrPermissions;
+    }
   }
 
   // Handle case where permissions might still be a string after extraction

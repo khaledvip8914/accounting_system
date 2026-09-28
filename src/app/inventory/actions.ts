@@ -125,6 +125,56 @@ export async function createDisposalVoucher(data: { productId: string, quantity:
         }
       });
 
+      // 6. Handle Accounting Link (Journal Voucher)
+      const productData = await tx.product.findUnique({ where: { id: data.productId } });
+      const itemCost = productData?.costPrice || 0;
+      const totalLoss = itemCost * data.quantity;
+
+      if (totalLoss > 0) {
+          let lossAccount = await tx.account.findFirst({ where: { companyId, code: '5200' } });
+          if (!lossAccount) {
+              lossAccount = await tx.account.create({
+                  data: { companyId, code: '5200', name: 'Inventory Loss', nameAr: 'خسائر إتلاف المخزون', type: 'Expense' }
+              });
+          }
+
+          let inventoryAccount = await tx.account.findFirst({ where: { companyId, code: '1140' } });
+          if (!inventoryAccount) {
+              inventoryAccount = await tx.account.create({
+                  data: { companyId, code: '1140', name: 'Inventory', nameAr: 'المخزون', type: 'Asset' }
+              });
+          }
+
+          await tx.journalVoucher.create({
+              data: {
+                  companyId,
+                  branchId: branchId || null,
+                  reference: `JVDISP-${voucherNumber}`,
+                  date: new Date(data.date),
+                  description: `Inventory Disposal/Spoilage ${voucherNumber}`,
+                  status: 'Posted',
+                  entries: {
+                      create: [
+                          {
+                              accountId: lossAccount.id,
+                              date: new Date(data.date),
+                              description: `Spoilage Expense: ${data.reason}`,
+                              debit: totalLoss,
+                              credit: 0
+                          },
+                          {
+                              accountId: inventoryAccount.id,
+                              date: new Date(data.date),
+                              description: `Inventory reduction for spoilage ${voucherNumber}`,
+                              debit: 0,
+                              credit: totalLoss
+                          }
+                      ]
+                  }
+              }
+          });
+      }
+
       return voucher;
     });
     return { success: true, data: res };

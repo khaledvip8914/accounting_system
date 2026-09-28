@@ -1,18 +1,18 @@
-import { PrismaClient } from '../generated/client_v8';
+import { PrismaClient } from '../generated/client_v9';
 
 // Force re-instantiation after schema update by using a new global key
 const globalForPrisma = globalThis as unknown as {
-  prisma_v16: PrismaClient | undefined;
+  prisma_v17: PrismaClient | undefined;
 };
 
 export const prisma =
-  globalForPrisma.prisma_v16 ??
+  globalForPrisma.prisma_v17 ??
   new PrismaClient({
     log: ['query', 'error', 'warn'],
   });
 
 if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma_v16 = prisma;
+  globalForPrisma.prisma_v17 = prisma;
 }
 
 export const prisma_latest = prisma;

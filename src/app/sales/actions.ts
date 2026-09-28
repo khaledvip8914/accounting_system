@@ -79,6 +79,16 @@ export async function updateUnit(id: string, data: any) {
   }
 }
 
+export async function deleteUnit(id: string) {
+  try {
+     await prisma.unitOfMeasure.delete({ where: { id } });
+     revalidatePath('/sales');
+     return { success: true };
+  } catch (err: any) {
+     return { success: false, error: err.message };
+  }
+}
+
 export async function getCostCenters() {
   const session = await getSession();
   const companyId = session?.user?.companyId;
@@ -713,7 +723,7 @@ export async function createSalesInvoice(data: {
       const invoiceNumber = `INV-${new Date().getFullYear()}-${(count + 1).toString().padStart(3, '0')}`;
 
       const finalWarehouseId = data.warehouseId || null;
-      let finalBranchId = (await getActiveBranch()) || null;
+      let finalBranchId = (await getActiveBranch()) || data.branchId || null;
       if (finalWarehouseId) {
         const wh = await tx.warehouse.findUnique({ where: { id: finalWarehouseId }});
         if (wh && wh.branchId) finalBranchId = wh.branchId;
@@ -733,6 +743,8 @@ export async function createSalesInvoice(data: {
           netAmount: data.netAmount,
           status: data.status, 
           isTaxInclusive: data.isTaxInclusive,
+          notes: data.notes || undefined,
+          paymentMethodId: data.paymentMethodId || undefined,
           currency: data.currency || 'SAR',
           exchangeRate: data.exchangeRate || 1.0,
           items: {
@@ -793,34 +805,49 @@ export async function createSalesInvoice(data: {
       }
 
       // 4. Handle Accounting Link (Journal Voucher)
-      const revenueAccount     = await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '4000' } })
-                              || await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '4100' } });
+      let revenueAccount = await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '4100' } })
+                        || await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '4000' } })
+                        || await tx.account.findFirst({ where: { companyId: session?.user?.companyId, type: 'Revenue' } });
+      
+      if (!revenueAccount) {
+         revenueAccount = await tx.account.create({
+            data: { companyId: session?.user?.companyId, code: '4100', name: 'Sales Revenue', nameAr: 'إيرادات المبيعات', type: 'Revenue' }
+         });
+      }
 
       let debitAccountId: string | null = null;
       if (data.paymentType === 'paid' && data.receiptAccountId) {
         debitAccountId = data.receiptAccountId;
-      } else {
-        const customerCode = invoice.customer.code;
-        let receivablesAccount = await tx.account.findFirst({
-          where: { code: { in: [`1130-${customerCode}`, `1131-${customerCode}`] } }
+      } else if (data.status === 'Paid') {
+        const cashAcc = await tx.account.findFirst({
+           where: { companyId: session?.user?.companyId, OR: [{ code: '1110' }, { code: '1100' }, { code: '1120' }] }
         });
-
+        debitAccountId = cashAcc?.id || null;
+      } else {
+        const customerCode = invoice.customer?.code;
+        let receivablesAccount = null;
+        if (customerCode) {
+           receivablesAccount = await tx.account.findFirst({
+             where: { companyId: session?.user?.companyId, code: { in: [`1130-${customerCode}`, `1131-${customerCode}`] } }
+           });
+        }
         if (!receivablesAccount) {
           receivablesAccount = await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '1130' } })
                             || await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '1131' } });
           if (!receivablesAccount) {
             receivablesAccount = await tx.account.create({
-              data: { code: '1130', name: 'Accounts Receivable', nameAr: 'ذمم مدينة - عملاء', type: 'Asset' }
+              data: { companyId: session?.user?.companyId, code: '1130', name: 'Accounts Receivable', nameAr: 'ذمم مدينة - عملاء', type: 'Asset' }
             });
           }
         }
         debitAccountId = receivablesAccount.id;
       }
 
-      let vatPayableAccount = await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '2120' } });
-      if (!vatPayableAccount) {
+      let vatPayableAccount = await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '2160' } })
+                           || await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '2120' } });
+      if (!vatPayableAccount && data.taxAmount > 0) {
         vatPayableAccount = await tx.account.create({
-          data: { code: '2120', name: 'VAT Payable (Output Tax)', nameAr: 'ضريبة القيمة المضافة المحصلة', type: 'Liability' }
+          data: { companyId: session?.user?.companyId, code: '2160', name: 'VAT Payable (Output Tax)', nameAr: 'ضريبة القيمة المضافة - مخرجات', type: 'Liability' }
         });
       }
 
@@ -951,6 +978,8 @@ export async function updateSalesInvoice(invoiceId: string, data: any) {
         discount: data.discount,
         netAmount: data.netAmount,
         status: data.status,
+        notes: data.notes || undefined,
+        paymentMethodId: data.paymentMethodId || undefined,
         currency: data.currency || 'SAR',
         exchangeRate: data.exchangeRate || 1.0,
         journalVoucherId: null, // Clear it temporarily
@@ -1003,29 +1032,49 @@ export async function updateSalesInvoice(invoiceId: string, data: any) {
     }
 
     // 7. Handle Accounting Link (Journal Voucher)
-    const revenueAccount     = await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '4101' } }) || await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '1101' } });
+    let revenueAccount = await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '4100' } })
+                      || await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '4000' } })
+                      || await tx.account.findFirst({ where: { companyId: session?.user?.companyId, type: 'Revenue' } });
+    
+    if (!revenueAccount) {
+       revenueAccount = await tx.account.create({
+          data: { companyId: session?.user?.companyId, code: '4100', name: 'Sales Revenue', nameAr: 'إيرادات المبيعات', type: 'Revenue' }
+       });
+    }
 
     let debitAccountId: string | null = null;
     if (data.paymentType === 'paid' && data.receiptAccountId) {
       debitAccountId = data.receiptAccountId;
+    } else if (data.status === 'Paid') {
+      const cashAcc = await tx.account.findFirst({
+         where: { companyId: session?.user?.companyId, OR: [{ code: '1110' }, { code: '1100' }, { code: '1120' }] }
+      });
+      debitAccountId = cashAcc?.id || null;
     } else {
-      const customerSubAccountCode = `1130-${invoice.customer.code}`;
-      let receivablesAccount = await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: customerSubAccountCode } });
+      const customerCode = invoice.customer?.code;
+      let receivablesAccount = null;
+      if (customerCode) {
+         receivablesAccount = await tx.account.findFirst({
+           where: { companyId: session?.user?.companyId, code: { in: [`1130-${customerCode}`, `1131-${customerCode}`] } }
+         });
+      }
       if (!receivablesAccount) {
-        receivablesAccount = await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '1130' } });
+        receivablesAccount = await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '1130' } })
+                          || await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '1131' } });
         if (!receivablesAccount) {
           receivablesAccount = await tx.account.create({
-            data: { code: '1130', name: 'Accounts Receivable', nameAr: 'ذمم مدينة - عملاء', type: 'Asset' }
+            data: { companyId: session?.user?.companyId, code: '1130', name: 'Accounts Receivable', nameAr: 'ذمم مدينة - عملاء', type: 'Asset' }
           });
         }
       }
       debitAccountId = receivablesAccount.id;
     }
 
-    let vatPayableAccount = await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '2120' } });
-    if (!vatPayableAccount) {
+    let vatPayableAccount = await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '2160' } })
+                         || await tx.account.findFirst({ where: { companyId: session?.user?.companyId, code: '2120' } });
+    if (!vatPayableAccount && data.taxAmount > 0) {
       vatPayableAccount = await tx.account.create({
-        data: { code: '2120', name: 'VAT Payable (Output Tax)', nameAr: 'ضريبة القيمة المضافة المحصلة', type: 'Liability' }
+        data: { companyId: session?.user?.companyId, code: '2160', name: 'VAT Payable (Output Tax)', nameAr: 'ضريبة القيمة المضافة - مخرجات', type: 'Liability' }
       });
     }
 

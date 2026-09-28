@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { createSupplier, uploadAttachmentBase64 } from './actions';
 import { createWarehouse } from '../warehouses/actions';
 import CreateSupplierModal from '@/components/CreateSupplierModal';
 import CreateWarehouseModal from '@/components/CreateWarehouseModal';
 import SearchableSelect from '@/components/SearchableSelect';
+import DimensionSelector from '@/components/DimensionSelector';
 
 type Account = { id: string; code: string; name: string; nameAr: string | null; type: string };
 
@@ -47,6 +48,8 @@ export default function CreatePurchaseModal({
     invoiceToEdit ? new Date(invoiceToEdit.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
   );
   const [isTaxInclusive, setIsTaxInclusive] = useState(false);
+  const [taxRates, setTaxRates] = useState<any[]>([]);
+  const [selectedTaxRate, setSelectedTaxRate] = useState<number>(0.15);
   const [paymentType, setPaymentType] = useState<'paid' | 'credit'>(invoiceToEdit?.status === 'Paid' ? 'paid' : 'credit');
   const [paymentAccountId, setPaymentAccountId] = useState('');
   const [accountSearch, setAccountSearch] = useState('');
@@ -72,13 +75,53 @@ export default function CreatePurchaseModal({
   );
   
   const [discount, setDiscount] = useState(invoiceToEdit?.discount || 0);
-  const [notes, setNotes] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Custom Fields & Dimensions
+  const [customFieldsConfig, setCustomFieldsConfig] = useState<any[]>([]);
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, any>>(
+    invoiceToEdit?.customFields ? (typeof invoiceToEdit.customFields === 'string' ? JSON.parse(invoiceToEdit.customFields) : invoiceToEdit.customFields) : {}
+  );
+  const [dimensionsConfig, setDimensionsConfig] = useState<any[]>([]);
+  const [dimensionValues, setDimensionValues] = useState<any[]>(
+    invoiceToEdit?.dimensionValues ? (typeof invoiceToEdit.dimensionValues === 'string' ? JSON.parse(invoiceToEdit.dimensionValues) : invoiceToEdit.dimensionValues) : []
+  );
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
   const [attachmentUrl, setAttachmentUrl] = useState(invoiceToEdit?.attachmentUrl || '');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [notes, setNotes] = useState('');
   
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    fetch('/api/taxes')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setTaxRates(data);
+          const defaultTax = data.find((t: any) => t.isDefault);
+          if (defaultTax) {
+            setSelectedTaxRate(defaultTax.rate);
+          } else if (data.length > 0) {
+            setSelectedTaxRate(data[0].rate);
+          }
+        }
+      })
+      .catch(err => console.error('Failed to fetch taxes:', err));
+
+    // Fetch Custom Fields
+    fetch('/api/v1/settings/custom-fields?module=PurchaseInvoice')
+      .then(res => res.json())
+      .then(data => Array.isArray(data) && setCustomFieldsConfig(data))
+      .catch(err => console.error('Failed to fetch custom fields:', err));
+
+    // Fetch Dimensions
+    fetch('/api/v1/settings/dimensions')
+      .then(res => res.json())
+      .then(data => Array.isArray(data) && setDimensionsConfig(data))
+      .catch(err => console.error('Failed to fetch dimensions:', err));
+  }, []);
 
   // Filter accounts for searchable dropdown
   const filteredAccounts = useMemo(() => {
@@ -118,13 +161,21 @@ export default function CreatePurchaseModal({
 
   const totals = useMemo(() => {
     const rawSubtotal = items.reduce((sum, item) => sum + (Number(item.total) || 0), 0);
+    const rawTaxRate = selectedTaxRate;
+    const taxRate = rawTaxRate > 1 ? rawTaxRate / 100 : rawTaxRate;
     
-    // Always treat as tax-inclusive now to match Purchase Orders and user request
-    const netAmount = rawSubtotal - discount;
-    const subtotal = netAmount / 1.15;
-    const taxAmount = netAmount - subtotal;
-    return { subtotal, taxAmount, netAmount };
-  }, [items, discount]);
+    if (isTaxInclusive) {
+      const netAmount = rawSubtotal - discount;
+      const subtotal = netAmount / (1 + taxRate);
+      const taxAmount = netAmount - subtotal;
+      return { subtotal, taxAmount, netAmount };
+    } else {
+      const subtotal = rawSubtotal;
+      const taxAmount = (subtotal - discount) * taxRate;
+      const netAmount = (subtotal - discount) + taxAmount;
+      return { subtotal, taxAmount, netAmount };
+    }
+  }, [items, discount, isTaxInclusive, selectedTaxRate]);
 
   const handleQuickAdd = async (data: any) => {
     return createSupplier(data);
@@ -224,6 +275,8 @@ export default function CreatePurchaseModal({
         exchangeRate,
         items,
         discount,
+        customFields: customFieldValues,
+        dimensionValues: dimensionValues,
         notes,
         attachmentUrl: finalAttachmentUrl,
         ...totals,
@@ -364,6 +417,20 @@ export default function CreatePurchaseModal({
               </div>
             )}
 
+            <div className="form-group">
+              <label>{lang === 'ar' ? 'نسبة الضريبة' : 'Tax Rate'}</label>
+              <select
+                value={selectedTaxRate}
+                onChange={(e) => setSelectedTaxRate(parseFloat(e.target.value))}
+              >
+                {taxRates.map((tr: any) => (
+                  <option key={tr.id} value={tr.rate}>
+                    {lang === 'ar' && tr.nameAr ? tr.nameAr : tr.name} ({tr.rate < 1 && tr.rate > 0 ? tr.rate * 100 : tr.rate}%)
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '1.8rem' }}>
               <input 
                 type="checkbox" 
@@ -372,11 +439,78 @@ export default function CreatePurchaseModal({
                 onChange={e => setIsTaxInclusive(e.target.checked)}
                 style={{ width: 'auto', cursor: 'pointer' }}
               />
-              <label htmlFor="isTaxInclusive" style={{ margin: 0, cursor: 'pointer', fontWeight: 700, color: '#059669' }}>
-                {lang === 'ar' ? 'الأسعار شاملة ضريبة القيمة المضافة (15%)' : 'Prices include 15% VAT'}
+              <label htmlFor="isTaxInclusive" style={{ margin: '0 0 0 0.5rem', cursor: 'pointer', fontWeight: 700, color: '#2563eb' }}>
+                {lang === 'ar' ? 'الأسعار شاملة الضريبة' : 'Prices include tax'}
               </label>
             </div>
           </div>
+
+          {/* Dynamic Settings: Custom Fields & Dimensions */}
+          {(customFieldsConfig.length > 0 || dimensionsConfig.length > 0) && (
+            <div className="dynamic-settings-section" style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px', marginBottom: '2.5rem', border: '1px solid #e2e8f0' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', color: '#1e293b' }}>
+                {lang === 'ar' ? 'معلومات إضافية وأبعاد تحليلية' : 'Additional Info & Dimensions'}
+              </h3>
+              <div className="invoice-form-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginBottom: 0 }}>
+                {/* Dimensions */}
+                {dimensionsConfig.length > 0 && (
+                  <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                    <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.5rem', color: '#475569', fontWeight: 600 }}>
+                      {lang === 'ar' ? 'الأبعاد التحليلية (مراكز التكلفة) للفاتورة (مراكز التكلفة)' : 'Invoice Dimensions'}
+                    </label>
+                    <DimensionSelector
+                      companyId={""}
+                      lang={lang}
+                      value={dimensionValues}
+                      onChange={setDimensionValues}
+                      inline={true}
+                    />
+                  </div>
+                )}
+                
+                {/* Custom Fields */}
+                {customFieldsConfig.filter(f => f.isActive).map(field => {
+                  const val = customFieldValues[field.name] || '';
+                  return (
+                    <div className="form-group" key={field.id}>
+                      <label>
+                        {lang === 'ar' ? (field.labelAr || field.label) : field.label}
+                        {field.isRequired && <span style={{color: '#dc2626'}}> *</span>}
+                      </label>
+                      {field.type === 'Select' ? (
+                        <select 
+                          value={val} 
+                          onChange={e => setCustomFieldValues(prev => ({ ...prev, [field.name]: e.target.value }))}
+                          required={field.isRequired}
+                        >
+                          <option value="">{lang === 'ar' ? '--- اختر ---' : '--- Select ---'}</option>
+                          {Array.isArray(field.options) && field.options.map((opt: string) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      ) : field.type === 'Checkbox' ? (
+                        <div style={{ display: 'flex', alignItems: 'center', height: '42px' }}>
+                          <input 
+                            type="checkbox" 
+                            checked={!!val}
+                            onChange={e => setCustomFieldValues(prev => ({ ...prev, [field.name]: e.target.checked }))}
+                            style={{ width: 'auto', cursor: 'pointer' }}
+                          />
+                        </div>
+                      ) : (
+                        <input 
+                          type={field.type === 'Number' ? 'number' : field.type === 'Date' ? 'date' : 'text'}
+                          value={val}
+                          onChange={e => setCustomFieldValues(prev => ({ ...prev, [field.name]: e.target.value }))}
+                          required={field.isRequired}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Row 2: Payment Type */}
           <div className="payment-section">
@@ -501,6 +635,7 @@ export default function CreatePurchaseModal({
                     <th style={{ width: '18%' }}>{lang === 'ar' ? 'الوحدة' : 'Unit'}</th>
                     <th>{lang === 'ar' ? 'الكمية' : 'Qty'}</th>
                     <th>{lang === 'ar' ? 'التكلفة' : 'Cost'}</th>
+                    <th style={{ width: '15%' }}>{lang === 'ar' ? 'مركز التكلفة' : 'Cost Center'}</th>
                     <th style={{ textAlign: 'right' }}>{lang === 'ar' ? 'الإجمالي' : 'Total'}</th>
                     <th></th>
                   </tr>
@@ -543,6 +678,15 @@ export default function CreatePurchaseModal({
                       </td>
                       <td>
                         <input type="number" step="0.01" min="0" value={item.unitPrice} onChange={e => updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)} />
+                      </td>
+                      <td>
+                        <DimensionSelector
+                          companyId={""}
+                          lang={lang}
+                          value={item.dimensionValues || []}
+                          onChange={(vals) => updateItem(index, 'dimensionValues', vals)}
+                          inline={true}
+                        />
                       </td>
                       <td style={{ textAlign: 'right', fontWeight: 700 }}>{item.total.toLocaleString(undefined, { minimumFractionDigits: 2 })} {currency}</td>
                       <td>
@@ -643,7 +787,7 @@ export default function CreatePurchaseModal({
                 </div>
               )}
               <div className="total-row">
-                <span>{lang === 'ar' ? 'ضريبة القيمة المضافة 15%' : 'VAT 15%'}</span>
+                <span>{lang === 'ar' ? `ضريبة القيمة المضافة ${selectedTaxRate < 1 && selectedTaxRate > 0 ? selectedTaxRate * 100 : selectedTaxRate}%` : `VAT ${selectedTaxRate < 1 && selectedTaxRate > 0 ? selectedTaxRate * 100 : selectedTaxRate}%`}</span>
                 <span>{totals.taxAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
               </div>
               <div className="total-row net-total" style={{ color: '#047857' }}>

@@ -7,8 +7,20 @@ import { prisma } from '@/lib/db';
 
 export default async function SettingsPage() {
   const session = await getSession();
-  if (!session) {
+  if (!session || !session.user || !session.user.companyId) {
     redirect('/login');
+  }
+
+  const { hasPermission } = await import('@/lib/permissions');
+  const user = session.user;
+  const canAccessSettings = hasPermission(user, 'settings', 'view') || 
+                            hasPermission(user, 'settings_general', 'view') || 
+                            hasPermission(user, 'settings_payroll', 'view') || 
+                            hasPermission(user, 'settings_users', 'view') || 
+                            hasPermission(user, 'settings_financial', 'view');
+  
+  if (!canAccessSettings) {
+    redirect('/unauthorized');
   }
 
   const cookieStore = await cookies();

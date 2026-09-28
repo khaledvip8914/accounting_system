@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useTransition } from 'react';
-import { createAccount, deleteAccount, seedProfessionalAccounts, updateAccount, translateText } from './actions';
+import { createAccount, deleteAccount, seedProfessionalAccounts, updateAccount, translateText, deleteAllAccounts } from './actions';
 
 type Account = {
   id: string;
@@ -138,6 +138,28 @@ export default function AccountsClient({ initialAccounts, dict, lang }: { initia
       const res = await seedProfessionalAccounts();
       if (!res.success) {
         alert(res.error);
+      } else {
+        if (res.addedCount && res.addedCount > 0) {
+           const names = res.addedAccounts ? res.addedAccounts.join('\n') : '';
+           alert(lang === 'ar' 
+             ? `تم تحديث الشجرة بنجاح وإضافة ${res.addedCount} حساب جديد:\n\n${names}` 
+             : `Tree updated successfully. Added ${res.addedCount} new accounts:\n\n${names}`);
+        } else {
+           alert(lang === 'ar' 
+             ? 'الشجرة محدثة بالكامل ولا يوجد حسابات جديدة لإضافتها.' 
+             : 'The tree is fully up to date. No new accounts to add.');
+        }
+      }
+    });
+  };
+
+  const handleDeleteAll = () => {
+    if (!confirm(lang === 'ar' ? 'هل أنت متأكد من حذف جميع الحسابات؟ (العملية غير قابلة للتراجع)' : 'Are you sure you want to delete all accounts? (Cannot be undone)')) return;
+    
+    startTransition(async () => {
+      const res = await deleteAllAccounts();
+      if (!res.success) {
+        alert(res.error);
       }
     });
   };
@@ -220,6 +242,7 @@ export default function AccountsClient({ initialAccounts, dict, lang }: { initia
 
   const renderRow = (acc: Account, depth = 0) => {
     const hasChildren = acc.children && acc.children.length > 0;
+    const isMain = hasChildren || !acc.parentId;
     const isExpanded = expandedParents[acc.id];
 
     return (
@@ -239,13 +262,27 @@ export default function AccountsClient({ initialAccounts, dict, lang }: { initia
             {depth > 0 && <span style={{ color: 'var(--glass-border)', marginRight: '0.5rem' }}>└─</span>}
             <span style={{ fontWeight: '600', color: 'var(--accent-primary)' }}>{acc.code}</span>
           </td>
-          <td style={{ fontWeight: depth > 0 ? 'normal' : '600' }}>{lang === 'ar' && acc.nameAr ? acc.nameAr : acc.name}</td>
+          <td style={{ fontWeight: depth > 0 ? 'normal' : '600' }}>
+            {lang === 'ar' && acc.nameAr ? acc.nameAr : acc.name}
+          </td>
+          <td style={{ textAlign: 'center' }}>
+            <span style={{
+              fontSize: '0.75rem',
+              padding: '4px 8px',
+              borderRadius: '6px',
+              backgroundColor: isMain ? '#e2e8f0' : '#f1f5f9',
+              color: isMain ? '#334155' : '#64748b',
+              fontWeight: '600'
+            }}>
+              {isMain ? (lang === 'ar' ? 'رئيسي' : 'Main') : (lang === 'ar' ? 'فرعي' : 'Sub')}
+            </span>
+          </td>
           <td>
             <span className={getBadgeClass(acc.type)}>{translateType(acc.type)}</span>
           </td>
           <td style={{ textAlign: 'center' }}>
             <span style={{ 
-                color: acc.nature === 'Debit' ? 'var(--accent-success)' : 'var(--accent-danger)',
+                color: acc.nature === 'Debit' ? 'var(--accent-danger)' : 'var(--accent-success)',
                 fontWeight: '500',
                 fontSize: '0.85rem'
             }}>
@@ -322,11 +359,14 @@ export default function AccountsClient({ initialAccounts, dict, lang }: { initia
           <p className="page-subtitle">{dict.subtitle}</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
-          {initialAccounts.length === 0 && (
-            <button className="btn-secondary" onClick={handleSeed} disabled={isPending}>
-              {isPending ? dict.generating : dict.generatePro}
+          {initialAccounts.length > 0 && (
+            <button className="btn-secondary" style={{ color: 'var(--accent-danger)', borderColor: 'var(--accent-danger)' }} onClick={handleDeleteAll} disabled={isPending}>
+              {isPending ? '...' : (lang === 'ar' ? 'مسح الشجرة الحالية' : 'Clear Current Tree')}
             </button>
           )}
+          <button className="btn-secondary" onClick={handleSeed} disabled={isPending}>
+            {isPending ? dict.generating : (initialAccounts.length === 0 ? dict.generatePro : (lang === 'ar' ? 'تحديث الشجرة الاحترافية' : 'Update Professional Tree'))}
+          </button>
           <button className="btn-primary" onClick={openAddParentModal}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             {dict.newAccount}
@@ -348,6 +388,7 @@ export default function AccountsClient({ initialAccounts, dict, lang }: { initia
               <tr>
                 <th style={{ color: '#ffffff', fontWeight: '900', padding: '12px 1rem', textAlign: lang === 'ar' ? 'right' : 'left' }}>{dict.code}</th>
                 <th style={{ color: '#ffffff', fontWeight: '900', padding: '12px 1rem', textAlign: lang === 'ar' ? 'right' : 'left' }}>{dict.name}</th>
+                <th style={{ color: '#ffffff', fontWeight: '900', padding: '12px 1rem', textAlign: 'center' }}>{lang === 'ar' ? 'المستوى' : 'Level'}</th>
                 <th style={{ color: '#ffffff', fontWeight: '900', padding: '12px 1rem', textAlign: lang === 'ar' ? 'right' : 'left' }}>{dict.type}</th>
                 <th style={{ color: '#ffffff', fontWeight: '900', padding: '12px 1rem', textAlign: 'center' }}>{lang === 'ar' ? 'طبيعة الحساب' : 'Nature'}</th>
                 <th style={{ color: '#ffffff', fontWeight: '900', padding: '12px 1rem', textAlign: lang === 'ar' ? 'right' : 'left' }}>{lang === 'ar' ? 'الوصف' : 'Description'}</th>
@@ -359,7 +400,7 @@ export default function AccountsClient({ initialAccounts, dict, lang }: { initia
             <tbody>
               {initialAccounts.length === 0 && (
                 <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
+                  <td colSpan={9} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
                     {dict.noAccounts}
                   </td>
                 </tr>

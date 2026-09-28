@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import DimensionSelector from '@/components/DimensionSelector';
 
 const DEDUCTIONS = [
   { value: 'AdvanceDeduction', labelAr: '🔄 استرداد سلفة', labelEn: 'Recover Advance', color: '#6366f1' },
@@ -39,7 +40,9 @@ export default function CreateFinancialMoveModal({
                   ? new Date(initialData.date).toISOString().split('T')[0] 
                   : new Date().toISOString().split('T')[0],
     reason:     initialData?.reason || '',
-    status:     initialData?.status || 'Confirmed'
+    status:     initialData?.status || 'Confirmed',
+    includeInPayroll: initialData?.includeInPayroll !== undefined ? initialData.includeInPayroll : true,
+    dimensionValues: initialData?.dimensionValues ? (typeof initialData.dimensionValues === 'string' ? JSON.parse(initialData.dimensionValues) : initialData.dimensionValues) : []
   });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -213,6 +216,38 @@ export default function CreateFinancialMoveModal({
                 value={formData.reason} 
                 onChange={e => setFormData({...formData, reason: e.target.value})}
                 suppressHydrationWarning
+              />
+            </div>
+
+            <div className="form-group" style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '0.75rem', opacity: formData.type === 'Penalty' ? 0.6 : 1, pointerEvents: formData.type === 'Penalty' ? 'none' : 'auto' }}>
+              <input 
+                type="checkbox" 
+                id="includeInPayroll"
+                checked={formData.type === 'Penalty' ? true : formData.includeInPayroll !== false} 
+                onChange={e => setFormData({...formData, includeInPayroll: e.target.checked})}
+                style={{ width: '1.25rem', height: '1.25rem', cursor: formData.type === 'Penalty' ? 'not-allowed' : 'pointer' }}
+                disabled={formData.type === 'Penalty'}
+              />
+              <label htmlFor="includeInPayroll" style={{ margin: 0, cursor: formData.type === 'Penalty' ? 'not-allowed' : 'pointer', fontWeight: 600, color: '#0f172a' }}>
+                {lang === 'ar' ? 'إدراج ضمن مسير الرواتب القادم' : 'Include in next payroll run'}
+              </label>
+              <span style={{ fontSize: '0.75rem', color: '#64748b', marginLeft: lang === 'ar' ? 0 : 'auto', marginRight: lang === 'ar' ? 'auto' : 0 }}>
+                {formData.type === 'Penalty' 
+                  ? (lang === 'ar' ? '(الجزاءات تخصم دائماً من مسير الرواتب)' : '(Penalties are always deducted from payroll)')
+                  : (lang === 'ar' ? '(إذا أزلت التحديد، ستُعتبر الحركة مستقلة)' : '(If unchecked, move is treated as separate)')}
+              </span>
+            </div>
+
+            <div className="form-group" style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <h3 style={{ margin: '0 0 0.5rem', fontSize: '0.9rem', color: '#334155' }}>
+                {lang === 'ar' ? 'الأبعاد التحليلية (مراكز التكلفة) (اختياري)' : 'Analytical Dimensions (Cost Centers) (Optional)'}
+              </h3>
+              <DimensionSelector
+                companyId=""
+                lang={lang}
+                value={formData.dimensionValues}
+                onChange={val => setFormData({ ...formData, dimensionValues: val })}
+                inline={true}
               />
             </div>
           </div>

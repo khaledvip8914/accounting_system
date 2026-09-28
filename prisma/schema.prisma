@@ -1,6 +1,6 @@
 generator client {
   provider      = "prisma-client-js"
-  output        = "../src/generated/client_v8"
+  output        = "../src/generated/client_v9"
   binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
@@ -48,11 +48,20 @@ model Company {
   warehouseStocks     WarehouseStock[]
   employeeFinancialMoves EmployeeFinancialMove[]
   salaryPayments      SalaryPayment[]
+  employeeLoans       EmployeeLoan[]
   currencies          Currency[]
   fixedAssets         FixedAsset[]
   bankAccounts        BankAccount[]
   bankReconciliations BankReconciliation[]
   branches            Branch[]
+  taxRates            TaxRate[]
+  financialYears      FinancialYear[]
+  customFields        Json?
+  attachmentSettings  Json?
+  paymentTerms        PaymentTerm[]
+  paymentMethods      PaymentMethod[]
+  productProps        ProductCharacteristic[]
+  employeeAttendances EmployeeAttendance[]
 }
 
 model Branch {
@@ -65,6 +74,9 @@ model Branch {
   address            String?
   taxNumber          String?
   commercialRegistry String?
+  workLat            Float?   // خط العرض لمقر الفرع
+  workLng            Float?   // خط الطول لمقر الفرع
+  workRadius         Float?   @default(100) // نطاق الحضور المسموح بالمتر
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
@@ -104,6 +116,10 @@ model SubscriptionPlan {
   hasFixedAssets        Boolean @default(false)
   hasMultiCurrency      Boolean @default(false)
   hasAdvancedReports    Boolean @default(false)
+  hasWhatsApp           Boolean @default(false)
+  hasHumanResources     Boolean @default(false)
+  hasApiIntegration     Boolean @default(false)
+  hasAnalysisDimensions Boolean @default(false)
   
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -133,6 +149,7 @@ model Customer {
   updatedAt          DateTime         @updatedAt
   invoices           SalesInvoice[]
   quotations         SalesQuotation[]
+  customFields       Json?
   @@unique([companyId, code])
 }
 
@@ -155,6 +172,7 @@ model Supplier {
   purchaseOrders     PurchaseOrder[]
   purchaseOrderItems PurchaseOrderItem[]
   products           Product[]           @relation("ProductSupplier")
+  customFields       Json?
   @@unique([companyId, code])
 }
 
@@ -239,6 +257,7 @@ model Product {
   supplier           Supplier?             @relation("ProductSupplier", fields: [supplierId], references: [id])
   branchId           String?
   branch             Branch?               @relation(fields: [branchId], references: [id])
+  customFields       Json?
   @@unique([companyId, sku])
 }
 
@@ -296,6 +315,11 @@ model SalesInvoice {
   warehouse        Warehouse?      @relation(fields: [warehouseId], references: [id])
   customer         Customer        @relation(fields: [customerId], references: [id])
   quotation        SalesQuotation? @relation("QuotationToInvoice")
+  notes            String?         @db.Text
+  paymentMethodId  String?
+  paymentMethod    PaymentMethod?  @relation(fields: [paymentMethodId], references: [id])
+  customFields     Json?
+  dimensionValues  Json?
   @@unique([companyId, invoiceNumber])
 }
 
@@ -325,31 +349,35 @@ model PurchaseInvoice {
   warehouse        Warehouse?      @relation(fields: [warehouseId], references: [id])
   supplier         Supplier?       @relation(fields: [supplierId], references: [id])
   items            PurchaseItem[]
+  customFields     Json?
+  dimensionValues  Json?
   @@unique([companyId, invoiceNumber])
 }
 
 model InvoiceItem {
-  id        String       @id @default(cuid())
-  invoiceId String
-  productId String
-  unitId    String?
-  quantity  Float
-  unitPrice Float
-  total     Float
-  product   Product      @relation(fields: [productId], references: [id])
-  invoice   SalesInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  id              String       @id @default(cuid())
+  invoiceId       String
+  productId       String
+  unitId          String?
+  quantity        Float
+  unitPrice       Float
+  total           Float
+  dimensionValues Json?
+  product         Product      @relation(fields: [productId], references: [id])
+  invoice         SalesInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 }
 
 model PurchaseItem {
-  id        String          @id @default(cuid())
-  invoiceId String
-  productId String
-  unitId    String?
-  quantity  Float
-  unitPrice Float
-  total     Float
-  product   Product         @relation(fields: [productId], references: [id])
-  invoice   PurchaseInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  id              String          @id @default(cuid())
+  invoiceId       String
+  productId       String
+  unitId          String?
+  quantity        Float
+  unitPrice       Float
+  total           Float
+  dimensionValues Json?
+  product         Product         @relation(fields: [productId], references: [id])
+  invoice         PurchaseInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 }
 
 model StockTransfer {
@@ -415,6 +443,7 @@ model Account {
   bankAccounts    BankAccount[]
   entries         JournalEntry[]
   primaryVouchers TransactionVoucher[] @relation("PrimaryAccount")
+  paymentMethods  PaymentMethod[]
   relatedVouchers TransactionVoucher[] @relation("RelatedAccount")
   @@unique([companyId, code])
 }
@@ -454,6 +483,7 @@ model JournalEntry {
   createdAt        DateTime        @default(now())
   journalVoucher   JournalVoucher? @relation(fields: [journalVoucherId], references: [id], onDelete: Cascade)
   account          Account         @relation(fields: [accountId], references: [id])
+  dimensionValues  Json?
 }
 
 model TransactionVoucher {
@@ -477,6 +507,7 @@ model TransactionVoucher {
   primaryAccount   Account         @relation("PrimaryAccount", fields: [primaryAccountId], references: [id])
   relatedAccount   Account         @relation("RelatedAccount", fields: [relatedAccountId], references: [id])
   journalVoucher   JournalVoucher? @relation(fields: [journalVoucherId], references: [id])
+  dimensionValues  Json?
   @@unique([companyId, voucherNumber])
 }
 
@@ -491,6 +522,7 @@ model CompanyProfile {
   logo                String?
   currency            String   @default("SAR")
   taxNumber           String?
+  commercialRegister  String?
   streetName          String?
   buildingNumber      String?
   city                String?
@@ -542,14 +574,15 @@ model SalesQuotation {
 }
 
 model QuotationItem {
-  id          String         @id @default(cuid())
-  quotationId String
-  productId   String
-  quantity    Float
-  unitPrice   Float
-  total       Float
-  quotation   SalesQuotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
-  product     Product        @relation(fields: [productId], references: [id])
+  id              String         @id @default(cuid())
+  quotationId     String
+  productId       String
+  quantity        Float
+  unitPrice       Float
+  total           Float
+  dimensionValues Json?
+  quotation       SalesQuotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  product         Product        @relation(fields: [productId], references: [id])
 }
 
 model UnitOfMeasure {
@@ -643,7 +676,7 @@ model User {
   company           Company   @relation(fields: [companyId], references: [id])
   id                String    @id @default(cuid())
   username          String    @unique
-  email             String?   @unique
+  email             String?
   emailVerified     DateTime?
   verificationToken String?
   resetToken        String?
@@ -689,13 +722,61 @@ model Employee {
   phone          String?
   email          String?
   address        String?
+  photoUrl       String?
   branchId       String?
   branch         Branch?                 @relation(fields: [branchId], references: [id])
   createdAt      DateTime                @default(now())
   updatedAt      DateTime                @updatedAt
   financialMoves EmployeeFinancialMove[]
   salaryPayments SalaryPayment[]
+  contracts      EmployeeContract[]
+  loans          EmployeeLoan[]
+  leaves         EmployeeLeave[]
+  attendances    EmployeeAttendance[]
+  biometricId    String?                 // كود البصمة في جهاز الحضور
+  weekendDays    String?                 // أيام العطلة الأسبوعية (e.g. "5,6" أو JSON)
+  shiftStart     String?                 @default("09:00") // موعد بداية الدوام (HH:mm)
+  shiftEnd       String?                 @default("17:00") // موعد نهاية الدوام (HH:mm)
+  workHoursPerDay Float?                 @default(8)       // ساعات العمل اليومية
+  workLat        Float?                  // خط العرض لموقع العمل المحدد للموظف
+  workLng        Float?                  // خط الطول لموقع العمل المحدد للموظف
+  workRadius     Float?                  @default(100) // نطاق السماح بالمتر (Geofence radius)
+  appPassword    String?                 // كلمة المرور لتطبيق الهاتف
+  deviceId       String?                 // معرّف هاتف الموظف لربط الحساب بجهاز واحد
+  allowBiometric Boolean                 @default(true) // السماح بالبصمة الحيوية
+  customFields   Json?
   @@unique([companyId, code])
+}
+
+model EmployeeContract {
+  id              String               @id @default(cuid())
+  companyId       String               @default("default")
+  employeeId      String
+  startDate       DateTime
+  endDate         DateTime?
+  basicSalary     Float
+  status          String               @default("Active") // Active, Terminated, Expired
+  allowances      ContractAllowance[]
+  deductions      ContractDeduction[]
+  employee        Employee             @relation(fields: [employeeId], references: [id])
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+}
+
+model ContractAllowance {
+  id              String           @id @default(cuid())
+  contractId      String
+  name            String
+  amount          Float
+  contract        EmployeeContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+}
+
+model ContractDeduction {
+  id              String           @id @default(cuid())
+  contractId      String
+  name            String
+  amount          Float
+  contract        EmployeeContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
 }
 
 model EmployeeFinancialMove {
@@ -706,8 +787,10 @@ model EmployeeFinancialMove {
   type       String // Advance, Penalty, Reward, Allowance
   amount     Float
   date       DateTime @default(now())
-  reason     String?
+  reason           String?
   status           String   @default("Confirmed")
+  includeInPayroll Boolean  @default(true)
+  dimensionValues  Json?
   journalVoucherId String?  @unique
   branchId         String?
   createdAt        DateTime @default(now())
@@ -729,6 +812,8 @@ model SalaryPayment {
   penalties        Float           @default(0)
   netSalary        Float
   status           String          @default("Pending") // Pending, Approved
+  notes            String?         @db.Text
+  dimensionValues  Json?
   journalVoucherId String?         @unique
   branchId         String?
   branch           Branch?         @relation(fields: [branchId], references: [id])
@@ -790,17 +875,18 @@ model PurchaseOrder {
 }
 
 model PurchaseOrderItem {
-  id         String        @id @default(cuid())
-  orderId    String
-  productId  String
-  unitId     String?
-  supplierId String?
-  quantity   Float
-  unitPrice  Float
-  total      Float
-  product    Product       @relation(fields: [productId], references: [id])
-  supplier   Supplier?     @relation(fields: [supplierId], references: [id])
-  order      PurchaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  id              String        @id @default(cuid())
+  orderId         String
+  productId       String
+  unitId          String?
+  supplierId      String?
+  quantity        Float
+  unitPrice       Float
+  total           Float
+  dimensionValues Json?
+  product         Product       @relation(fields: [productId], references: [id])
+  supplier        Supplier?     @relation(fields: [supplierId], references: [id])
+  order           PurchaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
 model Currency {
@@ -919,4 +1005,277 @@ model BankReconciliationItem {
 
   reconciliation    BankReconciliation @relation(fields: [reconciliationId], references: [id], onDelete: Cascade)
   bankStatement     BankStatement?     @relation(fields: [bankStatementId], references: [id])
+}
+
+model TaxRate {
+  id                  String   @id @default(cuid())
+  companyId           String   @default("default")
+  company             Company  @relation(fields: [companyId], references: [id])
+  name                String
+  nameAr              String?
+  rate                Float
+  code                String   @default("S") // ZATCA code: S, Z, E, O
+  exemptionReasonCode String?
+  exemptionReasonText String?
+  isDefault           Boolean  @default(false)
+  isActive            Boolean  @default(true)
+  
+  outputAccountId     String?
+  inputAccountId      String?
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  @@unique([companyId, code, rate])
+}
+
+model FinancialYear {
+  id           String    @id @default(cuid())
+  companyId    String
+  name         String
+  startDate    DateTime
+  endDate      DateTime
+  status       String    @default("Open") // Open, Closed
+  isActive     Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  company      Company   @relation(fields: [companyId], references: [id])
+  @@unique([companyId, name])
+}
+
+model CustomField {
+  id          String   @id @default(cuid())
+  companyId   String
+  module      String   // 'Customer', 'Supplier', 'Product', 'SalesInvoice', 'PurchaseInvoice', 'Employee'
+  name        String   // 'cf_birthday'
+  label       String
+  labelAr     String?
+  type        String   // 'Text', 'Number', 'Date', 'Select', 'Checkbox'
+  options     Json?    // Array of strings if type is 'Select'
+  isRequired  Boolean  @default(false)
+  showInPrint Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([companyId, module, name])
+}
+
+model AccountingDimension {
+  id          String   @id @default(cuid())
+  companyId   String
+  name        String   // 'Project', 'Region'
+  nameAr      String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  values      DimensionValue[]
+
+  @@unique([companyId, name])
+}
+
+model DimensionValue {
+  id          String   @id @default(cuid())
+  dimensionId String
+  code        String
+  name        String
+  nameAr      String?
+  isActive    Boolean  @default(true)
+  parentId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  dimension   AccountingDimension @relation(fields: [dimensionId], references: [id], onDelete: Cascade)
+  parent      DimensionValue?     @relation("DimensionHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  children    DimensionValue[]    @relation("DimensionHierarchy")
+
+  @@unique([dimensionId, code])
+}
+
+
+model PayrollSettings {
+  companyId                    String   @id @default("default")
+  basicSalaryAccountId         String?
+  allowancesAccountId          String?
+  deductionsAccountId          String?
+  employeeLoansAccountId       String?
+  accruedSalariesAccountId     String?
+  gosiCompanyExpenseAccountId  String?
+  gosiPayableAccountId         String?
+  endOfServiceExpenseAccountId String?
+  endOfServiceProvisionAccountId String?
+  vacationExpenseAccountId     String?
+  vacationProvisionAccountId   String?
+  
+  gosiEmployeeRatio            Float    @default(9.75)
+  gosiCompanyRatio             Float    @default(11.75)
+  gosiMaxSalary                Float    @default(45000)
+  
+  defaultAnnualLeaveDays       Int      @default(30)
+  enableEndOfServiceProvision  Boolean  @default(false)
+  enableVacationProvision      Boolean  @default(false)
+  
+  payrollCycleStartDay         Int      @default(1)
+  payrollCycleEndDay           Int      @default(30)
+  defaultPaymentMethod         String   @default("Bank Transfer")
+  defaultBankAccountId         String?
+  
+  createdAt                    DateTime @default(now())
+  updatedAt                    DateTime @updatedAt
+}
+
+model PayrollAllowanceType {
+  id               String   @id @default(cuid())
+  companyId        String   @default("default")
+  name             String
+  nameAr           String?
+  type             String   // Fixed, Variable
+  isGosiTaxable    Boolean  @default(false)
+  defaultAmount    Float    @default(0)
+  overrideAccountId String?
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([companyId, name])
+}
+
+model PayrollDeductionType {
+  id               String   @id @default(cuid())
+  companyId        String   @default("default")
+  name             String
+  nameAr           String?
+  type             String   // FixedAmount, Days, Hours
+  overrideAccountId String?
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([companyId, name])
+}
+
+model EmployeeLoan {
+  id                String            @id @default(cuid())
+  companyId         String            @default("default")
+  employeeId        String
+  totalAmount       Float
+  remainingAmount   Float
+  installmentAmount Float
+  startMonth        Int
+  startYear         Int
+  reason            String?
+  status            String            @default("Active")
+  date              DateTime          @default(now())
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  company           Company           @relation(fields: [companyId], references: [id])
+  employee          Employee          @relation(fields: [employeeId], references: [id])
+  installments      LoanInstallment[]
+}
+
+model LoanInstallment {
+  id        String       @id @default(cuid())
+  loanId    String
+  month     Int
+  year      Int
+  amount    Float
+  status    String       @default("Pending")
+  createdAt DateTime     @default(now())
+
+  loan      EmployeeLoan @relation(fields: [loanId], references: [id], onDelete: Cascade)
+}
+
+model EmployeeLeave {
+  id          String   @id @default(cuid())
+  companyId   String   @default("default")
+  employeeId  String
+  startDate   DateTime
+  endDate     DateTime
+  type        String
+  status      String   @default("Pending")
+  reason      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+}
+
+
+model PaymentMethod {
+  companyId     String         @default("default")
+  company       Company        @relation(fields: [companyId], references: [id])
+  id            String         @id @default(cuid())
+  name          String
+  nameAr        String?
+  code          String?
+  type          String         @default("Cash") // Cash, Card, Bank, Other
+  accountId     String?
+  account       Account?       @relation(fields: [accountId], references: [id])
+  isActive      Boolean        @default(true)
+  isDefault     Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  salesInvoices SalesInvoice[]
+
+  @@unique([companyId, name])
+}
+
+model PaymentTerm {
+  companyId          String    @default("default")
+  company            Company   @relation(fields: [companyId], references: [id])
+  id                 String    @id @default(cuid())
+  name               String
+  nameAr             String?
+  dueDays            Int
+  discountDays       Int       @default(0)
+  discountPercentage Float     @default(0)
+  isActive           Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@unique([companyId, name])
+}
+
+model ProductCharacteristic {
+  companyId    String    @default("default")
+  company      Company   @relation(fields: [companyId], references: [id])
+  id           String    @id @default(cuid())
+  name         String
+  nameAr       String?
+  type         String    // text, select, number, boolean
+  options      String[]  // Array of strings for select options
+  isRequired   Boolean   @default(false)
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([companyId, name])
+}
+
+model EmployeeAttendance {
+  id             String    @id @default(cuid())
+  companyId      String    @default("default")
+  company        Company   @relation(fields: [companyId], references: [id])
+  employeeId     String
+  employee       Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  date           DateTime  // تاريخ اليوم (منتصف الليل أو تاريخ التسجيل)
+  checkIn        DateTime? // وقت تسجيل الحضور
+  checkOut       DateTime? // وقت تسجيل الانصراف
+  checkInLat     Float?    // خط عرض الحضور
+  checkInLng     Float?    // خط طول الحضور
+  checkOutLat    Float?    // خط عرض الانصراف
+  checkOutLng    Float?    // خط طول الانصراف
+  workMinutes    Int       @default(0) // إجمالي دقائق العمل
+  lateMinutes    Int       @default(0) // دقائق التأخير
+  earlyMinutes   Int       @default(0) // دقائق الانصراف المبكر
+  status         String    @default("PRESENT") // PRESENT, ABSENT, LATE, ON_LEAVE, WEEKEND, HALF_DAY
+  source         String    @default("MANUAL")  // MANUAL, BIOMETRIC, MOBILE_GPS
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([companyId, employeeId, date])
 }

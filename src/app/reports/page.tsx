@@ -8,14 +8,22 @@ import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ReportsPage() {
+export default async function ReportsPage(props: { searchParams: Promise<{ [key: string]: string | undefined }> }) {
+  const searchParams = await props.searchParams;
+  const tab = searchParams?.tab || 'trial';
+
   const cookieStore = await cookies();
-  const lang = cookieStore.get('NX_LANG')?.value || 'en';
+  const lang = cookieStore.get('NX_LANG')?.value || 'ar';
   const dict = getDictionary(lang).reports;
 
   const session = await getSession();
   if (!session || !session.user || !session.user.companyId) {
     redirect('/login');
+  }
+
+  const { hasPermission } = await import('@/lib/permissions');
+  if (!hasPermission(session.user, 'reports', 'view')) {
+    redirect('/unauthorized');
   }
   await requireFeature(session.user.companyId, 'hasAdvancedReports');
 
@@ -32,6 +40,8 @@ export default async function ReportsPage() {
       balanceSheet={balanceSheet} 
       dict={dict} 
       lang={lang} 
+      defaultTab={tab}
     />
   );
 }
+

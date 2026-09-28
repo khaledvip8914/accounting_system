@@ -42,7 +42,35 @@ if (
   keepAliveTimeout = undefined
 }
 
-const fsPromises = require('fs').promises;
+// =========================================================================
+// Security Headers via http.ServerResponse prototype monkey-patch.
+// This guarantees headers on ALL responses (HTTP/1.1 and HTTP/2)
+// regardless of caching, static pages, or Nginx proxy behavior.
+// =========================================================================
+const http = require('http');
+const _origWriteHead = http.ServerResponse.prototype.writeHead;
+const _CSP = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' ws: wss: https:; object-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests;";
+const _PP  = 'camera=(), microphone=(), geolocation=(), browsing-topics=()';
+
+http.ServerResponse.prototype.writeHead = function(statusCode, reasonOrHeaders, hdrs) {
+  try {
+    if (!this.headersSent) {
+      // Remove X-Powered-By to prevent leakage
+      this.removeHeader('X-Powered-By');
+      this.removeHeader('x-powered-by');
+      
+      // Force set all required security headers (override any existing/old values)
+      this.setHeader('Content-Security-Policy', _CSP);
+      this.setHeader('Permissions-Policy', _PP);
+      this.setHeader('X-XSS-Protection', '1; mode=block');
+      this.setHeader('X-Frame-Options', 'DENY');
+      this.setHeader('X-Content-Type-Options', 'nosniff');
+      this.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+      this.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+    }
+  } catch (_) {}
+  return _origWriteHead.apply(this, arguments);
+};
 
 startServer({
   dir,

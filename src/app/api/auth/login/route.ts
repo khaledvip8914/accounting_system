@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { login } from '@/lib/auth';
+import { checkLockout, recordFailedLogin, resetLoginAttempts } from '@/lib/security';
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,6 +16,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { errorAr: 'الرجاء إدخال معرف الشركة واسم المستخدم وكلمة المرور', errorEn: 'Please enter Company ID, username and password' },
         { status: 400 }
+      );
+    }
+
+    // BRUTE FORCE PROTECTION: Check if user/IP is locked out
+    const ip = request.headers.get('x-forwarded-for') || 'unknown';
+    const identifier = `${companyId}:${username}:${ip}`;
+    
+    const lockoutStatus = checkLockout(identifier);
+    if (lockoutStatus.isLocked) {
+      const minutesRemaining = Math.ceil(lockoutStatus.remainingMs / 60000);
+      return NextResponse.json(
+        { 
+          errorAr: `تم قفل الحساب مؤقتاً بسبب المحاولات الخاطئة الكثيرة. الرجاء المحاولة بعد ${minutesRemaining} دقيقة.`, 
+          errorEn: `Account temporarily locked due to too many failed attempts. Please try again in ${minutesRemaining} minutes.` 
+        },
+        { status: 429 } // Too Many Requests
       );
     }
 
@@ -34,6 +51,7 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       console.warn(`[AUTH] User not found: ${username}`);
+      recordFailedLogin(identifier);
       return NextResponse.json(
         { errorAr: 'اسم المستخدم غير موجود في قاعدة البيانات', errorEn: 'Username not found in database' },
         { status: 401 }
@@ -48,14 +66,21 @@ export async function POST(request: NextRequest) {
 
     if (!passwordMatch) {
       console.warn(`[AUTH] Password mismatch for: ${username}`);
-      console.log(`[AUTH] Input password length: ${password.length}`);
-      console.log(`[AUTH] Stored hash starts with: ${user.password.substring(0, 10)}`);
+      
+      const failedRecord = recordFailedLogin(identifier);
+      const attemptsLeft = 5 - failedRecord.attempts;
       
       return NextResponse.json(
-        { errorAr: 'كلمة المرور غير صحيحة لهذا المستخدم', errorEn: 'Incorrect password for this user' },
+        { 
+          errorAr: `كلمة المرور غير صحيحة. يتبقى لك ${attemptsLeft} محاولات قبل قفل الحساب.`, 
+          errorEn: `Incorrect password. You have ${attemptsLeft} attempts left before account lockout.` 
+        },
         { status: 401 }
       );
     }
+
+    // Login successful - reset attempts
+    resetLoginAttempts(identifier);
 
     // Login successful
     const { password: _, ...userWithoutPassword } = user;

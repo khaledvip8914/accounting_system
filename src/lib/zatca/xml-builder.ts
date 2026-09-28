@@ -21,6 +21,7 @@ export class ZatcaXmlBuilder {
     const issueDate = new Date(this.invoice.date).toISOString().split('T')[0];
     const issueTime = new Date(this.invoice.date).toISOString().split('T')[1].substring(0, 8);
     const previousHash = this.invoice.zatcaPreviousHash || "NWZlY2ViNjZmZmM4NmYzOGQ5NTI3ODZjNmQ2OTZjNzljMmRiYzIzOWRkNGU5MWI0NjcyOWQ3M2EyN2ZiNTdlOQ==";
+    const icv = parseInt(this.invoice.invoiceNumber.replace(/[^0-9]/g, ''), 10) || 1;
 
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
@@ -50,6 +51,11 @@ export class ZatcaXmlBuilder {
     <cbc:InvoiceTypeCode name="${invoiceTypeCode}">${this.invoice.invoiceType || '388'}</cbc:InvoiceTypeCode>
     <cbc:DocumentCurrencyCode>${this.company.currency || 'SAR'}</cbc:DocumentCurrencyCode>
     <cbc:TaxCurrencyCode>SAR</cbc:TaxCurrencyCode>
+    
+    <cac:AdditionalDocumentReference>
+        <cbc:ID>ICV</cbc:ID>
+        <cbc:UUID>${icv}</cbc:UUID>
+    </cac:AdditionalDocumentReference>
     
     <cac:AdditionalDocumentReference>
         <cbc:ID>PIH</cbc:ID>
@@ -152,8 +158,18 @@ export class ZatcaXmlBuilder {
   }
 
   private buildTaxTotal(): string {
-    const taxAmount = this.invoice.taxAmount.toFixed(2);
-    const taxableAmount = (this.invoice.totalAmount - this.invoice.taxAmount).toFixed(2);
+    let totalTaxable = 0;
+    let totalTax = 0;
+    this.items.forEach(item => {
+      const lineTotal = item.quantity * item.unitPrice;
+      const taxCategory = item.product?.taxCategory || 'S';
+      const taxPercent = taxCategory === 'S' ? 15 : 0;
+      totalTaxable += lineTotal;
+      totalTax += lineTotal * (taxPercent / 100);
+    });
+
+    const taxAmount = totalTax.toFixed(2);
+    const taxableAmount = totalTaxable.toFixed(2);
     // Assuming Standard Rate 15%
     return `
     <cac:TaxTotal>
@@ -173,10 +189,20 @@ export class ZatcaXmlBuilder {
   }
 
   private buildLegalMonetaryTotal(): string {
-    const lineExtensionAmount = (this.invoice.totalAmount - this.invoice.taxAmount).toFixed(2);
-    const taxExclusiveAmount = lineExtensionAmount;
-    const taxInclusiveAmount = this.invoice.totalAmount.toFixed(2);
-    const payableAmount = this.invoice.totalAmount.toFixed(2);
+    let totalTaxable = 0;
+    let totalTax = 0;
+    this.items.forEach(item => {
+      const lineTotal = item.quantity * item.unitPrice;
+      const taxCategory = item.product?.taxCategory || 'S';
+      const taxPercent = taxCategory === 'S' ? 15 : 0;
+      totalTaxable += lineTotal;
+      totalTax += lineTotal * (taxPercent / 100);
+    });
+    
+    const lineExtensionAmount = totalTaxable.toFixed(2);
+    const taxExclusiveAmount = totalTaxable.toFixed(2);
+    const taxInclusiveAmount = (totalTaxable + totalTax).toFixed(2);
+    const payableAmount = taxInclusiveAmount;
     // ZATCA requires no rounding errors between lines and total
     return `
     <cac:LegalMonetaryTotal>

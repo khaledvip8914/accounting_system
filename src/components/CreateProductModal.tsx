@@ -56,15 +56,41 @@ export default function CreateProductModal({
   }, []);
 
   const handleTranslate = async () => {
-    if (formData.name && !formData.nameAr) {
-      setIsTranslating(true);
-      const res = await translateText(formData.name, 'en', 'ar');
-      if (res.success) setFormData({ ...formData, nameAr: res.text });
-      setIsTranslating(false);
-    } else if (formData.nameAr && !formData.name) {
-      setIsTranslating(true);
-      const res = await translateText(formData.nameAr, 'ar', 'en');
-      if (res.success) setFormData({ ...formData, name: res.text });
+    const hasAr = formData.nameAr && formData.nameAr.trim().length > 0;
+    const hasEn = formData.name && formData.name.trim().length > 0;
+
+    if (!hasAr && !hasEn) {
+      alert(lang === 'ar' ? 'يرجى إدخال اسم واحد على الأقل للترجمة' : 'Please enter at least one name to translate');
+      return;
+    }
+    if (hasAr && hasEn) {
+      alert(lang === 'ar' ? 'كلا الحقلين ممتلئين، يرجى مسح أحدهما للترجمة' : 'Both fields are filled. Clear one to translate');
+      return;
+    }
+
+    setIsTranslating(true);
+    try {
+      if (hasAr && !hasEn) {
+        // Translate Ar to En
+        const res = await translateText(formData.nameAr.trim(), 'ar', 'en');
+        if (res?.success && res.text) {
+          setFormData(prev => ({ ...prev, name: res.text }));
+        } else {
+          alert(lang === 'ar' ? 'فشلت الترجمة، قد تكون الخدمة محظورة مؤقتاً' : 'Translation failed, service may be temporarily blocked');
+        }
+      } else if (hasEn && !hasAr) {
+        // Translate En to Ar
+        const res = await translateText(formData.name.trim(), 'en', 'ar');
+        if (res?.success && res.text) {
+          setFormData(prev => ({ ...prev, nameAr: res.text }));
+        } else {
+          alert(lang === 'ar' ? 'فشلت الترجمة، قد تكون الخدمة محظورة مؤقتاً' : 'Translation failed, service may be temporarily blocked');
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      alert(lang === 'ar' ? 'حدث خطأ في الترجمة' : 'Translation error occurred');
+    } finally {
       setIsTranslating(false);
     }
   };
@@ -109,17 +135,37 @@ export default function CreateProductModal({
                   <input type="date" value={formData.expiryDate} onChange={e => setFormData({...formData, expiryDate: e.target.value})} />
                   </div>
                   <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <label>{lang === 'ar' ? 'الاسم الأصلي (AR)' : 'Arabic Name (AR)'}</label>
-                          <button type="button" onClick={handleTranslate} disabled={isTranslating} style={{ fontSize: '0.7rem', color: 'var(--accent-primary)', background: 'none', border: 'none', cursor: 'pointer' }}>
-                              {isTranslating ? '...' : (lang === 'ar' ? '🔄 ترجمة للإنجليزية' : '🔄 Translate to EN')}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                          <label style={{ margin: 0, fontWeight: 600 }}>{lang === 'ar' ? 'الاسم الأصلي (AR)' : 'Arabic Name (AR)'}</label>
+                          <button 
+                            type="button" 
+                            onClick={handleTranslate} 
+                            disabled={isTranslating} 
+                            style={{ 
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              fontSize: '0.75rem', 
+                              fontWeight: 600,
+                              color: isTranslating ? '#94a3b8' : '#2563eb', 
+                              background: '#eff6ff', 
+                              border: '1px solid #bfdbfe', 
+                              borderRadius: '6px',
+                              padding: '2px 8px',
+                              cursor: isTranslating ? 'not-allowed' : 'pointer',
+                              transition: 'all 0.2s'
+                            }}
+                          >
+                              {isTranslating ? (lang === 'ar' ? '⏳ جاري الترجمة...' : '⏳ Translating...') : (lang === 'ar' ? '🔄 ترجمة ذكية' : '🔄 Smart Translate')}
                           </button>
                       </div>
-                  <input required value={formData.nameAr} onChange={e => setFormData({...formData, nameAr: e.target.value})} dir="rtl" />
+                      <input required value={formData.nameAr} onChange={e => setFormData({...formData, nameAr: e.target.value})} dir="rtl" placeholder={lang === 'ar' ? 'مثال: قهوة عربي مختصة' : 'Arabic Name'} />
                   </div>
                   <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>{lang === 'ar' ? 'الاسم بالإنجليزية (EN)' : 'English Name (EN)'}</label>
-                  <input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                          <label style={{ margin: 0, fontWeight: 600 }}>{lang === 'ar' ? 'الاسم بالإنجليزية (EN)' : 'English Name (EN)'}</label>
+                      </div>
+                      <input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder={lang === 'ar' ? 'مثال: Special Arabic Coffee' : 'English Name'} />
                   </div>
                   <div className="form-group" style={{ gridColumn: 'span 2' }}>
                      <label>{lang === 'ar' ? 'القسم (نظامي)' : 'Category (System)'}</label>
@@ -134,6 +180,7 @@ export default function CreateProductModal({
                       <option value="Raw Material">{lang === 'ar' ? 'مادة خام' : 'Raw Material'}</option>
                       <option value="Semi-finished">{lang === 'ar' ? 'منتج شبه تام' : 'Semi-finished'}</option>
                       <option value="Finished Product">{lang === 'ar' ? 'منتج تام' : 'Finished Product'}</option>
+                      <option value="Service">{lang === 'ar' ? 'خدمة' : 'Service'}</option>
                   </select>
                   </div>
                   <div className="form-group">

@@ -19,6 +19,15 @@ interface SearchableSelectProps {
   disabled?: boolean;
 }
 
+const normalizeArabic = (text: string) => {
+  if (!text) return '';
+  return text
+    .replace(/[أإآا]/g, 'ا')
+    .replace(/[ةه]/g, 'ه')
+    .replace(/[يى]/g, 'ي')
+    .replace(/[\u064B-\u065F]/g, '');
+};
+
 export default function SearchableSelect({ options, value, onChange, placeholder, lang, disabled }: SearchableSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -27,16 +36,16 @@ export default function SearchableSelect({ options, value, onChange, placeholder
   const selectedOption = options.find(o => o.id === value);
   
   const filteredOptions = options.filter(o => {
-    const s = searchTerm.toLowerCase();
-    const sku = (o.sku || '').toLowerCase();
-    const name = (o.name || '').toLowerCase();
-    const nameAr = (o.nameAr || '').toLowerCase();
+    const s = normalizeArabic(searchTerm.toLowerCase());
+    const sku = normalizeArabic((o.sku || '').toLowerCase());
+    const name = normalizeArabic((o.name || '').toLowerCase());
+    const nameAr = normalizeArabic((o.nameAr || '').toLowerCase());
     return (
       sku.includes(s) ||
       name.includes(s) ||
       nameAr.includes(s)
     );
-  }).slice(0, 50);
+  });
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -129,7 +138,7 @@ export default function SearchableSelect({ options, value, onChange, placeholder
         .chevron { font-size: 0.7rem; color: #64748b; }
         
         .dropdown-panel { 
-          position: absolute; top: calc(100% + 4px); left: 0; right: 0; 
+          position: absolute; top: calc(100% + 4px); left: 0; min-width: 100%; width: max-content;
           background: white; border: 1px solid #e2e8f0; border-radius: 12px; 
           box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); z-index: 2000; overflow: hidden;
           animation: slideDown 0.2s cubic-bezier(0, 0, 0.2, 1);
@@ -144,7 +153,7 @@ export default function SearchableSelect({ options, value, onChange, placeholder
         .search-input { width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0; outline: none; font-size: 0.85rem; }
         .search-input:focus { border-color: #3b82f6; }
         
-        .options-list { max-height: 350px; overflow-y: auto; }
+        .options-list { max-height: 450px; overflow-y: auto; overscroll-behavior: none; }
         .option-item { 
           padding: 10px 15px; cursor: pointer; display: flex; flex-direction: column; 
           transition: background 0.1s; border-bottom: 1px solid #f8fafc;

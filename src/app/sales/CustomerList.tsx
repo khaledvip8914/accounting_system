@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { createCustomer, updateCustomer, deleteCustomer } from './actions';
 import CreateCustomerModal from '@/components/CreateCustomerModal';
+import ContactStatementModal from '../reports/ContactStatementModal';
 
 export default function CustomerList({ customers, lang, dict }: { customers: any[], lang: string, dict: any }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -10,6 +11,7 @@ export default function CustomerList({ customers, lang, dict }: { customers: any
   const [isPending, startTransition] = useTransition();
   const [editingCustomer, setEditingCustomer] = useState<any | null>(null);
   const [formData, setFormData] = useState<any>({ code: '', name: '', nameAr: '', phone: '', email: '' });
+  const [selectedStatementContact, setSelectedStatementContact] = useState<any | null>(null);
 
   const filtered = (customers || []).filter(c => {
     const s = (searchTerm || '').toLowerCase();
@@ -119,9 +121,9 @@ export default function CustomerList({ customers, lang, dict }: { customers: any
                   <td><span className="badge">{c.code}</span></td>
                   <td>
                     <div style={{ fontWeight: '600' }}>
-                      <a href={`/financial?tab=ledger&accountCode=1130-${c.code}`} style={{ color: 'var(--accent-primary)', textDecoration: 'none' }} title={lang === 'ar' ? 'عرض كشف الحساب' : 'View Account Statement'}>
+                      <span onClick={() => setSelectedStatementContact(c)} style={{ color: 'var(--accent-primary)', cursor: 'pointer' }} title={lang === 'ar' ? 'عرض كشف الحساب' : 'View Account Statement'}>
                         {lang === 'ar' && c.nameAr ? c.nameAr : c.name}
-                      </a>
+                      </span>
                     </div>
                     <div className="text-sub" style={{ fontSize: '0.75rem' }}>{c.email || ''}</div>
                   </td>
@@ -159,6 +161,16 @@ export default function CustomerList({ customers, lang, dict }: { customers: any
               return createCustomer(data);
             }
           }}
+        />
+      )}
+
+      {selectedStatementContact && (
+        <ContactStatementModal
+          contact={selectedStatementContact}
+          type="customer"
+          onClose={() => setSelectedStatementContact(null)}
+          lang={lang}
+          dict={dict}
         />
       )}
       <style jsx>{`

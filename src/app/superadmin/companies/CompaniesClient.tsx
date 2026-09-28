@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createCompany, updateCompany, resendWelcomeEmail } from './actions'
+import { createCompany, updateCompany, resendWelcomeEmail, deleteCompany } from './actions'
 
 export default function CompaniesClient({ initialCompanies, subscriptionPlans = [] }: { initialCompanies: any[], subscriptionPlans?: any[] }) {
   const [companies, setCompanies] = useState(initialCompanies)
@@ -12,6 +12,9 @@ export default function CompaniesClient({ initialCompanies, subscriptionPlans = 
   const [editingCompany, setEditingCompany] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [notification, setNotification] = useState<{message: string, type: 'error' | 'success'} | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [companyToDelete, setCompanyToDelete] = useState<any>(null)
 
   const filteredCompanies = companies.filter(c => {
     if (!searchQuery) return true;
@@ -53,10 +56,13 @@ export default function CompaniesClient({ initialCompanies, subscriptionPlans = 
         const res = await updateCompany(editingCompany.id, {
           name: formData.name,
           email: formData.email,
+          username: formData.username,
+          phone: formData.phone,
           password: formData.password,
           subscriptionStatus: formData.subscriptionStatus,
           subscriptionEndsAt: endsAt,
-          subscriptionPlanId: formData.subscriptionPlanId || undefined
+          subscriptionPlanId: formData.subscriptionPlanId || undefined,
+          sendEmail: formData.sendEmail
         })
 
         if (!res.success) throw new Error(res.error)
@@ -72,10 +78,11 @@ export default function CompaniesClient({ initialCompanies, subscriptionPlans = 
         })
         if (!res.success) throw new Error(res.error)
       }
-      window.location.reload()
+      setNotification({ message: 'تم حفظ البيانات بنجاح', type: 'success' })
+      setTimeout(() => window.location.reload(), 1500)
     } catch (error: any) {
       console.error(error)
-      alert(error.message || 'حدث خطأ أثناء حفظ البيانات')
+      setNotification({ message: error.message || 'حدث خطأ أثناء حفظ البيانات', type: 'error' })
       setIsLoading(false)
     }
   }
@@ -86,15 +93,34 @@ export default function CompaniesClient({ initialCompanies, subscriptionPlans = 
       try {
         const res = await resendWelcomeEmail(companyId)
         if (res.success) {
-          alert('تم إرسال بطاقة الدخول للعميل بنجاح.')
+          setNotification({ message: 'تم إرسال بطاقة الدخول للعميل بنجاح.', type: 'success' })
         } else {
-          alert('فشل الإرسال: ' + res.error)
+          setNotification({ message: 'فشل الإرسال: ' + res.error, type: 'error' })
         }
       } catch (err) {
-        alert('حدث خطأ أثناء الاتصال.')
+        setNotification({ message: 'حدث خطأ أثناء الاتصال.', type: 'error' })
       } finally {
         setSendingEmailId(null)
       }
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!companyToDelete) return;
+    setDeletingId(companyToDelete.id);
+    try {
+      const res = await deleteCompany(companyToDelete.id);
+      if (res.success) {
+        setNotification({ message: 'تم حذف الشركة بنجاح', type: 'success' });
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        setNotification({ message: 'فشل الحذف: ' + res.error, type: 'error' });
+      }
+    } catch (err: any) {
+      setNotification({ message: err.message || 'حدث خطأ أثناء الحذف', type: 'error' });
+    } finally {
+      setDeletingId(null);
+      setCompanyToDelete(null);
     }
   }
 
@@ -108,7 +134,7 @@ export default function CompaniesClient({ initialCompanies, subscriptionPlans = 
       days = Math.max(0, Math.ceil(diff / (1000 * 3600 * 24)));
     }
 
-    const adminEmail = c.users?.[0]?.email || ''
+    const adminEmail = c.users?.[0]?.email || c.email || ''
 
     setFormData({
       name: c.name,
@@ -147,162 +173,151 @@ export default function CompaniesClient({ initialCompanies, subscriptionPlans = 
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white p-6 pb-20 font-sans" dir="rtl">
-      <div className="max-w-7xl mx-auto">
+    <div className="page-content" dir="rtl">
+      <div className="max-w-7xl">
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
-          <div className="relative">
-            <div className="absolute -left-6 top-0 w-1 h-full bg-gradient-to-b from-yellow-500 to-transparent"></div>
-            <h1 className="text-4xl font-black tracking-tight text-white mb-2">
-              إدارة <span className="text-yellow-500">المستأجرين</span>
+        <div className="page-header">
+          <div>
+            <h1 className="page-title">
+              إدارة <span className="highlight-text">المستأجرين</span>
             </h1>
-            <p className="text-gray-500 text-sm font-medium">نظام التحكم المركزي في الشركات والاشتراكات السحابية.</p>
+            <p className="page-subtitle">نظام التحكم المركزي في الشركات والاشتراكات السحابية.</p>
           </div>
           
-          <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
-            <div className="relative w-full sm:w-auto">
-              <svg width="20" height="20" className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: '20px', height: '20px' }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          <div className="header-actions-group">
+            <div className="search-container">
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
               <input
                 type="text"
                 placeholder="بحث بالاسم، المعرف، البريد..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-[#111] border border-gray-800 text-white pl-4 pr-12 py-4 rounded-xl focus:border-yellow-500 focus:outline-none w-full sm:w-64 md:w-80 transition-all shadow-inner"
               />
             </div>
-            <button 
-              onClick={openCreate}
-              className="flex items-center justify-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-bold hover:bg-yellow-500 transition-all transform hover:scale-105 active:scale-95 shadow-xl w-full sm:w-auto"
-            >
-              <svg width="24" height="24" className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+            <button className="btn-primary" onClick={openCreate}>
+              <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
               تأسيس شركة جديدة
             </button>
           </div>
         </div>
 
-        {/* Stats Summary - Optional but adds "Premium" feel */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <div className="bg-[#111] border border-gray-800 p-6 rounded-2xl">
-            <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">إجمالي الشركات</p>
-            <h3 className="text-3xl font-black">{companies.length}</h3>
+        {/* Stats Summary */}
+        <div className="stats-grid">
+          <div className="stat-card">
+            <div className="stat-top">
+              <p className="stat-label">إجمالي الشركات</p>
+            </div>
+            <h3 className="stat-value">{companies.length}</h3>
           </div>
-          <div className="bg-[#111] border border-gray-800 p-6 rounded-2xl">
-            <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">الاشتراكات النشطة</p>
-            <h3 className="text-3xl font-black text-emerald-500">{companies.filter(c => c.subscriptionStatus === 'Active').length}</h3>
+          <div className="stat-card" style={{'--stat-color': 'var(--accent-success)'} as React.CSSProperties}>
+            <div className="stat-top">
+              <p className="stat-label">الاشتراكات النشطة</p>
+            </div>
+            <h3 className="stat-value text-success">{companies.filter(c => c.subscriptionStatus === 'Active').length}</h3>
           </div>
-          <div className="bg-[#111] border border-gray-800 p-6 rounded-2xl">
-            <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">شركات موقوفة</p>
-            <h3 className="text-3xl font-black text-red-500">{companies.filter(c => c.subscriptionStatus !== 'Active').length}</h3>
+          <div className="stat-card" style={{'--stat-color': 'var(--accent-danger)'} as React.CSSProperties}>
+            <div className="stat-top">
+              <p className="stat-label">شركات موقوفة</p>
+            </div>
+            <h3 className="stat-value text-danger">{companies.filter(c => c.subscriptionStatus !== 'Active').length}</h3>
           </div>
         </div>
 
         {/* Table Container */}
-        <div className="bg-[#0f0f0f] border border-gray-800 rounded-3xl overflow-hidden shadow-2xl">
-          <div className="overflow-x-auto">
-            <table className="w-full text-right border-collapse">
+        <div className="card table-wrapper">
+          <div className="table-container">
+            <table>
               <thead>
-                <tr className="bg-[#151515] text-gray-500 text-xs font-black uppercase tracking-widest border-b border-gray-800">
-                  <th className="p-6">الشركة</th>
-                  <th className="p-6">معرف النظام</th>
-                  <th className="p-6">البريد الإلكتروني</th>
-                  <th className="p-6">رقم الجوال</th>
-                  <th className="p-6">المستخدم / المرور</th>
-                  <th className="p-6">الباقة</th>
-                  <th className="p-6">تاريخ الانتهاء</th>
-                  <th className="p-6">الحالة</th>
-                  <th className="p-6 text-center">الإجراءات</th>
+                <tr>
+                  <th>الشركة</th>
+                  <th>معرف النظام</th>
+                  <th>البريد الإلكتروني</th>
+                  <th>رقم الجوال</th>
+                  <th>المستخدم / المرور</th>
+                  <th>الباقة</th>
+                  <th>تاريخ الانتهاء</th>
+                  <th>الحالة</th>
+                  <th style={{textAlign: 'center'}}>الإجراءات</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800">
+              <tbody>
                 {filteredCompanies.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="p-12 text-center text-gray-500">
-                      <div className="flex flex-col items-center justify-center gap-3">
-                        <svg width="48" height="48" className="w-12 h-12 text-gray-700 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: '48px', height: '48px' }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                        <p className="font-bold">لا توجد شركات تطابق عملية البحث</p>
+                    <td colSpan={9} style={{textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)'}}>
+                      <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem'}}>
+                        <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        <p style={{fontWeight: 'bold'}}>لا توجد شركات تطابق عملية البحث</p>
                       </div>
                     </td>
                   </tr>
                 ) : filteredCompanies.map(c => (
-                  <tr key={c.id} className="hover:bg-white/[0.02] transition-all group">
-                    <td className="p-6">
-                      <div className="flex items-center gap-4">
-                        <div 
-                          className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center font-bold text-gray-400 group-hover:from-yellow-500 group-hover:to-yellow-600 group-hover:text-black transition-all flex-shrink-0 overflow-hidden"
-                          style={{ width: '40px', height: '40px', minWidth: '40px', minHeight: '40px' }}
-                        >
+                  <tr key={c.id}>
+                    <td>
+                      <div className="company-info-cell">
+                        <div className="company-avatar">
                           {c.name.substring(0,1)}
                         </div>
-                        <span className="font-bold text-lg">{c.name}</span>
+                        <span style={{fontWeight: 'bold', fontSize: '1.1rem'}}>{c.name}</span>
                       </div>
                     </td>
-                    <td className="p-6">
-                      <span className="px-3 py-1 bg-black rounded border border-gray-800 text-[10px] font-mono text-gray-500">
+                    <td>
+                      <span className="code-badge">
                         {c.id}
                       </span>
                     </td>
-                    <td className="p-6 text-sm text-gray-400 font-mono" dir="ltr">
+                    <td dir="ltr" style={{fontFamily: 'monospace', color: 'var(--text-secondary)'}}>
                       {c.email || c.users?.[0]?.email || '---'}
                     </td>
-                    <td className="p-6 text-sm text-gray-400 font-mono" dir="ltr">
+                    <td dir="ltr" style={{fontFamily: 'monospace', color: 'var(--text-secondary)'}}>
                       {c.phone || '---'}
                     </td>
-                    <td className="p-6 text-sm text-gray-400" dir="ltr">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-white font-bold">{c.users?.[0]?.username || '---'}</span>
-                        <span className="text-xs text-yellow-500/70" title="كلمة المرور مشفرة لغايات أمنية">*** (مشفرة)</span>
+                    <td dir="ltr">
+                      <div style={{display: 'flex', flexDirection: 'column', gap: '0.25rem'}}>
+                        <span style={{fontWeight: 'bold'}}>{c.users?.[0]?.username || '---'}</span>
+                        <span style={{fontSize: '0.75rem', color: 'var(--accent-warning)', opacity: 0.8}} title="كلمة المرور مشفرة لغايات أمنية">*** (مشفرة)</span>
                       </div>
                     </td>
-                    <td className="p-6">
-                      <span className="px-3 py-1 bg-[#111] rounded border border-yellow-500/30 text-xs text-yellow-500 font-bold">
+                    <td>
+                      <span className="plan-badge">
                         {c.subscriptionPlan?.nameAr || c.subscriptionPlan?.name || '---'}
                       </span>
                     </td>
-                    <td className="p-6">
-                      <div className="text-sm">
+                    <td>
+                      <div>
                         {c.subscriptionEndsAt ? (
-                          <span className={new Date(c.subscriptionEndsAt) < new Date() ? 'text-red-500 font-bold' : 'text-gray-300'}>
+                          <span className={new Date(c.subscriptionEndsAt) < new Date() ? 'text-danger' : ''}>
                             {new Date(c.subscriptionEndsAt).toLocaleDateString('ar-EG', { year:'numeric', month:'long', day:'numeric' })}
                           </span>
                         ) : (
-                          <span className="text-yellow-500/50 italic">غير محدد</span>
+                          <span style={{color: 'var(--text-secondary)', fontStyle: 'italic'}}>غير محدد</span>
                         )}
                       </div>
                     </td>
-                    <td className="p-6">
-                      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                        c.subscriptionStatus === 'Active' 
-                          ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' 
-                          : 'bg-red-500/10 text-red-500 border border-red-500/20'
-                      }`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${c.subscriptionStatus === 'Active' ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></div>
+                    <td>
+                      <div className={`status ${c.subscriptionStatus === 'Active' ? 'paid' : 'unpaid'}`}>
                         {c.subscriptionStatus === 'Active' ? 'نشط' : 'موقوف'}
                       </div>
                     </td>
-                    <td className="p-6 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <button 
-                          onClick={() => openEdit(c)} 
-                          className="bg-gray-800 hover:bg-white hover:text-black px-4 py-2 rounded-lg text-xs font-bold transition-all border border-transparent hover:border-white active:scale-95 flex-1"
-                        >
+                    <td style={{textAlign: 'center'}}>
+                      <div className="action-buttons-group">
+                        <button onClick={() => openEdit(c)} className="btn-action-edit">
                           إدارة الحساب
                         </button>
                         <button 
                           onClick={() => handleResendEmail(c.id)} 
                           disabled={sendingEmailId === c.id}
-                          className="bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500 hover:text-black px-3 py-2 rounded-lg text-xs font-bold transition-all border border-yellow-500/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="btn-action-mail"
                           title="إعادة إرسال بطاقة الدخول للعميل"
                         >
-                          {sendingEmailId === c.id ? (
-                            <span className="flex items-center gap-1">
-                              <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                            </span>
-                          ) : (
-                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                          )}
+                          {sendingEmailId === c.id ? '...' : <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>}
+                        </button>
+                        <button 
+                          onClick={() => setCompanyToDelete(c)}
+                          disabled={deletingId === c.id}
+                          className="btn-action-delete"
+                          title="حذف الشركة"
+                        >
+                          {deletingId === c.id ? '...' : <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>}
                         </button>
                       </div>
                     </td>
@@ -313,11 +328,10 @@ export default function CompaniesClient({ initialCompanies, subscriptionPlans = 
           </div>
         </div>
 
-        {/* Robust Centered Modal Popup */}
+        {/* Modal Popup */}
         {isModalOpen && (
           <div className="modal-overlay">
-            <div className="company-modal">
-              {/* Modal Header */}
+            <div className="modal-content">
               <div className="modal-header">
                 <div>
                   <h2 className="modal-title">
@@ -328,7 +342,6 @@ export default function CompaniesClient({ initialCompanies, subscriptionPlans = 
                 <button type="button" onClick={() => setIsModalOpen(false)} className="close-btn">&times;</button>
               </div>
               
-              {/* Modal Body */}
               <div className="modal-body custom-scrollbar">
                 <form onSubmit={handleSubmit} className="company-form">
                   <div className="form-grid-2">
@@ -344,7 +357,7 @@ export default function CompaniesClient({ initialCompanies, subscriptionPlans = 
                     </div>
                     
                     <div className="form-group">
-                      <label>كود الشركة (معرف النظام) {editingCompany ? '' : <span style={{color: '#94a3b8', fontSize: '10px', fontWeight: 'normal'}}>(اختياري)</span>}</label>
+                      <label>كود الشركة (معرف النظام) {editingCompany ? '' : <span style={{color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 'normal'}}>(اختياري)</span>}</label>
                       <input 
                         type="text" 
                         value={formData.customId} 
@@ -396,9 +409,9 @@ export default function CompaniesClient({ initialCompanies, subscriptionPlans = 
                   </div>
 
                   <div className="form-grid-2">
-                    <div className="form-group relative">
+                    <div className="form-group">
                       <label>كلمة مرور المدير {editingCompany ? '' : <span className="required">*</span>}</label>
-                      <div className="relative">
+                      <div className="password-input-wrapper">
                         <input 
                           required={!editingCompany}
                           type={showPassword ? "text" : "password"} 
@@ -406,19 +419,13 @@ export default function CompaniesClient({ initialCompanies, subscriptionPlans = 
                           onChange={e => setFormData({...formData, password: e.target.value})} 
                           placeholder={editingCompany ? "اترك الحقل فارغاً للاحتفاظ بكلمة المرور القديمة" : "••••••••"}
                           dir="ltr"
-                          style={{ paddingLeft: '2.5rem' }}
                         />
                         <button 
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-yellow-500 focus:outline-none"
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                          className="toggle-password-btn"
                         >
-                          {showPassword ? (
-                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
-                          ) : (
-                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.543 7-1.275 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                          )}
+                          {showPassword ? 'إخفاء' : 'إظهار'}
                         </button>
                       </div>
                     </div>
@@ -434,7 +441,6 @@ export default function CompaniesClient({ initialCompanies, subscriptionPlans = 
                           value={formData.subscriptionEndsAt} 
                           onChange={e => setFormData({...formData, subscriptionEndsAt: e.target.value})} 
                           dir="ltr"
-                          className="bg-[#111] border border-gray-800 text-white pl-4 pr-4 py-4 rounded-xl focus:border-yellow-500 focus:outline-none w-full transition-all"
                         />
                       </div>
                     ) : (
@@ -475,17 +481,14 @@ export default function CompaniesClient({ initialCompanies, subscriptionPlans = 
                     </div>
                   </div>
 
-                  {!editingCompany && (
-                    <div className="notification-toggle" onClick={() => setFormData({...formData, sendEmail: !formData.sendEmail})}>
-                      <input type="checkbox" checked={formData.sendEmail} readOnly />
-                      <div>
-                        <p className="toggle-title">تفعيل الإشعارات الترحيبية</p>
-                        <p className="toggle-subtitle">سيتم إرسال بطاقة الدخول وتفاصيل الـ Tenant ID للعميل فوراً.</p>
-                      </div>
+                  <div className="notification-toggle" onClick={() => setFormData({...formData, sendEmail: !formData.sendEmail})}>
+                    <input type="checkbox" checked={formData.sendEmail} readOnly />
+                    <div>
+                      <p className="toggle-title">تفعيل الإشعارات الترحيبية</p>
+                      <p className="toggle-subtitle">سيتم إرسال بطاقة الدخول للعميل فوراً عبر البريد الإلكتروني.</p>
                     </div>
-                  )}
+                  </div>
 
-                  {/* Submit Button */}
                   <div className="modal-actions">
                     <button type="button" className="btn-cancel" onClick={() => setIsModalOpen(false)}>إلغاء</button>
                     <button type="submit" className="btn-submit" disabled={isLoading}>
@@ -497,9 +500,183 @@ export default function CompaniesClient({ initialCompanies, subscriptionPlans = 
             </div>
           </div>
         )}
+
+        {/* Delete Confirmation Modal */}
+        {companyToDelete && (
+          <div className="modal-overlay delete-modal-overlay">
+            <div className="delete-modal-content">
+              <div className="delete-modal-accent"></div>
+              <h3 className="delete-modal-title">
+                <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                تأكيد الحذف
+              </h3>
+              <p className="delete-modal-desc">
+                هل أنت متأكد من رغبتك في حذف شركة <strong>{companyToDelete.name}</strong>؟ لا يمكن التراجع عن هذا الإجراء وسيتم مسح جميع المستخدمين والحركات التابعة لها.
+              </p>
+              <div className="delete-modal-actions">
+                <button onClick={() => setCompanyToDelete(null)} className="btn-delete-cancel">إلغاء</button>
+                <button onClick={handleDelete} disabled={deletingId === companyToDelete.id} className="btn-delete-confirm">
+                  {deletingId === companyToDelete.id ? 'جاري الحذف...' : 'نعم، احذف الشركة'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Toast Notification */}
+        {notification && (
+          <div className="toast-notification">
+            <div className={`toast-content ${notification.type}`}>
+              <div className="toast-icon">
+                {notification.type === 'success' ? (
+                  <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path></svg>
+                ) : (
+                  <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                )}
+              </div>
+              <div className="toast-text">
+                <h4>{notification.type === 'success' ? 'عملية ناجحة' : 'تنبيه'}</h4>
+                <p>{notification.message}</p>
+              </div>
+              <button onClick={() => setNotification(null)} className="toast-close">&times;</button>
+            </div>
+          </div>
+        )}
       </div>
 
-      <style jsx global>{`
+      <style jsx>{`
+        .max-w-7xl {
+          max-width: 100%;
+          margin: 0 auto;
+          width: 100%;
+        }
+        
+        table th, table td {
+          white-space: nowrap;
+          font-size: 0.95rem;
+        }
+
+        .company-info-cell span {
+          font-size: 1.15rem !important;
+        }
+        
+        .header-actions-group {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .highlight-text {
+          color: var(--accent-warning);
+        }
+        
+        .text-success { color: var(--accent-success); }
+        .text-danger { color: var(--accent-danger); }
+
+        .company-info-cell {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .company-avatar {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, var(--glass-border), rgba(255,255,255,0.1));
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
+          font-size: 1.2rem;
+          color: var(--text-primary);
+          flex-shrink: 0;
+        }
+
+        .code-badge {
+          background: rgba(0, 0, 0, 0.3);
+          border: 1px solid var(--glass-border);
+          padding: 0.25rem 0.5rem;
+          border-radius: 4px;
+          font-family: monospace;
+          font-size: 0.8rem;
+          color: var(--text-secondary);
+        }
+
+        .plan-badge {
+          background: rgba(245, 158, 11, 0.1);
+          border: 1px solid rgba(245, 158, 11, 0.2);
+          color: var(--accent-warning);
+          padding: 0.25rem 0.75rem;
+          border-radius: 4px;
+          font-size: 0.8rem;
+          font-weight: 600;
+        }
+
+        .action-buttons-group {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+        }
+
+        .btn-action-edit {
+          background: var(--glass-border);
+          color: var(--text-primary);
+          border: 1px solid transparent;
+          padding: 0.5rem 1rem;
+          border-radius: 8px;
+          font-size: 0.8rem;
+          font-weight: bold;
+          cursor: pointer;
+          transition: all 0.2s;
+          flex: 1;
+        }
+
+        .btn-action-edit:hover {
+          background: white;
+          color: black;
+        }
+
+        .btn-action-mail {
+          background: rgba(245, 158, 11, 0.1);
+          color: var(--accent-warning);
+          border: 1px solid rgba(245, 158, 11, 0.2);
+          width: 34px;
+          height: 34px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-action-mail:hover:not(:disabled) {
+          background: var(--accent-warning);
+          color: white;
+        }
+
+        .btn-action-delete {
+          background: rgba(239, 68, 68, 0.1);
+          color: var(--accent-danger);
+          border: 1px solid rgba(239, 68, 68, 0.2);
+          width: 34px;
+          height: 34px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-action-delete:hover:not(:disabled) {
+          background: var(--accent-danger);
+          color: white;
+        }
+
+        /* Modals */
         .modal-overlay {
           position: fixed;
           inset: 0;
@@ -510,11 +687,12 @@ export default function CompaniesClient({ initialCompanies, subscriptionPlans = 
           justify-content: center;
           z-index: 999999;
           padding: 1.5rem;
+          animation: fadeIn 0.2s ease-out forwards;
         }
 
-        .company-modal {
+        .modal-content {
           background: #0f172a;
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          border: 1px solid var(--glass-border);
           border-radius: 1.5rem;
           width: 100%;
           max-width: 650px;
@@ -522,13 +700,13 @@ export default function CompaniesClient({ initialCompanies, subscriptionPlans = 
           display: flex;
           flex-direction: column;
           box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-          overflow: hidden;
+          animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
 
         .modal-header {
           padding: 1.5rem 2rem;
-          background: #1e293b;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+          background: rgba(255, 255, 255, 0.02);
+          border-bottom: 1px solid var(--glass-border);
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -537,20 +715,20 @@ export default function CompaniesClient({ initialCompanies, subscriptionPlans = 
         .modal-title {
           font-size: 1.5rem;
           font-weight: 800;
-          color: #f8fafc;
+          color: var(--text-primary);
           margin: 0 0 0.25rem 0;
         }
 
         .modal-subtitle {
           font-size: 0.85rem;
-          color: #94a3b8;
+          color: var(--text-secondary);
           margin: 0;
         }
 
         .close-btn {
-          background: rgba(255, 255, 255, 0.05);
+          background: var(--glass-border);
           border: none;
-          color: #94a3b8;
+          color: var(--text-secondary);
           font-size: 1.5rem;
           width: 40px;
           height: 40px;
@@ -563,7 +741,7 @@ export default function CompaniesClient({ initialCompanies, subscriptionPlans = 
         }
 
         .close-btn:hover {
-          background: #ef4444;
+          background: var(--accent-danger);
           color: white;
         }
 
@@ -584,29 +762,21 @@ export default function CompaniesClient({ initialCompanies, subscriptionPlans = 
           gap: 1.25rem;
         }
 
-        @media (max-width: 600px) {
-          .form-grid-2 {
-            grid-template-columns: 1fr;
-          }
-        }
-
         .form-group label {
           display: block;
           font-size: 0.85rem;
           font-weight: 700;
-          color: #cbd5e1;
+          color: var(--text-secondary);
           margin-bottom: 0.5rem;
         }
 
-        .required {
-          color: #ef4444;
-        }
+        .required { color: var(--accent-danger); }
 
         .company-form input,
         .company-form select {
           width: 100%;
-          background: rgba(15, 23, 42, 0.6);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: rgba(0, 0, 0, 0.3);
+          border: 1px solid var(--glass-border);
           color: white;
           padding: 0.875rem 1rem;
           border-radius: 0.75rem;
@@ -617,41 +787,59 @@ export default function CompaniesClient({ initialCompanies, subscriptionPlans = 
 
         .company-form input:focus,
         .company-form select:focus {
-          border-color: #eab308;
-          box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.2);
+          border-color: var(--accent-warning);
+          box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+        }
+
+        .password-input-wrapper {
+          position: relative;
+        }
+
+        .toggle-password-btn {
+          position: absolute;
+          left: 1rem;
+          top: 50%;
+          transform: translateY(-50%);
+          background: transparent;
+          border: none;
+          color: var(--text-secondary);
+          font-size: 0.8rem;
+          cursor: pointer;
+        }
+        
+        .toggle-password-btn:hover {
+          color: var(--accent-warning);
         }
 
         .notification-toggle {
-          background: rgba(234, 179, 8, 0.1);
-          border: 1px solid rgba(234, 179, 8, 0.2);
+          background: rgba(245, 158, 11, 0.1);
+          border: 1px solid rgba(245, 158, 11, 0.2);
           padding: 1rem 1.25rem;
           border-radius: 0.75rem;
           display: flex;
           align-items: center;
           gap: 1rem;
           cursor: pointer;
-          transition: all 0.2s;
         }
 
-        .notification-toggle:hover {
-          background: rgba(234, 179, 8, 0.15);
-        }
-
-        .notification-toggle input {
-          width: auto;
-          margin: 0;
+        .notification-toggle input[type="checkbox"] {
+          width: 20px !important;
+          height: 20px !important;
+          accent-color: var(--accent-warning);
+          flex-shrink: 0;
           cursor: pointer;
+          margin: 0;
         }
 
         .toggle-title {
-          color: #eab308;
+          color: var(--accent-warning);
           font-weight: 700;
           font-size: 0.95rem;
           margin: 0 0 0.25rem 0;
         }
 
         .toggle-subtitle {
-          color: #94a3b8;
+          color: var(--text-secondary);
           font-size: 0.8rem;
           margin: 0;
         }
@@ -662,61 +850,231 @@ export default function CompaniesClient({ initialCompanies, subscriptionPlans = 
           gap: 1rem;
           margin-top: 1rem;
           padding-top: 1.5rem;
-          border-top: 1px solid rgba(255, 255, 255, 0.05);
+          border-top: 1px solid var(--glass-border);
         }
 
         .btn-cancel {
           background: transparent;
-          color: #cbd5e1;
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: var(--text-secondary);
+          border: 1px solid var(--glass-border);
           padding: 0.75rem 1.5rem;
           border-radius: 0.5rem;
           font-weight: 600;
           cursor: pointer;
-          transition: all 0.2s;
         }
 
         .btn-cancel:hover {
-          background: rgba(255, 255, 255, 0.05);
+          background: var(--glass-border);
           color: white;
         }
 
         .btn-submit {
-          background: #eab308;
+          background: var(--accent-warning);
           color: #1e293b;
           border: none;
           padding: 0.75rem 2rem;
           border-radius: 0.5rem;
           font-weight: 700;
           cursor: pointer;
-          transition: all 0.2s;
         }
 
         .btn-submit:hover:not(:disabled) {
-          background: #ca8a04;
-          transform: translateY(-1px);
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
         }
 
-        .btn-submit:disabled {
-          opacity: 0.7;
-          cursor: not-allowed;
+        /* Delete Modal */
+        .delete-modal-content {
+          background: #0f172a;
+          border: 1px solid rgba(239, 68, 68, 0.3);
+          border-radius: 1rem;
+          padding: 2rem;
+          width: 100%;
+          max-width: 450px;
+          position: relative;
+          overflow: hidden;
+          animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
 
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
+        .delete-modal-accent {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 4px;
+          background: linear-gradient(to right, var(--accent-danger), #991b1b);
         }
-        .custom-scrollbar::-webkit-scrollbar-track {
+
+        .delete-modal-title {
+          font-size: 1.5rem;
+          font-weight: 800;
+          color: white;
+          margin: 0 0 1rem 0;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
+        .delete-modal-title svg {
+          color: var(--accent-danger);
+        }
+
+        .delete-modal-desc {
+          color: var(--text-secondary);
+          margin-bottom: 2rem;
+          line-height: 1.6;
+        }
+
+        .delete-modal-actions {
+          display: flex;
+          gap: 1rem;
+        }
+
+        .btn-delete-cancel {
+          flex: 1;
           background: transparent;
+          border: 1px solid var(--glass-border);
+          color: var(--text-secondary);
+          padding: 0.75rem;
+          border-radius: 0.5rem;
+          font-weight: bold;
+          cursor: pointer;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #334155;
-          border-radius: 10px;
+
+        .btn-delete-cancel:hover {
+          background: var(--glass-border);
+          color: white;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #475569;
+
+        .btn-delete-confirm {
+          flex: 1;
+          background: var(--accent-danger);
+          color: white;
+          border: none;
+          padding: 0.75rem;
+          border-radius: 0.5rem;
+          font-weight: bold;
+          cursor: pointer;
+          box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-delete-confirm:hover:not(:disabled) {
+          background: #dc2626;
+        }
+
+        /* Toast Notifications */
+        .toast-notification {
+          position: fixed;
+          top: 2rem;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 9999999;
+          animation: bounce 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        .toast-content {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          padding: 1rem 1.5rem;
+          border-radius: 1rem;
+          backdrop-filter: blur(12px);
+          box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5);
+        }
+
+        .toast-content.success {
+          background: rgba(6, 78, 59, 0.6);
+          border: 1px solid rgba(16, 185, 129, 0.5);
+        }
+
+        .toast-content.error {
+          background: rgba(127, 29, 29, 0.6);
+          border: 1px solid rgba(239, 68, 68, 0.5);
+        }
+
+        .toast-icon {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .success .toast-icon {
+          background: rgba(16, 185, 129, 0.2);
+          color: var(--accent-success);
+        }
+
+        .error .toast-icon {
+          background: rgba(239, 68, 68, 0.2);
+          color: var(--accent-danger);
+        }
+
+        .toast-text h4 {
+          margin: 0;
+          font-weight: 800;
+          font-size: 1.1rem;
+        }
+        
+        .success .toast-text h4 { color: var(--accent-success); }
+        .error .toast-text h4 { color: var(--accent-danger); }
+
+        .toast-text p {
+          margin: 0;
+          font-size: 0.85rem;
+          color: white;
+          opacity: 0.9;
+        }
+
+        .toast-close {
+          background: transparent;
+          border: none;
+          color: white;
+          font-size: 1.5rem;
+          cursor: pointer;
+          opacity: 0.5;
+          margin-right: 0.5rem;
+        }
+
+        .toast-close:hover {
+          opacity: 1;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(10px) scale(0.98); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes bounce {
+          0% { opacity: 0; transform: translate(-50%, -20px) scale(0.95); }
+          50% { transform: translate(-50%, 5px) scale(1.02); }
+          100% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+        }
+
+        @media (max-width: 768px) {
+          .header-actions-group {
+            flex-direction: column;
+            width: 100%;
+          }
+          .search-container {
+            width: 100%;
+          }
+          .btn-primary {
+            width: 100%;
+            justify-content: center;
+          }
+          .form-grid-2 {
+            grid-template-columns: 1fr;
+          }
         }
       `}</style>
     </div>
   )
 }
-

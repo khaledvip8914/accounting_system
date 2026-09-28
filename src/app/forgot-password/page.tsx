@@ -3,7 +3,8 @@ import ForgotPasswordClient from './ForgotPasswordClient';
 
 export default async function ForgotPassword() {
   const cookieStore = await cookies();
-  const lang = cookieStore.get('NX_LANG')?.value || 'en';
+  const lang = cookieStore.get('NX_LANG')?.value || 'ar';
 
   return <ForgotPasswordClient lang={lang} />;
 }
+

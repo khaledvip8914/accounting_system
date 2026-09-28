@@ -36,6 +36,10 @@ export async function createPackage(data: any) {
         hasFixedAssets: Boolean(data.hasFixedAssets),
         hasMultiCurrency: Boolean(data.hasMultiCurrency),
         hasAdvancedReports: Boolean(data.hasAdvancedReports),
+        hasWhatsApp: Boolean(data.hasWhatsApp),
+        hasHumanResources: Boolean(data.hasHumanResources),
+        hasApiIntegration: Boolean(data.hasApiIntegration),
+        hasAnalysisDimensions: Boolean(data.hasAnalysisDimensions),
       }
     })
 
@@ -65,6 +69,10 @@ export async function updatePackage(id: string, data: any) {
         hasFixedAssets: Boolean(data.hasFixedAssets),
         hasMultiCurrency: Boolean(data.hasMultiCurrency),
         hasAdvancedReports: Boolean(data.hasAdvancedReports),
+        hasWhatsApp: Boolean(data.hasWhatsApp),
+        hasHumanResources: Boolean(data.hasHumanResources),
+        hasApiIntegration: Boolean(data.hasApiIntegration),
+        hasAnalysisDimensions: Boolean(data.hasAnalysisDimensions),
       }
     })
 

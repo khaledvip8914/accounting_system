@@ -35,7 +35,10 @@ export async function createBranch(data: any) {
       isMain: data.isMain || false,
       address: data.address,
       taxNumber: data.taxNumber,
-      commercialRegistry: data.commercialRegistry
+      commercialRegistry: data.commercialRegistry,
+      workLat: data.workLat !== undefined && data.workLat !== '' ? parseFloat(data.workLat) : null,
+      workLng: data.workLng !== undefined && data.workLng !== '' ? parseFloat(data.workLng) : null,
+      workRadius: data.workRadius !== undefined && data.workRadius !== '' ? parseFloat(data.workRadius) : 100
     }
   });
 
@@ -55,7 +58,10 @@ export async function updateBranch(id: string, data: any) {
       nameAr: data.nameAr,
       address: data.address,
       taxNumber: data.taxNumber,
-      commercialRegistry: data.commercialRegistry
+      commercialRegistry: data.commercialRegistry,
+      workLat: data.workLat !== undefined ? (data.workLat !== '' && data.workLat !== null ? parseFloat(data.workLat) : null) : undefined,
+      workLng: data.workLng !== undefined ? (data.workLng !== '' && data.workLng !== null ? parseFloat(data.workLng) : null) : undefined,
+      workRadius: data.workRadius !== undefined ? (data.workRadius !== '' && data.workRadius !== null ? parseFloat(data.workRadius) : 100) : undefined
     }
   });
 
