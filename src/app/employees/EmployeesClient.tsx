@@ -792,11 +792,28 @@ export default function EmployeesClient({ initialEmployees, initialMoves, branch
             cursor: 'pointer',
             fontWeight: activeTab === 'leaves' ? 'bold' : 'normal',
             transition: 'all 0.3s ease',
-            whiteSpace: 'nowrap'
+            whiteSpace: 'nowrap',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px'
           }}
           onClick={() => setActiveTab('leaves')}
         >
-          {lang === 'ar' ? '🏖️ الإجازات' : '🏖️ Leaves'}
+          <span>{lang === 'ar' ? '🏖️ الإجازات' : '🏖️ Leaves'}</span>
+          {(leaves || []).filter(l => l.status === 'Pending').length > 0 && (
+            <span style={{
+              background: '#ef4444',
+              color: '#ffffff',
+              borderRadius: '20px',
+              padding: '2px 8px',
+              fontSize: '0.75rem',
+              fontWeight: 800,
+              boxShadow: '0 0 10px rgba(239, 68, 68, 0.6)'
+            }}>
+              {(leaves || []).filter(l => l.status === 'Pending').length} {lang === 'ar' ? 'معلق' : 'pending'}
+            </span>
+          )}
         </button>
       </div>
 
@@ -1537,9 +1554,9 @@ export default function EmployeesClient({ initialEmployees, initialMoves, branch
                       </td>
                       <td>
                         <span className="badge" style={{ 
-                          background: leave.type === 'Permission' ? 'rgba(168, 85, 247, 0.1)' : 'rgba(59, 130, 246, 0.1)', 
-                          color: leave.type === 'Permission' ? '#9333ea' : '#3b82f6', 
-                          border: `1px solid ${leave.type === 'Permission' ? 'rgba(168, 85, 247, 0.2)' : 'rgba(59, 130, 246, 0.2)'}`,
+                          background: leave.type === 'Permission' ? 'rgba(168, 85, 247, 0.1)' : leave.type === 'Emergency' ? 'rgba(245, 158, 11, 0.15)' : leave.type === 'Sick' ? 'rgba(239, 68, 68, 0.12)' : 'rgba(59, 130, 246, 0.1)', 
+                          color: leave.type === 'Permission' ? '#9333ea' : leave.type === 'Emergency' ? '#d97706' : leave.type === 'Sick' ? '#ef4444' : '#3b82f6', 
+                          border: `1px solid ${leave.type === 'Permission' ? 'rgba(168, 85, 247, 0.2)' : leave.type === 'Emergency' ? 'rgba(245, 158, 11, 0.3)' : leave.type === 'Sick' ? 'rgba(239, 68, 68, 0.25)' : 'rgba(59, 130, 246, 0.2)'}`,
                           fontWeight: 700
                         }}>
                           {leave.type === 'Permission' ? (lang === 'ar' ? '🕒 استئذان' : 'Permission') :
@@ -1547,6 +1564,8 @@ export default function EmployeesClient({ initialEmployees, initialMoves, branch
                            leave.type === 'LateArrival' ? (lang === 'ar' ? '⏳ تأخر مبرر' : 'Late Arrival') :
                            leave.type === 'Annual' ? (lang === 'ar' ? '🏖️ سنوية' : 'Annual') :
                            leave.type === 'Sick' ? (lang === 'ar' ? '🤒 مرضية' : 'Sick') :
+                           leave.type === 'Emergency' ? (lang === 'ar' ? '🚨 طارئة' : 'Emergency') :
+                           leave.type === 'Maternity' ? (lang === 'ar' ? '🍼 أمومة / رعاية' : 'Maternity') :
                            leave.type === 'Unpaid' ? (lang === 'ar' ? 'بدون راتب' : 'Unpaid') :
                            leave.type}
                         </span>

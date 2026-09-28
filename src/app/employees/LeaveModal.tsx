@@ -17,6 +17,7 @@ export default function LeaveModal({ onClose, onSave, leave, employees, lang }: 
   const leaveTypes = [
     { value: 'Annual', label: lang === 'ar' ? 'إجازة سنوية' : 'Annual Leave' },
     { value: 'Sick', label: lang === 'ar' ? 'إجازة مرضية' : 'Sick Leave' },
+    { value: 'Emergency', label: lang === 'ar' ? 'إجازة طارئة' : 'Emergency Leave' },
     { value: 'Permission', label: lang === 'ar' ? 'طلب استئذان (ساعي)' : 'Permission / Short Leave' },
     { value: 'EarlyDeparture', label: lang === 'ar' ? 'انصراف مبكر مبرر' : 'Excused Early Departure' },
     { value: 'LateArrival', label: lang === 'ar' ? 'تأخر مبرر' : 'Excused Late Arrival' },

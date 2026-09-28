@@ -8,8 +8,10 @@ export async function POST(req: NextRequest) {
       companyCode,
       employeeCode,
       password,
-      type, // 'Permission' (استئذان), 'LateArrival' (تأخر مبرر), 'EarlyDeparture' (خروج مبكر)
-      date, // YYYY-MM-DD
+      type, // 'Annual', 'Sick', 'Emergency', 'Permission', 'LateArrival', 'EarlyDeparture', 'Unpaid', 'Maternity'
+      startDate, // YYYY-MM-DD
+      endDate, // YYYY-MM-DD
+      date, // YYYY-MM-DD fallback
       startTime, // HH:mm
       endTime, // HH:mm
       reason
@@ -19,14 +21,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'كود الموظف مطلوب' }, { status: 400 });
     }
 
-    if (!date) {
-      return NextResponse.json({ success: false, error: 'التاريخ مطلوب' }, { status: 400 });
+    const startStr = startDate || date;
+    const endStr = endDate || startDate || date;
+
+    if (!startStr) {
+      return NextResponse.json({ success: false, error: 'يرجى تحديد تاريخ الإجازة' }, { status: 400 });
     }
 
     // Find Employee
     const employee = await prisma.employee.findFirst({
       where: {
-        code: employeeCode,
+        code: employeeCode.trim(),
         ...(companyCode ? { companyId: companyCode } : {})
       }
     });
@@ -40,41 +45,65 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'كلمة المرور غير صحيحة' }, { status: 401 });
     }
 
-    const [year, month, day] = date.split('-').map(Number);
+    const [sY, sM, sD] = startStr.split('-').map(Number);
+    const [eY, eM, eD] = endStr.split('-').map(Number);
     
     let startDateTime: Date;
     let endDateTime: Date;
 
     if (startTime && endTime) {
-      const [sH, sM] = startTime.split(':').map(Number);
-      const [eH, eM] = endTime.split(':').map(Number);
-      startDateTime = new Date(year, month - 1, day, sH, sM, 0);
-      endDateTime = new Date(year, month - 1, day, eH, eM, 0);
+      const [sH, sm] = startTime.split(':').map(Number);
+      const [eH, em] = endTime.split(':').map(Number);
+      startDateTime = new Date(sY, sM - 1, sD, sH, sm, 0);
+      endDateTime = new Date(eY, eM - 1, eD, eH, em, 0);
     } else {
-      startDateTime = new Date(year, month - 1, day, 0, 0, 0);
-      endDateTime = new Date(year, month - 1, day, 23, 59, 59);
+      startDateTime = new Date(sY, sM - 1, sD, 0, 0, 0);
+      endDateTime = new Date(eY, eM - 1, eD, 23, 59, 59);
+    }
+
+    if (startDateTime > endDateTime) {
+      return NextResponse.json({ success: false, error: 'تاريخ بداية الإجازة يجب أن يكون قبل تاريخ النهاية' }, { status: 400 });
+    }
+
+    const leaveType = type || 'Annual';
+    let formattedReason = reason || '';
+    if (startTime && endTime) {
+      formattedReason = formattedReason ? `[${startTime} - ${endTime}] ${formattedReason}` : `استئذان من ${startTime} إلى ${endTime}`;
     }
 
     const leaveRequest = await prisma.employeeLeave.create({
       data: {
         companyId: employee.companyId,
         employeeId: employee.id,
-        type: type || 'Permission',
+        type: leaveType,
         startDate: startDateTime,
         endDate: endDateTime,
-        reason: reason ? `[${startTime || ''} - ${endTime || ''}] ${reason}` : `استئذان من ${startTime || ''} إلى ${endTime || ''}`,
+        reason: formattedReason || null,
         status: 'Pending'
       }
     });
 
+    const typeLabelsAr: Record<string, string> = {
+      Annual: 'إجازة سنوية',
+      Sick: 'إجازة مرضية',
+      Emergency: 'إجازة طارئة',
+      Permission: 'طلب استئذان ساعي',
+      Unpaid: 'إجازة بدون راتب',
+      Maternity: 'إجازة أمومة / رعاية',
+      EarlyDeparture: 'خروج مبكر مبرر',
+      LateArrival: 'تأخر مبرر',
+    };
+
+    const typeLabel = typeLabelsAr[leaveType] || leaveType;
+
     return NextResponse.json({
       success: true,
-      message: 'تم إرسال طلب الاستئذان بنجاح وهو قيد مراجعة الإدارة',
+      message: `تم إرسال طلب (${typeLabel}) بنجاح وهو قيد مراجعة واعتماد الإدارة`,
       leaveRequest
     });
 
   } catch (err: any) {
-    console.error('Permission Request Error:', err);
+    console.error('Leave/Permission Request Error:', err);
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
@@ -90,10 +119,10 @@ export async function GET(req: NextRequest) {
 
     const leaves = await prisma.employeeLeave.findMany({
       where: {
-        employee: { code: employeeCode }
+        employee: { code: employeeCode.trim() }
       },
       orderBy: { createdAt: 'desc' },
-      take: 20
+      take: 30
     });
 
     return NextResponse.json({ success: true, leaves });

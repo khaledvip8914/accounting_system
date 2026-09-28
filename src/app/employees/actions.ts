@@ -465,6 +465,71 @@ export async function updateEmployeeLeaveStatus({ id, status }: { id: string, st
       data: { status },
       include: { employee: true }
     });
+
+    // If Approved, automatically mark attendance records across leave dates as ON_LEAVE
+    if (status === 'Approved') {
+      const start = new Date(leave.startDate);
+      const end = new Date(leave.endDate);
+      const cur = new Date(start);
+      while (cur <= end) {
+        const curDate = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate(), 0, 0, 0);
+        const existing = await prisma.employeeAttendance.findFirst({
+          where: {
+            employeeId: leave.employeeId,
+            date: curDate
+          }
+        });
+
+        const leaveNote = `إجازة ${leave.type === 'Annual' ? 'سنوية' : leave.type === 'Sick' ? 'مرضية' : leave.type === 'Emergency' ? 'طارئة' : leave.type} معتمدة`;
+
+        if (existing) {
+          if (!existing.checkIn) {
+            await prisma.employeeAttendance.update({
+              where: { id: existing.id },
+              data: {
+                status: 'ON_LEAVE',
+                notes: existing.notes ? `${existing.notes} | ${leaveNote}` : leaveNote
+              }
+            });
+          }
+        } else {
+          await prisma.employeeAttendance.create({
+            data: {
+              companyId,
+              employeeId: leave.employeeId,
+              date: curDate,
+              status: 'ON_LEAVE',
+              source: 'MANUAL',
+              notes: leaveNote
+            }
+          });
+        }
+        cur.setDate(cur.getDate() + 1);
+      }
+    } else if (status === 'Rejected') {
+      // Revert auto-created ON_LEAVE records without check-in
+      const start = new Date(leave.startDate);
+      const end = new Date(leave.endDate);
+      const cur = new Date(start);
+      while (cur <= end) {
+        const curDate = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate(), 0, 0, 0);
+        const existing = await prisma.employeeAttendance.findFirst({
+          where: {
+            employeeId: leave.employeeId,
+            date: curDate,
+            status: 'ON_LEAVE',
+            checkIn: null
+          }
+        });
+        if (existing) {
+          await prisma.employeeAttendance.delete({
+            where: { id: existing.id }
+          });
+        }
+        cur.setDate(cur.getDate() + 1);
+      }
+    }
+
     revalidatePath('/employees');
     return { success: true, leave };
   } catch (err: any) {
